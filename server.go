@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -63,6 +65,7 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 	if osuBase == 0 {
 		log.Fatalln("could not find osuStatusAddr, is osu! running?")
 	}
+	fmt.Println(osuBase)
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
@@ -259,6 +262,60 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(group)
 		if err != nil {
 			fmt.Println("error:", err)
+		}
+		var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
+		fullPathToOsu := fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
+		if strings.HasSuffix(fullPathToOsu, ".osu") == true {
+			//fmt.Println(fullPathToOsu)
+			file, err := os.Open(fullPathToOsu)
+			if err != nil {
+				log.Println(err)
+				defer file.Close()
+			}
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			var bgString string
+			for scanner.Scan() {
+				//fmt.Println(scanner.Text())
+				if strings.Contains(scanner.Text(), ".jpg") == true {
+					bg := strings.Split(scanner.Text(), "\"")
+					bgString = (bg[1])
+					break
+					//log.Fatalln(scanner.Text())
+				}
+				if strings.Contains(scanner.Text(), ".png") == true {
+					bg := strings.Split(scanner.Text(), "\"")
+					bgString = (bg[1])
+					//log.Fatalln(scanner.Text())
+					break
+				}
+				if strings.Contains(scanner.Text(), ".JPG") == true {
+					bg := strings.Split(scanner.Text(), "\"")
+					bgString = (bg[1])
+					//log.Fatalln(scanner.Text())
+					break
+				}
+				if strings.Contains(scanner.Text(), ".PNG") == true {
+					bg := strings.Split(scanner.Text(), "\"")
+					bgString = (bg[1])
+					break
+					//log.Fatalln(scanner.Text())
+				} else {
+					bgString = ""
+				}
+			}
+			if err := scanner.Err(); err != nil {
+				log.Println(err)
+			}
+			var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
+			var fullBGCommand string = fmt.Sprintf("ln -sf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
+			fullPathToBgCMD := Cmd((fullBGCommand), true)
+			fullPathToBgCMD2 := cast.ToString(fullPathToBgCMD)
+			fmt.Println(fullPathToBgCMD2)
+
+			//fmt.Println(bgString)
+			fmt.Println(fullPathToBG)
+
 		}
 
 		ws.WriteMessage(1, []byte(b)) //sending data to the client
@@ -884,6 +941,26 @@ func ValidCurrentBeatmapFolderString() string {
 		//fmt.Println("\u0001 true")
 
 	}
+	if strings.Contains(strParts[0], "$d\u0011") == true {
+		strParts = strings.Split(strParts[0], "$d\u0011")
+
+	}
+	if strings.Contains(strParts[0], "#\u0008") == true {
+		strParts = strings.Split(strParts[0], "#\u0008")
+
+	}
+	if strings.Contains(strParts[0], "!\u0006") == true {
+		strParts = strings.Split(strParts[0], "!\u0006")
+
+	}
+	if strings.Contains(strParts[0], "`") == true {
+		strParts = strings.Split(strParts[0], "`")
+
+	}
+	if strings.Contains(strParts[0], "t'\u0008") == true {
+		strParts = strings.Split(strParts[0], "t'\u0008")
+
+	}
 
 	return strParts[0]
 }
@@ -941,6 +1018,26 @@ func ValidCurrentBeatmapString() string {
 		//fmt.Println("\u0001 true")
 
 	}
+	if strings.Contains(strParts[0], "$d\u0011") == true {
+		strParts = strings.Split(strParts[0], "$d\u0011")
+
+	}
+	if strings.Contains(strParts[0], "#\u0008") == true {
+		strParts = strings.Split(strParts[0], "#\u0008")
+
+	}
+	if strings.Contains(strParts[0], "!\u0006") == true {
+		strParts = strings.Split(strParts[0], "!\u0006")
+
+	}
+	if strings.Contains(strParts[0], "`") == true {
+		strParts = strings.Split(strParts[0], "`")
+
+	}
+	if strings.Contains(strParts[0], "t'\u0008") == true {
+		strParts = strings.Split(strParts[0], "t'\u0008")
+
+	}
 
 	return strParts[0]
 }
@@ -949,46 +1046,73 @@ func ValidCurrentBeatmapOsuFileString() string {
 	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
 	strParts := strings.Split(t, "\u0018")
 
-	if strings.Contains(strParts[0], "@Ou") == true {
-		strParts = strings.Split(strParts[0], "@Ou")
+	// if strings.Contains(strParts[0], "@Ou") == true {
+	// 	strParts = strings.Split(strParts[0], "@Ou")
 
-	}
-	if strings.Contains(strParts[0], " \u000f") == true {
-		strParts = strings.Split(strParts[0], " \u000f")
+	// }
+	// if strings.Contains(strParts[0], " \u000f") == true {
+	// 	strParts = strings.Split(strParts[0], " \u000f")
 
-	}
-	if strings.Contains(strParts[0], "\u000f") == true {
-		strParts = strings.Split(strParts[0], "\u000f")
+	// }
+	// if strings.Contains(strParts[0], "\u000f") == true {
+	// 	strParts = strings.Split(strParts[0], "\u000f")
 
-	}
-	if strings.Contains(strParts[0], "W\u000e") == true {
-		strParts = strings.Split(strParts[0], "W\u000e")
+	// }
+	// if strings.Contains(strParts[0], "W\u000e") == true {
+	// 	strParts = strings.Split(strParts[0], "W\u000e")
 
-	}
-	if strings.Contains(strParts[0], "\u0001") == true {
-		strParts = strings.Split(strParts[0], "\u0001")
-	}
-	if strings.Contains(strParts[0], "P\u000f") == true {
-		strParts = strings.Split(strParts[0], "P\u000f")
+	// }
+	// if strings.Contains(strParts[0], "\u0001") == true {
+	// 	strParts = strings.Split(strParts[0], "\u0001")
+	// }
+	// if strings.Contains(strParts[0], "P\u000f") == true {
+	// 	strParts = strings.Split(strParts[0], "P\u000f")
 
-	}
-	if strings.Contains(strParts[0], "!\u000f") == true {
-		strParts = strings.Split(strParts[0], "!\u000f")
+	// }
+	// if strings.Contains(strParts[0], "!\u000f") == true {
+	// 	strParts = strings.Split(strParts[0], "!\u000f")
 
-	}
-	if strings.Contains(strParts[0], "\u001c") == true {
-		strParts = strings.Split(strParts[0], "\u001c")
-	}
-	if strings.Contains(strParts[0], "\u001d") == true {
-		strParts = strings.Split(strParts[0], "\u001d")
+	// }
+	// if strings.Contains(strParts[0], "\u001c") == true {
+	// 	strParts = strings.Split(strParts[0], "\u001c")
+	// }
+	// if strings.Contains(strParts[0], "\u001d") == true {
+	// 	strParts = strings.Split(strParts[0], "\u001d")
 
-	}
-	if strings.Contains(strParts[0], "\u0019") == true {
-		strParts = strings.Split(strParts[0], "\u0019")
+	// }
+	// if strings.Contains(strParts[0], "\u0019") == true {
+	// 	strParts = strings.Split(strParts[0], "\u0019")
 
-	}
-	if strings.Contains(strParts[0], "-\u000e") == true {
-		strParts = strings.Split(strParts[0], "-\u000e")
+	// }
+	// if strings.Contains(strParts[0], "-\u000e") == true {
+	// 	strParts = strings.Split(strParts[0], "-\u000e")
+
+	// }
+	// if strings.Contains(strParts[0], "$d\u0011") == true {
+	// 	strParts = strings.Split(strParts[0], "$d\u0011")
+
+	// }
+	// if strings.Contains(strParts[0], "#\u0008") == true {
+	// 	strParts = strings.Split(strParts[0], "#\u0008")
+
+	// }
+	// if strings.Contains(strParts[0], "!\u0006") == true {
+	// 	strParts = strings.Split(strParts[0], "!\u0006")
+
+	// }
+	// if strings.Contains(strParts[0], "`") == true {
+	// 	strParts = strings.Split(strParts[0], "`")
+
+	// }
+	// if strings.Contains(strParts[0], "t'\u0008") == true {
+	// 	strParts = strings.Split(strParts[0], "t'\u0008")
+
+	// }
+	if strings.Contains(strParts[0], ".osu") == true {
+		strParts = strings.Split(strParts[0], ".osu")
+		strPartsString := cast.ToString(strParts[0])
+		strPartsString = strPartsString + ".osu"
+		strParts[0] = strPartsString
 
 	}
 
