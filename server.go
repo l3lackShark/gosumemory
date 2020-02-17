@@ -24,44 +24,56 @@ var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
 
-func OsuStatusAddr() uintptr { //in hopes to deprecate this
-	out, err := exec.Command("/bin/sh", "osustatus.sh").Output()
-	if err != nil {
-		log.Fatalln("osuStatus base address could not be found (scanmem)")
-	}
+func Cmd(cmd string, shell bool) []byte {
 
-	outStr := cast.ToString(out)
+	if shell {
+		out, err := exec.Command("bash", "-c", cmd).Output()
+		if err != nil {
+			panic("some error found")
+		}
+		return out
+	} else {
+		out, err := exec.Command(cmd).Output()
+		if err != nil {
+			panic("some error found")
+		}
+		return out
+
+	}
+}
+
+func OsuStatusAddr() uintptr { //in hopes to deprecate this
+	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
+	outStr := cast.ToString(x)
+	outStr = strings.Replace(outStr, " ", "", -1)
+
 	input := outStr
 	if input == "" {
-		log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		log.Fatalln("osuStatus addr fail")
 	}
-	output := (input[9:])
-
+	output := (input[3:])
 	yosuBase := firstN(output, 8)
 	osuBaseString := "0x" + yosuBase
-	//fmt.Println(osuBaseString)
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
 	if osuBase == 0 {
-		log.Fatalln("could not find OsuStatusAddr, is osu! running?")
+		log.Fatalln("could not find osuStatusAddr, is osu! running?")
 	}
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
 func OsuBaseAddr() uintptr { //in hopes to deprecate this
-	out, err := exec.Command("/bin/sh", "osubase.sh").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	outStr := cast.ToString(out)
+	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
+	outStr := cast.ToString(x)
+	outStr = strings.Replace(outStr, " ", "", -1)
+
 	input := outStr
 	if input == "" {
 		log.Fatalln("OsuBase addr fail")
 	}
-	output := (input[9:])
+	output := (input[3:])
 	yosuBase := firstN(output, 8)
 	osuBaseString := "0x" + yosuBase
-	//fmt.Println(osuBaseString)
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
 	//println(CurrentBeatmapFolderString())
@@ -71,16 +83,13 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 	return osuBase
 }
 func OsuplayContainer() uintptr { //in hopes to deprecate this
-	out, err := exec.Command("/bin/sh", "playcontainer.sh").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	outStr := cast.ToString(out)
+	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
+	outStr := cast.ToString(x)
 	outStr = strings.Replace(outStr, " ", "", -1)
 
 	input := outStr
 	if input == "" {
-		log.Fatalln("OsuPlayContainer addr fail")
+		log.Fatalln("osuplayContainer addr fail")
 	}
 	output := (input[3:])
 	yosuBase := firstN(output, 8)
@@ -89,7 +98,7 @@ func OsuplayContainer() uintptr { //in hopes to deprecate this
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuplayContainer address, is osu! running?")
+		log.Fatalln("Could not find osuplayContainer address, is osu! running?")
 	}
 	//println(CurrentBeatmapFolderString())
 	return osuBase
