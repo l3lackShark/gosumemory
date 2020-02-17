@@ -49,10 +49,14 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 
 	input := outStr
 	if input == "" {
-		log.Fatalln("osuStatus addr fail")
+		log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
 	}
 	output := (input[3:])
 	yosuBase := firstN(output, 8)
+	check := strings.Contains(yosuBase, ",")
+	if check == true {
+		yosuBase = strings.Replace(yosuBase, ",", "", -1)
+	}
 	osuBaseString := "0x" + yosuBase
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
@@ -73,6 +77,10 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 	}
 	output := (input[3:])
 	yosuBase := firstN(output, 8)
+	check := strings.Contains(yosuBase, ",")
+	if check == true {
+		yosuBase = strings.Replace(yosuBase, ",", "", -1)
+	}
 	osuBaseString := "0x" + yosuBase
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
@@ -93,12 +101,16 @@ func OsuplayContainer() uintptr { //in hopes to deprecate this
 	}
 	output := (input[3:])
 	yosuBase := firstN(output, 8)
+	check := strings.Contains(yosuBase, ",")
+	if check == true {
+		yosuBase = strings.Replace(yosuBase, ",", "", -1)
+	}
 	osuBaseString := "0x" + yosuBase
 
 	osuBaseUINT32 := cast.ToUint32(osuBaseString)
 	osuBase = uintptr(osuBaseUINT32)
 	if osuBase == 0 {
-		log.Fatalln("Could not find osuplayContainer address, is osu! running?")
+		log.Fatalln("Could not find osuplayContainer address, is osu! running?", "Address was:", osuBaseString)
 	}
 	//println(CurrentBeatmapFolderString())
 	return osuBase
