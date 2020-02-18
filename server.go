@@ -26,19 +26,20 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
+var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
 
 func Cmd(cmd string, shell bool) []byte {
 
 	if shell {
 		out, err := exec.Command("bash", "-c", cmd).Output()
 		if err != nil {
-			panic("some error found")
+			println("some error found")
 		}
 		return out
 	} else {
 		out, err := exec.Command(cmd).Output()
 		if err != nil {
-			panic("some error found")
+			println("some error found")
 		}
 		return out
 
@@ -190,11 +191,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln("is osu! running? (osu! status offset was not found)")
 	}
+	var tempCurrentBeatmapOsu string
 
 	for {
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-		if procerr != nil {
-			log.Fatalln("is osu! running? (osu! process was not found, terminating...)")
+		for procerr != nil {
+			log.Println("is osu! running? (osu! process was not found, terminating...)")
+			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		}
 		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
 		if err != nil {
@@ -256,6 +259,66 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapCS: CurrentBeatmapCS(),
 			CurrentBeatmapHP: CurrentBeatmapHP(),
 		}
+		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
+			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
+			fullPathToOsu := fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
+
+			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
+				//fmt.Println(fullPathToOsu)
+				file, err := os.Open(fullPathToOsu)
+				if err != nil {
+					log.Println(err)
+					defer file.Close()
+				}
+				defer file.Close()
+				scanner := bufio.NewScanner(file)
+				var bgString string
+				for scanner.Scan() {
+					//fmt.Println(scanner.Text())
+					if strings.Contains(scanner.Text(), ".jpg") == true {
+						bg := strings.Split(scanner.Text(), "\"")
+						bgString = (bg[1])
+						break
+						//log.Fatalln(scanner.Text())
+					}
+					if strings.Contains(scanner.Text(), ".png") == true {
+						bg := strings.Split(scanner.Text(), "\"")
+						bgString = (bg[1])
+						//log.Fatalln(scanner.Text())
+						break
+					}
+					if strings.Contains(scanner.Text(), ".JPG") == true {
+						bg := strings.Split(scanner.Text(), "\"")
+						bgString = (bg[1])
+						//log.Fatalln(scanner.Text())
+						break
+					}
+					if strings.Contains(scanner.Text(), ".PNG") == true {
+						bg := strings.Split(scanner.Text(), "\"")
+						bgString = (bg[1])
+						break
+						//log.Fatalln(scanner.Text())
+					} else {
+						bgString = ""
+					}
+				}
+				if err := scanner.Err(); err != nil {
+					log.Println(err)
+				}
+				var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
+				var fullBGCommand string = fmt.Sprintf("ln -sf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
+				fullPathToBgCMD := Cmd((fullBGCommand), true)
+				fullPathToBgCMD2 := cast.ToString(fullPathToBgCMD)
+				fmt.Println(fullPathToBgCMD2)
+
+				//fmt.Println(bgString)
+				fmt.Println(fullPathToBG)
+
+			} else {
+				fmt.Println("osu file was not found")
+			}
+
+		}
 		group := EverythingInMenu2{
 			P: PlayContainerStruct,
 			D: MenuContainerStruct,
@@ -263,60 +326,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(group)
 		if err != nil {
 			fmt.Println("error:", err)
-		}
-		var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
-		fullPathToOsu := fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
-		if strings.HasSuffix(fullPathToOsu, ".osu") == true {
-			//fmt.Println(fullPathToOsu)
-			file, err := os.Open(fullPathToOsu)
-			if err != nil {
-				log.Println(err)
-				defer file.Close()
-			}
-			defer file.Close()
-			scanner := bufio.NewScanner(file)
-			var bgString string
-			for scanner.Scan() {
-				//fmt.Println(scanner.Text())
-				if strings.Contains(scanner.Text(), ".jpg") == true {
-					bg := strings.Split(scanner.Text(), "\"")
-					bgString = (bg[1])
-					break
-					//log.Fatalln(scanner.Text())
-				}
-				if strings.Contains(scanner.Text(), ".png") == true {
-					bg := strings.Split(scanner.Text(), "\"")
-					bgString = (bg[1])
-					//log.Fatalln(scanner.Text())
-					break
-				}
-				if strings.Contains(scanner.Text(), ".JPG") == true {
-					bg := strings.Split(scanner.Text(), "\"")
-					bgString = (bg[1])
-					//log.Fatalln(scanner.Text())
-					break
-				}
-				if strings.Contains(scanner.Text(), ".PNG") == true {
-					bg := strings.Split(scanner.Text(), "\"")
-					bgString = (bg[1])
-					break
-					//log.Fatalln(scanner.Text())
-				} else {
-					bgString = ""
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				log.Println(err)
-			}
-			var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
-			var fullBGCommand string = fmt.Sprintf("ln -sf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
-			fullPathToBgCMD := Cmd((fullBGCommand), true)
-			fullPathToBgCMD2 := cast.ToString(fullPathToBgCMD)
-			fmt.Println(fullPathToBgCMD2)
-
-			//fmt.Println(bgString)
-			fmt.Println(fullPathToBG)
-
 		}
 
 		ws.WriteMessage(1, []byte(b)) //sending data to the client
@@ -697,7 +706,7 @@ func CurrentAppliedMods() int32 {
 		log.Println("CurrentCombo result pointer failure")
 		return -7
 	}
-	val := xorVal2 - xorVal1
+	val := xorVal2 ^ xorVal1
 	return val
 }
 func CurrentCombo() int32 {
