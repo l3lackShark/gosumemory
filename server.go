@@ -27,6 +27,8 @@ var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
 var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
+var playTimeBase uintptr
+var playTime uintptr
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -95,6 +97,32 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 	}
 	return osuBase
 }
+
+func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
+	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04;list;exit'", true)
+	outStr := cast.ToString(x)
+	outStr = strings.Replace(outStr, " ", "", -1)
+
+	input := outStr
+	if input == "" {
+		log.Fatalln("OsuBase addr fail")
+	}
+	output := (input[3:])
+	yosuBase := firstN(output, 8)
+	check := strings.Contains(yosuBase, ",")
+	if check == true {
+		yosuBase = strings.Replace(yosuBase, ",", "", -1)
+	}
+	osuBaseString := "0x" + yosuBase
+	osuBaseUINT32 := cast.ToUint32(osuBaseString)
+	osuBase = uintptr(osuBaseUINT32)
+	//println(CurrentBeatmapFolderString())
+	if osuBase == 0 {
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+	}
+	return osuBase
+}
+
 func OsuplayContainer() uintptr { //in hopes to deprecate this
 	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
 	outStr := cast.ToString(x)
@@ -186,8 +214,11 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	osuBase = OsuBaseAddr()
 	currentBeatmapData = (osuBase - 0xC)
+	playTimeBase = OsuPlayTimeAddr()
 	playContainer = OsuplayContainer()
 	playContainerBase = (playContainer - 0x4)
+	playTime = (playTimeBase + 0x5)
+
 	if err != nil {
 		log.Fatalln("is osu! running? (osu! status offset was not found)")
 	}
@@ -227,6 +258,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapString        string  `json:"bmInfo"`
 			CurrentBeatmapFolderString  string  `json:"bmFolder"`
 			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
+			CurrentPlayTime             int32   `json:"bmCurrentTime"`
 		}
 
 		type EverythingInMenu2 struct { //order sets here
@@ -235,8 +267,15 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		PlayContainerStruct := PlayContainer{
-			CurrentHit300c: CurrentHit300c(), CurrentHit100c: CurrentHit100c(), CurrentHit50c: CurrentHit50c(), CurrentHitMiss: CurrentHitMiss(),
-			CurrentScore: CurrentScore(), CurrentAccuracy: CurrentAccuracy(), CurrentCombo: CurrentCombo(), CurrentGameMode: CurrentGameMode(), CurrentAppliedMods: CurrentAppliedMods(),
+			CurrentHit300c:     CurrentHit300c(),
+			CurrentHit100c:     CurrentHit100c(),
+			CurrentHit50c:      CurrentHit50c(),
+			CurrentHitMiss:     CurrentHitMiss(),
+			CurrentScore:       CurrentScore(),
+			CurrentAccuracy:    CurrentAccuracy(),
+			CurrentCombo:       CurrentCombo(),
+			CurrentGameMode:    CurrentGameMode(),
+			CurrentAppliedMods: CurrentAppliedMods(),
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -258,6 +297,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapOD: CurrentBeatmapOD(),
 			CurrentBeatmapCS: CurrentBeatmapCS(),
 			CurrentBeatmapHP: CurrentBeatmapHP(),
+			CurrentPlayTime:  CurrentPlayTime(),
 		}
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
@@ -306,7 +346,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					log.Println(err)
 				}
 				var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
-				var fullBGCommand string = fmt.Sprintf("ln -sf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
+				var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
 				fullPathToBgCMD := Cmd((fullBGCommand), true)
 				fullPathToBgCMD2 := cast.ToString(fullPathToBgCMD)
 				fmt.Println(fullPathToBgCMD2)
@@ -971,4 +1011,18 @@ func ValidCurrentBeatmapOsuFileString() string {
 	}
 
 	return strParts[0]
+}
+func CurrentPlayTime() int32 {
+	playTimeFirstLevel, err := proc.ReadUint32(playTime)
+	if err != nil {
+		log.Println("playTime Base level failure")
+		return 0
+	}
+	playTimeValue, err := proc.ReadUint32(uintptr(playTimeFirstLevel))
+	if err != nil {
+		log.Println("playTime Result level failure")
+		return 0
+	}
+
+	return cast.ToInt32(playTimeValue)
 }
