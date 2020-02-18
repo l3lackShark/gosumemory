@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	"unicode/utf16"
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
@@ -26,9 +25,14 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
+var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
 var playTimeBase uintptr
 var playTime uintptr
+var currentBeatmapDataBase uint32
+var currentBeatmapDataFirtLevel uint32
+var playContainerBaseAddr uint32
+var playContainerFirstlevel uint32
+var playContainer38 uint32
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -236,6 +240,32 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		}
 		osuStatus = osuStatusValue
+		//init base stuff
+		currentBeatmapDataBase, err = proc.ReadUint32(currentBeatmapData)
+		if err != nil {
+			log.Println("currentBeatmapDataBase Base level failure")
+		}
+		currentBeatmapDataFirtLevel, err = proc.ReadUint32(uintptr(currentBeatmapDataBase))
+		if err != nil {
+			log.Println("currentBeatmapDataFirtLevel First level pointer failure")
+		}
+
+		if osuStatus == 2 {
+			playContainerBaseAddr, err = proc.ReadUint32(playContainerBase)
+			if err != nil {
+				log.Println("playContainerBaseAddr Base level failure")
+			}
+			playContainerFirstlevel, err = proc.ReadUint32(uintptr(playContainerBaseAddr))
+			if err != nil {
+				log.Println("playContainerFirstlevel pointer failure")
+			}
+			playContainer38, err = proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x38)
+			if err != nil {
+				log.Println("playContainer38 pointer failure")
+
+			}
+		}
+
 		type PlayContainer struct {
 			CurrentHit300c     int16   `json:"300"`
 			CurrentHit100c     int16   `json:"100"`
@@ -399,21 +429,9 @@ func firstN(s string, n int) string {
 	return s
 }
 
-func CurrentBeatmapID() uint32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
+func CurrentBeatmapID() uint32 { //currentbeatmapdata
 
-	beatmapIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("CurrentBeatmapID Base level failure")
-		return 0
-	}
-	beatmapIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapIDBase))
-	if err != nil {
-		log.Println("CurrentBeatmapID First level pointer failure")
-		return 0
-	}
-	currentBeatmapID, err := proc.ReadUint32(uintptr(beatmapIDFirstLevel + 0xC4))
+	currentBeatmapID, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0xC4))
 	if err != nil {
 		log.Println("CurrentBeatmapID result pointer failure")
 		return 0
@@ -421,64 +439,15 @@ func CurrentBeatmapID() uint32 {
 	return currentBeatmapID
 }
 func CurrentBeatmapSetID() uint32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapSetIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("CurrentBeatmapSetID Base level failure")
-		return 0
-	}
-	beatmapSetIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapSetIDBase))
-	if err != nil {
-		log.Println("CurrentBeatmapSetID First level pointer failure")
-		return 0
-	}
-	currentSetBeatmapID, err := proc.ReadUint32(uintptr(beatmapSetIDFirstLevel + 0xC8))
+	currentSetBeatmapID, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0xC8))
 	if err != nil {
 		log.Println("CurrentBeatmapSetID result pointer failure")
 		return 0
 	}
 	return currentSetBeatmapID
 }
-func utf16toString(b []uint8) string {
-	if len(b)&1 != 0 {
-		return ""
-	}
-
-	// Check BOM
-	var bom int
-	if len(b) >= 2 {
-		switch n := int(b[0])<<8 | int(b[1]); n {
-		case 0xfffe:
-			bom = 1
-			fallthrough
-		case 0xfeff:
-			b = b[2:]
-		}
-	}
-
-	w := make([]uint16, len(b)/2)
-	for i := range w {
-		w[i] = uint16(b[2*i+bom&1])<<8 | uint16(b[2*i+(bom+1)&1])
-	}
-	return string(utf16.Decode(w))
-}
 func CurrentBeatmapString() string {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapStringBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("BeatMapString Base level failure")
-		return "-2"
-	}
-	beatmapStringFirstLevel, err := proc.ReadUint32(uintptr(beatmapStringBase))
-	if err != nil {
-		log.Println("BeatMapString First level pointer failure")
-		return "-3"
-	}
-	beatmapStringSecondLevel, err := proc.ReadUint32(uintptr(beatmapStringFirstLevel + 0x7C))
+	beatmapStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x7C))
 	if err != nil {
 		log.Println("BeatMapString Second level pointer failure")
 		return "-4"
@@ -500,20 +469,8 @@ func CurrentBeatmapString() string {
 }
 
 func CurrentBeatmapFolderString() string {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
 
-	beatmapFolderStringBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("BeatMapFolderString Base level failure")
-		return "-2"
-	}
-	beatmapFolderStringFirstLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringBase))
-	if err != nil {
-		log.Println("BeatMapFolderString First level pointer failure")
-		return "-3"
-	}
-	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringFirstLevel + 0x74))
+	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x74))
 	if err != nil {
 		log.Println("BeatMapFolderString Second level pointer failure")
 		return "-4"
@@ -535,20 +492,8 @@ func CurrentBeatmapFolderString() string {
 	return beatmapValidString
 }
 func CurrentBeatmapOsuFileString() string {
-	proc := proc
-	//currentBeatmapData := currentBeatmapData
 
-	beatmapFolderStringBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("BeatMapOsuFileString Base level failure")
-		return "-2"
-	}
-	beatmapFolderStringFirstLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringBase))
-	if err != nil {
-		log.Println("BeatMapOsuFileString First level pointer failure")
-		return "-3"
-	}
-	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringFirstLevel + 0x8C))
+	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x8C))
 	if err != nil {
 		log.Println("BeatMapOsuFileString Second level pointer failure")
 		return "-4"
@@ -560,7 +505,7 @@ func CurrentBeatmapOsuFileString() string {
 		return "-6"
 	}
 
-	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2)) // fix repeating
+	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2))
 	if err != nil {
 		log.Println("BeatMapString Third level pointer failure")
 		return "-5"
@@ -569,75 +514,8 @@ func CurrentBeatmapOsuFileString() string {
 	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
 	return beatmapValidString
 }
-func CurrentBeatmapFolderBase64() []byte {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapFolderStringBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("BeatMapFolderString Base level failure")
-		return []byte("-1")
-	}
-	beatmapFolderStringFirstLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringBase))
-	if err != nil {
-		log.Println("BeatMapFolderString First level pointer failure")
-		return []byte("-2")
-	}
-	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringFirstLevel + 0x74))
-	if err != nil {
-		log.Println("BeatMapFolderString Second level pointer failure")
-		return []byte("-3")
-	}
-	beatmapFolderStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), 500) // fix repeating
-	if err != nil {
-		log.Println("BeatMapFolderString result level pointer failure")
-		return []byte("-5")
-	}
-	//beatmapString := cast.ToString(beatmapFolderStringResult)
-	return beatmapFolderStringResult
-}
-func CurrentBeatmapOsuFileBase64() []byte {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapFolderStringBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("BeatMapOsuFileString Base level failure")
-		return []byte("-2")
-	}
-	beatmapFolderStringFirstLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringBase))
-	if err != nil {
-		log.Println("BeatMapOsuFileString First level pointer failure")
-		return []byte("-3")
-	}
-	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(beatmapFolderStringFirstLevel + 0x8C))
-	if err != nil {
-		log.Println("BeatMapOsuFileString Second level pointer failure")
-		return []byte("-4")
-	}
-	beatmapFolderStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), 500) // fix repeating
-	if err != nil {
-		log.Println("BeatMapOsuFileString result level pointer failure")
-		return []byte("-5")
-	}
-	//beatmapString := cast.ToString(beatmapFolderStringResult)
-	return beatmapFolderStringResult
-}
 func CurrentBeatmapAR() float32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapSetIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("AR Base level failure")
-		return -2
-	}
-	beatmapSetIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapSetIDBase))
-	if err != nil {
-		log.Println("AR First level pointer failure")
-		return -3
-	}
-	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(beatmapSetIDFirstLevel + 0x2C))
+	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x2C))
 	if err != nil {
 		log.Println("AR result level pointer failure")
 		return -5
@@ -645,20 +523,7 @@ func CurrentBeatmapAR() float32 {
 	return currentSetBeatmapID
 }
 func CurrentBeatmapCS() float32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapSetIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("CS Base level failure")
-		return -2
-	}
-	beatmapSetIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapSetIDBase))
-	if err != nil {
-		log.Println("CS First level pointer failure")
-		return -3
-	}
-	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(beatmapSetIDFirstLevel + 0x30))
+	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x30))
 	if err != nil {
 		log.Println("CS result level pointer failure")
 		return -4
@@ -666,20 +531,7 @@ func CurrentBeatmapCS() float32 {
 	return currentSetBeatmapID
 }
 func CurrentBeatmapHP() float32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapSetIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("HP Base level failure")
-		return -2
-	}
-	beatmapSetIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapSetIDBase))
-	if err != nil {
-		log.Println("HP First level pointer failure")
-		return -3
-	}
-	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(beatmapSetIDFirstLevel + 0x34))
+	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x34))
 	if err != nil {
 		log.Println("HP result level pointer failure")
 		return -5
@@ -687,20 +539,7 @@ func CurrentBeatmapHP() float32 {
 	return currentSetBeatmapID
 }
 func CurrentBeatmapOD() float32 {
-	proc := proc
-	currentBeatmapData := currentBeatmapData
-
-	beatmapSetIDBase, err := proc.ReadUint32(currentBeatmapData)
-	if err != nil {
-		log.Println("OD Base level failure")
-		return -2
-	}
-	beatmapSetIDFirstLevel, err := proc.ReadUint32(uintptr(beatmapSetIDBase))
-	if err != nil {
-		log.Println("OD first level pointer failure")
-		return -3
-	}
-	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(beatmapSetIDFirstLevel + 0x38))
+	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x38))
 	if err != nil {
 		log.Println("OD result level pointer failure")
 		return -5
@@ -710,28 +549,10 @@ func CurrentBeatmapOD() float32 {
 
 // ------------------- PlayContainer
 func CurrentAppliedMods() int32 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentCombo Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentCombo First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentCombo Second level pointer failure")
-		return -4
-
-	}
-	currentCombo, err := proc.ReadInt32(uintptr(comboSecondLevel + 0x1C))
+	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x1C))
 	if err != nil {
 		log.Println("CurrentCombo result pointer failure")
 		return -5
@@ -750,28 +571,11 @@ func CurrentAppliedMods() int32 {
 	return val
 }
 func CurrentCombo() int32 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentCombo Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentCombo First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentCombo Second level pointer failure")
-		return -4
 
-	}
-	currentCombo, err := proc.ReadInt32(uintptr(comboSecondLevel + 0x90))
+	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x90))
 	if err != nil {
 		log.Println("CurrentCombo result pointer failure")
 		return -5
@@ -779,27 +583,11 @@ func CurrentCombo() int32 {
 	return currentCombo
 }
 func CurrentHit100c() int16 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentHit100c Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentHit100c First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentHit100c Second level pointer failure")
-		return -4
-	}
-	currentCombo, err := proc.ReadInt16(uintptr(comboSecondLevel + 0x84)) //2 bytes
+
+	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x84)) //2 bytes
 	if err != nil {
 		log.Println("CurrentHit100c result pointer failure")
 		return -5
@@ -807,27 +595,10 @@ func CurrentHit100c() int16 {
 	return currentCombo
 }
 func CurrentHit300c() int16 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentHit300c Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentHit300c First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentHit300c Second level pointer failure")
-		return -4
-	}
-	current300, err := proc.ReadInt16(uintptr(comboSecondLevel + 0x86)) //2 bytes
+	current300, err := proc.ReadInt16(uintptr(playContainer38 + 0x86)) //2 bytes
 	if err != nil {
 		log.Println("CurrentHit300c result pointer failure")
 		return -5
@@ -837,28 +608,11 @@ func CurrentHit300c() int16 {
 	return current300
 }
 func CurrentHit50c() int16 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
 
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentHit50c Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentHit50c First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentHit50c Second level pointer failure")
-		return -4
-	}
-	currentCombo, err := proc.ReadInt16(uintptr(comboSecondLevel + 0x88)) //2 bytes
+	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x88)) //2 bytes
 	if err != nil {
 		log.Println("CurrentHitMiss result pointer failure")
 		return -5
@@ -866,28 +620,11 @@ func CurrentHit50c() int16 {
 	return currentCombo
 }
 func CurrentHitMiss() int16 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
 
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentHitMiss Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentHitMiss First level pointer failure")
-		return -2
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentHitMiss Second level pointer failure")
-		return -2
-	}
-	currentCombo, err := proc.ReadInt16(uintptr(comboSecondLevel + 0x8E)) //2 bytes
+	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x8E)) //2 bytes
 	if err != nil {
 		log.Println("CurrentHitMiss result pointer failure")
 		return -5
@@ -895,28 +632,11 @@ func CurrentHitMiss() int16 {
 	return currentCombo
 }
 func CurrentScore() int32 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
 
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("CurrentScore Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("CurrentScore First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("CurrentScore Second level pointer failure")
-		return -4
-	}
-	currentCombo, err := proc.ReadInt32(uintptr(comboSecondLevel + 0x74))
+	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x74))
 	if err != nil {
 		log.Println("CurrentScore result pointer failure")
 		return -5
@@ -924,28 +644,11 @@ func CurrentScore() int32 {
 	return currentCombo
 }
 func CurrentGameMode() int32 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
 
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("GameMode Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("GameMode First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x38)
-	if err != nil {
-		log.Println("GameMode Second level pointer failure")
-		return -4
-	}
-	currentCombo, err := proc.ReadInt32(uintptr(comboSecondLevel + 0x64))
+	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x64))
 	if err != nil {
 		log.Println("GameMode result pointer failure")
 		return -5
@@ -953,23 +656,11 @@ func CurrentGameMode() int32 {
 	return currentCombo
 }
 func CurrentAccuracy() float64 {
-	proc := proc
-	playContainer := playContainerBase
 	if osuStatus != 2 {
 		return -1
 	}
 
-	comboBase, err := proc.ReadUint32(playContainer)
-	if err != nil {
-		log.Println("Accuracy Base level failure")
-		return -2
-	}
-	comboFirstLevel, err := proc.ReadUint32(uintptr(comboBase))
-	if err != nil {
-		log.Println("Accuracy First level pointer failure")
-		return -3
-	}
-	comboSecondLevel, err := proc.ReadUint32(uintptr(comboFirstLevel) + 0x48)
+	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x48)
 	if err != nil {
 		log.Println("Accuracy Second level pointer failure")
 		return -4
