@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
@@ -263,7 +264,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
+		var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
 		fullPathToOsu := fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
 		if strings.HasSuffix(fullPathToOsu, ".osu") == true {
 			//fmt.Println(fullPathToOsu)
@@ -391,6 +392,29 @@ func CurrentBeatmapSetID() uint32 {
 	}
 	return currentSetBeatmapID
 }
+func utf16toString(b []uint8) string {
+	if len(b)&1 != 0 {
+		return ""
+	}
+
+	// Check BOM
+	var bom int
+	if len(b) >= 2 {
+		switch n := int(b[0])<<8 | int(b[1]); n {
+		case 0xfffe:
+			bom = 1
+			fallthrough
+		case 0xfeff:
+			b = b[2:]
+		}
+	}
+
+	w := make([]uint16, len(b)/2)
+	for i := range w {
+		w[i] = uint16(b[2*i+bom&1])<<8 | uint16(b[2*i+(bom+1)&1])
+	}
+	return string(utf16.Decode(w))
+}
 func CurrentBeatmapString() string {
 	proc := proc
 	currentBeatmapData := currentBeatmapData
@@ -410,13 +434,20 @@ func CurrentBeatmapString() string {
 		log.Println("BeatMapString Second level pointer failure")
 		return "-4"
 	}
-	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapStringSecondLevel+0x8), 500) // fix repeating
+	beatmapStringSize, err := proc.ReadUint32(uintptr(beatmapStringSecondLevel + 0x4))
+	if err != nil {
+		log.Println("BeatMapString Third level pointer failure")
+		return "-6"
+	}
+
+	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2)) // fix repeating
 	if err != nil {
 		log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := cast.ToString(beatmapStringResult)
-	return beatmapString
+	beatmapString := string(beatmapStringResult)
+	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
+	return beatmapValidString
 }
 
 func CurrentBeatmapFolderString() string {
@@ -438,13 +469,21 @@ func CurrentBeatmapFolderString() string {
 		log.Println("BeatMapFolderString Second level pointer failure")
 		return "-4"
 	}
-	beatmapFolderStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), 500) // fix repeating
+
+	beatmapFolderStringSize, err := proc.ReadUint32(uintptr(beatmapFolderStringSecondLevel + 0x4))
 	if err != nil {
-		log.Println("BeatMapFolderString result level pointer failure")
+		log.Println("BeatMapFolderStringSize Third level pointer failure")
+		return "-6"
+	}
+
+	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapFolderStringSize*2)) // fix repeating
+	if err != nil {
+		log.Println("BeatMapFolderString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := string(beatmapFolderStringResult)
-	return beatmapString
+	beatmapString := string(beatmapStringResult)
+	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
+	return beatmapValidString
 }
 func CurrentBeatmapOsuFileString() string {
 	proc := proc
@@ -465,13 +504,21 @@ func CurrentBeatmapOsuFileString() string {
 		log.Println("BeatMapOsuFileString Second level pointer failure")
 		return "-4"
 	}
-	beatmapFolderStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), 500) // fix repeating
+
+	beatmapStringSize, err := proc.ReadUint32(uintptr(beatmapFolderStringSecondLevel + 0x4))
 	if err != nil {
-		log.Println("BeatMapOsuFileString result level pointer failure")
+		log.Println("BeatMapString Third level pointer failure")
+		return "-6"
+	}
+
+	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2)) // fix repeating
+	if err != nil {
+		log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := cast.ToString(beatmapFolderStringResult)
-	return beatmapString
+	beatmapString := string(beatmapStringResult)
+	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
+	return beatmapValidString
 }
 func CurrentBeatmapFolderBase64() []byte {
 	proc := proc
@@ -886,81 +933,11 @@ func CurrentAccuracy() float64 {
 	return currentCombo
 }
 
-//monkaW section
+//not so monkaW section
 func ValidCurrentBeatmapFolderString() string {
 	validCurrentBeatmapFolderString := strings.ToValidUTF8(CurrentBeatmapFolderString(), "")
 	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
 	strParts := strings.Split(t, "\u0018")
-	//fmt.Println(strParts[0])
-
-	if strings.Contains(strParts[0], "@Ou") == true {
-		strParts = strings.Split(strParts[0], "@Ou")
-
-	}
-	if strings.Contains(strParts[0], " \u000f") == true {
-		strParts = strings.Split(strParts[0], " \u000f")
-
-	}
-	//if strings.Contains(strParts[0], "?") == true {
-	//		strParts = strings.Split(strParts[0], "?")
-	//	fmt.Println("?")
-
-	//	}
-	if strings.Contains(strParts[0], "W\u000e") == true {
-		//fmt.Println("da")
-		strParts = strings.Split(strParts[0], "W\u000e")
-
-	}
-	if strings.Contains(strParts[0], "\u0001") == true {
-		strParts = strings.Split(strParts[0], "\u0001")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "P\u000f") == true {
-		strParts = strings.Split(strParts[0], "P\u000f")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "!\u000f") == true {
-		strParts = strings.Split(strParts[0], "!\u000f")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "\u001d") == true {
-		strParts = strings.Split(strParts[0], "\u001d")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "\u0019") == true {
-		strParts = strings.Split(strParts[0], "\u0019")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "-\u000e") == true {
-		strParts = strings.Split(strParts[0], "-\u000e")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "$d\u0011") == true {
-		strParts = strings.Split(strParts[0], "$d\u0011")
-
-	}
-	if strings.Contains(strParts[0], "#\u0008") == true {
-		strParts = strings.Split(strParts[0], "#\u0008")
-
-	}
-	if strings.Contains(strParts[0], "!\u0006") == true {
-		strParts = strings.Split(strParts[0], "!\u0006")
-
-	}
-	if strings.Contains(strParts[0], "`") == true {
-		strParts = strings.Split(strParts[0], "`")
-
-	}
-	if strings.Contains(strParts[0], "t'\u0008") == true {
-		strParts = strings.Split(strParts[0], "t'\u0008")
-
-	}
 
 	return strParts[0]
 }
@@ -968,76 +945,6 @@ func ValidCurrentBeatmapString() string {
 	validCurrentBeatmapFolderString := strings.ToValidUTF8(CurrentBeatmapString(), "")
 	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
 	strParts := strings.Split(t, "\u0018")
-	//fmt.Println(strParts[0])
-
-	if strings.Contains(strParts[0], "@Ou") == true {
-		strParts = strings.Split(strParts[0], "@Ou")
-
-	}
-	if strings.Contains(strParts[0], " \u000f") == true {
-		strParts = strings.Split(strParts[0], " \u000f")
-
-	}
-	//if strings.Contains(strParts[0], "?") == true {
-	//		strParts = strings.Split(strParts[0], "?")
-	//	fmt.Println("?")
-
-	//	}
-	if strings.Contains(strParts[0], "W\u000e") == true {
-		//fmt.Println("da")
-		strParts = strings.Split(strParts[0], "W\u000e")
-
-	}
-	if strings.Contains(strParts[0], "\u0001") == true {
-		strParts = strings.Split(strParts[0], "\u0001")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "P\u000f") == true {
-		strParts = strings.Split(strParts[0], "P\u000f")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "!\u000f") == true {
-		strParts = strings.Split(strParts[0], "!\u000f")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "\u001d") == true {
-		strParts = strings.Split(strParts[0], "\u001d")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "\u0019") == true {
-		strParts = strings.Split(strParts[0], "\u0019")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "-\u000e") == true {
-		strParts = strings.Split(strParts[0], "\u000e")
-		//fmt.Println("\u0001 true")
-
-	}
-	if strings.Contains(strParts[0], "$d\u0011") == true {
-		strParts = strings.Split(strParts[0], "$d\u0011")
-
-	}
-	if strings.Contains(strParts[0], "#\u0008") == true {
-		strParts = strings.Split(strParts[0], "#\u0008")
-
-	}
-	if strings.Contains(strParts[0], "!\u0006") == true {
-		strParts = strings.Split(strParts[0], "!\u0006")
-
-	}
-	if strings.Contains(strParts[0], "`") == true {
-		strParts = strings.Split(strParts[0], "`")
-
-	}
-	if strings.Contains(strParts[0], "t'\u0008") == true {
-		strParts = strings.Split(strParts[0], "t'\u0008")
-
-	}
 
 	return strParts[0]
 }
@@ -1046,68 +953,6 @@ func ValidCurrentBeatmapOsuFileString() string {
 	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
 	strParts := strings.Split(t, "\u0018")
 
-	// if strings.Contains(strParts[0], "@Ou") == true {
-	// 	strParts = strings.Split(strParts[0], "@Ou")
-
-	// }
-	// if strings.Contains(strParts[0], " \u000f") == true {
-	// 	strParts = strings.Split(strParts[0], " \u000f")
-
-	// }
-	// if strings.Contains(strParts[0], "\u000f") == true {
-	// 	strParts = strings.Split(strParts[0], "\u000f")
-
-	// }
-	// if strings.Contains(strParts[0], "W\u000e") == true {
-	// 	strParts = strings.Split(strParts[0], "W\u000e")
-
-	// }
-	// if strings.Contains(strParts[0], "\u0001") == true {
-	// 	strParts = strings.Split(strParts[0], "\u0001")
-	// }
-	// if strings.Contains(strParts[0], "P\u000f") == true {
-	// 	strParts = strings.Split(strParts[0], "P\u000f")
-
-	// }
-	// if strings.Contains(strParts[0], "!\u000f") == true {
-	// 	strParts = strings.Split(strParts[0], "!\u000f")
-
-	// }
-	// if strings.Contains(strParts[0], "\u001c") == true {
-	// 	strParts = strings.Split(strParts[0], "\u001c")
-	// }
-	// if strings.Contains(strParts[0], "\u001d") == true {
-	// 	strParts = strings.Split(strParts[0], "\u001d")
-
-	// }
-	// if strings.Contains(strParts[0], "\u0019") == true {
-	// 	strParts = strings.Split(strParts[0], "\u0019")
-
-	// }
-	// if strings.Contains(strParts[0], "-\u000e") == true {
-	// 	strParts = strings.Split(strParts[0], "-\u000e")
-
-	// }
-	// if strings.Contains(strParts[0], "$d\u0011") == true {
-	// 	strParts = strings.Split(strParts[0], "$d\u0011")
-
-	// }
-	// if strings.Contains(strParts[0], "#\u0008") == true {
-	// 	strParts = strings.Split(strParts[0], "#\u0008")
-
-	// }
-	// if strings.Contains(strParts[0], "!\u0006") == true {
-	// 	strParts = strings.Split(strParts[0], "!\u0006")
-
-	// }
-	// if strings.Contains(strParts[0], "`") == true {
-	// 	strParts = strings.Split(strParts[0], "`")
-
-	// }
-	// if strings.Contains(strParts[0], "t'\u0008") == true {
-	// 	strParts = strings.Split(strParts[0], "t'\u0008")
-
-	// }
 	if strings.Contains(strParts[0], ".osu") == true {
 		strParts = strings.Split(strParts[0], ".osu")
 		strPartsString := cast.ToString(strParts[0])
