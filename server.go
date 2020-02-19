@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -35,21 +36,25 @@ var playContainerBaseAddr uint32
 var playContainerFirstlevel uint32
 var playContainer38 uint32
 var fullPathToOsu string
+var osuFileStdIN string
 var minBPM float64
 var maxBPM float64
+var ourTime []int
+var lastObjectInt int
+var lastObject string
 
 func Cmd(cmd string, shell bool) []byte {
 
 	if shell {
 		out, err := exec.Command("bash", "-c", cmd).Output()
 		if err != nil {
-			println("some error found")
+			println("some error found", err)
 		}
 		return out
 	} else {
 		out, err := exec.Command(cmd).Output()
 		if err != nil {
-			println("some error found")
+			println("some error found2", err)
 		}
 		return out
 
@@ -332,12 +337,52 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapCS:            CurrentBeatmapCS(),
 			CurrentBeatmapHP:            CurrentBeatmapHP(),
 			CurrentPlayTime:             CurrentPlayTime(),
-			MinBPM:                      minBPM,
-			MaxBPM:                      maxBPM,
+
+			MinBPM: minBPM,
+			MaxBPM: maxBPM,
 		}
+		if osuStatusValue == 2 {
+
+			//fmt.Println(ourTime[0])
+			for _, hitObjectTime := range ourTime {
+
+				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime {
+
+					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
+					lastObject = cast.ToString(lastObjectInt)
+					fmt.Println(PP())
+					//fmt.Println(hitObjectTime)
+					break
+
+				}
+			}
+
+		}
+
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
+			ourTime = nil
+
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
+
+			j, err := ioutil.ReadFile(fullPathToOsu)
+			if err != nil {
+				fmt.Println("osu file was not found2")
+			}
+			osuFileStdIN = string(j)
+			if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
+				splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
+				newline := strings.Split(splitted, "\n")
+
+				for i := 1; i < len(newline)-1; i++ {
+					if len(newline[i]) > 0 {
+						elements := strings.Split(newline[i], ",")[2]
+						elementsInt := cast.ToInt(elements)
+						ourTime = append(ourTime, elementsInt)
+
+					}
+				}
+			}
 
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
 				//fmt.Println(fullPathToOsu)
@@ -350,6 +395,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				scanner := bufio.NewScanner(file)
 				var bgString string
 				for scanner.Scan() {
+
 					//fmt.Println(scanner.Text())
 					if strings.Contains(scanner.Text(), ".jpg") == true {
 						bg := strings.Split(scanner.Text(), "\"")
@@ -387,7 +433,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				minBPM = CurrentBeatmapMinBPM()
 				maxBPM = CurrentBeatmapMaxBPM()
-
+				//fmt.Println(OsuHitobjects())
 			} else {
 				fmt.Println("osu file was not found")
 			}
@@ -736,4 +782,25 @@ func CurrentBeatmapMaxBPM() float64 {
 	}
 	result := osuBeatmap.BpmMax
 	return result
+}
+func CurrentBeatmapIntro() int32 {
+	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
+	if err != nil {
+		fmt.Println("CurrentBeatmapMaxBPM error")
+	}
+	result := cast.ToInt32(osuBeatmap.PreviewTime)
+	return result
+}
+func PP() string {
+	//fmt.Println(stdin)
+	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject, true)
+	return cast.ToString(calc)
+}
+func SliceIndex(limit int, predicate func(i int) bool) int {
+	for i := 0; i < limit; i++ {
+		if predicate(i) {
+			return i
+		}
+	}
+	return -1
 }
