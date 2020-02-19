@@ -13,6 +13,7 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
+	parser "github.com/natsukagami/go-osu-parser"
 	"github.com/spf13/cast"
 )
 
@@ -33,6 +34,9 @@ var currentBeatmapDataFirtLevel uint32
 var playContainerBaseAddr uint32
 var playContainerFirstlevel uint32
 var playContainer38 uint32
+var fullPathToOsu string
+var minBPM float64
+var maxBPM float64
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -73,9 +77,9 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 	if osuBase == 0 {
 		log.Fatalln("could not find osuStatusAddr, is osu! running?")
 	}
-	fmt.Println(osuBase)
 	//println(CurrentBeatmapFolderString())
 	return osuBase
+
 }
 func OsuBaseAddr() uintptr { //in hopes to deprecate this
 	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
@@ -229,6 +233,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	var tempCurrentBeatmapOsu string
 
 	for {
+
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		for procerr != nil {
 			log.Println("is osu! running? (osu! process was not found, terminating...)")
@@ -249,7 +254,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("currentBeatmapDataFirtLevel First level pointer failure")
 		}
-
 		if osuStatus == 2 {
 			playContainerBaseAddr, err = proc.ReadUint32(playContainerBase)
 			if err != nil {
@@ -289,6 +293,8 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapFolderString  string  `json:"bmFolder"`
 			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
 			CurrentPlayTime             int32   `json:"bmCurrentTime"`
+			MinBPM                      float64 `json:"bmMinBPM"`
+			MaxBPM                      float64 `json:"bmMaxBPM"`
 		}
 
 		type EverythingInMenu2 struct { //order sets here
@@ -319,25 +325,25 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapID:            CurrentBeatmapID(),
 			CurrentBeatmapSetID:         CurrentBeatmapSetID(),
 			CurrentBeatmapString:        ValidCurrentBeatmapString(),
-			CurrentBeatmapFolderString:  ValidCurrentBeatmapFolderString(),  //TODO: fix strings  //kind of fixed via monkaW functions
-			CurrentBeatmapOsuFileString: ValidCurrentBeatmapOsuFileString(), //TODO: fix strings  //kind of fixed via monkaW functions
-			//CurrentBeatmapOsuFileString: runesStr,
-
-			CurrentBeatmapAR: CurrentBeatmapAR(),
-			CurrentBeatmapOD: CurrentBeatmapOD(),
-			CurrentBeatmapCS: CurrentBeatmapCS(),
-			CurrentBeatmapHP: CurrentBeatmapHP(),
-			CurrentPlayTime:  CurrentPlayTime(),
+			CurrentBeatmapFolderString:  ValidCurrentBeatmapFolderString(),
+			CurrentBeatmapOsuFileString: ValidCurrentBeatmapOsuFileString(),
+			CurrentBeatmapAR:            CurrentBeatmapAR(),
+			CurrentBeatmapOD:            CurrentBeatmapOD(),
+			CurrentBeatmapCS:            CurrentBeatmapCS(),
+			CurrentBeatmapHP:            CurrentBeatmapHP(),
+			CurrentPlayTime:             CurrentPlayTime(),
+			MinBPM:                      minBPM,
+			MaxBPM:                      maxBPM,
 		}
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
-			fullPathToOsu := fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
+			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
 
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
 				//fmt.Println(fullPathToOsu)
 				file, err := os.Open(fullPathToOsu)
 				if err != nil {
-					log.Println(err)
+					log.Println(err, "in error")
 					defer file.Close()
 				}
 				defer file.Close()
@@ -377,12 +383,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				}
 				var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
 				var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
-				fullPathToBgCMD := Cmd((fullBGCommand), true)
-				fullPathToBgCMD2 := cast.ToString(fullPathToBgCMD)
-				fmt.Println(fullPathToBgCMD2)
+				Cmd((fullBGCommand), true)
 
-				//fmt.Println(bgString)
-				fmt.Println(fullPathToBG)
+				minBPM = CurrentBeatmapMinBPM()
+				maxBPM = CurrentBeatmapMaxBPM()
 
 			} else {
 				fmt.Println("osu file was not found")
@@ -716,4 +720,20 @@ func CurrentPlayTime() int32 {
 	}
 
 	return cast.ToInt32(playTimeValue)
+}
+func CurrentBeatmapMinBPM() float64 {
+	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
+	if err != nil {
+		fmt.Println("CurrentBeatmapMinBPM error")
+	}
+	result := osuBeatmap.BpmMin
+	return result
+}
+func CurrentBeatmapMaxBPM() float64 {
+	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
+	if err != nil {
+		fmt.Println("CurrentBeatmapMaxBPM error")
+	}
+	result := osuBeatmap.BpmMax
+	return result
 }
