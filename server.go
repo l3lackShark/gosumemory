@@ -358,15 +358,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
 					lastObject = cast.ToString(lastObjectInt)
-
 					ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
-					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
 					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
+					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
+					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
 					fmt.Println(PP())
-
 					break
 
 				}
@@ -442,9 +440,11 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				if err := scanner.Err(); err != nil {
 					log.Println(err)
 				}
-				var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
-				var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
-				Cmd((fullBGCommand), true)
+				if bgString != "" {
+					var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
+					var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
+					Cmd((fullBGCommand), true)
+				}
 
 				minBPM = CurrentBeatmapMinBPM()
 				maxBPM = CurrentBeatmapMaxBPM()
