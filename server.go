@@ -42,6 +42,11 @@ var maxBPM float64
 var ourTime []int
 var lastObjectInt int
 var lastObject string
+var ppAcc string
+var ppCombo string
+var pp100 string
+var pp50 string
+var ppMiss string
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -222,6 +227,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	}
 	fmt.Println("it seems that the client is in song select, you are good to go!")
+	time.Sleep(1 * time.Second)
 
 	log.Println("Client Connected")
 
@@ -285,6 +291,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentCombo       int32   `json:"combo"`
 			CurrentGameMode    int32   `json:"gameMode"`
 			CurrentAppliedMods int32   `json:"appliedMods"`
+			CurrentMaxCombo    int32   `json:"maxCombo"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -317,6 +324,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentCombo:       CurrentCombo(),
 			CurrentGameMode:    CurrentGameMode(),
 			CurrentAppliedMods: CurrentAppliedMods(),
+			CurrentMaxCombo:    CurrentMaxCombo(),
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -343,15 +351,19 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 		if osuStatusValue == 2 {
 
-			//fmt.Println(ourTime[0])
 			for _, hitObjectTime := range ourTime {
 
 				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime {
 
 					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
 					lastObject = cast.ToString(lastObjectInt)
+
+					ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
+					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
+					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
+					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
+					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
 					fmt.Println(PP())
-					//fmt.Println(hitObjectTime)
 					break
 
 				}
@@ -632,6 +644,18 @@ func CurrentCombo() int32 {
 	}
 	return currentCombo
 }
+func CurrentMaxCombo() int32 {
+	if osuStatus != 2 {
+		return -1
+	}
+
+	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x68))
+	if err != nil {
+		log.Println("CurrentCombo result pointer failure")
+		return -5
+	}
+	return currentCombo
+}
 func CurrentHit100c() int16 {
 	if osuStatus != 2 {
 		return -1
@@ -783,17 +807,9 @@ func CurrentBeatmapMaxBPM() float64 {
 	result := osuBeatmap.BpmMax
 	return result
 }
-func CurrentBeatmapIntro() int32 {
-	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
-	if err != nil {
-		fmt.Println("CurrentBeatmapMaxBPM error")
-	}
-	result := cast.ToInt32(osuBeatmap.PreviewTime)
-	return result
-}
 func PP() string {
 	//fmt.Println(stdin)
-	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject, true)
+	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50", true)
 	return cast.ToString(calc)
 }
 func SliceIndex(limit int, predicate func(i int) bool) int {
