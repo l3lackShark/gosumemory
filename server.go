@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -27,7 +28,9 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
+
+//var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
+var baseDir string
 var playTimeBase uintptr
 var playTime uintptr
 var currentBeatmapDataBase uint32
@@ -483,6 +486,9 @@ func setupRoutes() {
 
 func main() {
 
+	baseDir := flag.String("osudir", "", "osu! directory")
+	flag.Parse()
+	fmt.Println(*baseDir)
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
