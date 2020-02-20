@@ -47,6 +47,7 @@ var ppCombo string
 var pp100 string
 var pp50 string
 var ppMiss string
+var ppMods string
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -353,7 +354,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			for _, hitObjectTime := range ourTime {
 
-				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime {
+				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
 
 					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
 					lastObject = cast.ToString(lastObjectInt)
@@ -363,7 +364,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
 					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
+					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
 					fmt.Println(PP())
+
 					break
 
 				}
@@ -809,7 +812,7 @@ func CurrentBeatmapMaxBPM() float64 {
 }
 func PP() string {
 	//fmt.Println(stdin)
-	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50", true)
+	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods, true)
 	return cast.ToString(calc)
 }
 func SliceIndex(limit int, predicate func(i int) bool) int {
@@ -819,4 +822,95 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 		}
 	}
 	return -1
+}
+func ModsResolver(xor uint32) string {
+	NoMod := uint32(0)
+	NoFail := uint32(1) << 0
+	Easy := uint32(1) << 1
+	//TouchDevice := uint32(1) << 2
+	Hidden := uint32(1) << 3
+	HardRock := uint32(1) << 4
+	SuddenDeath := uint32(1) << 5
+	DoubleTime := uint32(1) << 6
+	Relax := uint32(1) << 7
+	HalfTime := uint32(1) << 8
+	Nightcore := uint32(1) << 9
+	Flashlight := uint32(1) << 10
+	Autoplay := uint32(1) << 11
+	SpunOut := uint32(1) << 12
+	AutoPilot := uint32(1) << 13
+	Perfect := uint32(1) << 14
+	ScoreV2 := uint32(1) << 29
+
+	if xor == NoMod {
+		return ""
+	}
+	if xor == NoFail {
+		return "NF"
+	}
+	if xor == Easy {
+		return "EZ"
+	}
+	if xor == Hidden {
+		return "HD"
+	}
+	if xor == HardRock {
+		return "HR"
+	}
+	if xor == SuddenDeath {
+		return "SD"
+	}
+	if xor == DoubleTime {
+		return "DT"
+	}
+	if xor == Relax {
+		return ""
+	}
+	if xor == HalfTime {
+		return "HT"
+	}
+	if xor == Nightcore {
+		return "NC"
+	}
+	if xor == Flashlight {
+		return "FL"
+	}
+	if xor == Autoplay {
+		return ""
+	}
+	if xor == SpunOut {
+		return ""
+	}
+	if xor == AutoPilot {
+		return ""
+	}
+	if xor == Perfect {
+		return ""
+	}
+	if xor == ScoreV2 {
+		return "" // we actually support that
+	}
+	if xor == Hidden+DoubleTime {
+		return "HDDT" // we actually support that
+	}
+	if xor == Hidden+HardRock {
+		return "HDHR" // we actually support that
+	}
+	if xor == Hidden+DoubleTime+HardRock {
+		return "HDDTHR" // we actually support that
+	}
+	if xor == Hidden+DoubleTime+HardRock+Flashlight {
+		return "HDHRDTFL" // we actually support that
+	}
+	if xor == Hidden+DoubleTime+Easy {
+		return "EZHDDT" // we actually support that
+	}
+	if xor == DoubleTime+Easy {
+		return "EZDT" // we actually support that
+	}
+	if xor == Hidden+Easy {
+		return "EZHD" // we actually support that
+	}
+	return ""
+
 }
