@@ -329,18 +329,18 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
-		if strings.HasSuffix(ValidCurrentBeatmapOsuFileString(), ".osu") == false {
+		if strings.HasSuffix(CurrentBeatmapOsuFileString(), ".osu") == false {
 			println(".osu ends with ???")
 		}
-		if strings.HasSuffix(ValidCurrentBeatmapString(), "]") == false {
+		if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
 			println("beatmapstring ends with ???")
 		}
 		MenuContainerStruct := EverythingInMenu{CurrentState: osuStatus,
 			CurrentBeatmapID:            CurrentBeatmapID(),
 			CurrentBeatmapSetID:         CurrentBeatmapSetID(),
-			CurrentBeatmapString:        ValidCurrentBeatmapString(),
-			CurrentBeatmapFolderString:  ValidCurrentBeatmapFolderString(),
-			CurrentBeatmapOsuFileString: ValidCurrentBeatmapOsuFileString(),
+			CurrentBeatmapString:        CurrentBeatmapString(),
+			CurrentBeatmapFolderString:  CurrentBeatmapFolderString(),
+			CurrentBeatmapOsuFileString: CurrentBeatmapOsuFileString(),
 			CurrentBeatmapAR:            CurrentBeatmapAR(),
 			CurrentBeatmapOD:            CurrentBeatmapOD(),
 			CurrentBeatmapCS:            CurrentBeatmapCS(),
@@ -516,20 +516,13 @@ func CurrentBeatmapString() string {
 		log.Println("BeatMapString Second level pointer failure")
 		return "-4"
 	}
-	beatmapStringSize, err := proc.ReadUint32(uintptr(beatmapStringSecondLevel + 0x4))
-	if err != nil {
-		log.Println("BeatMapString Third level pointer failure")
-		return "-6"
-	}
 
-	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2)) // fix repeating
+	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapStringSecondLevel + 0x8)))
 	if err != nil {
 		log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := string(beatmapStringResult)
-	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
-	return beatmapValidString
+	return beatmapStringResult
 }
 
 func CurrentBeatmapFolderString() string {
@@ -539,21 +532,12 @@ func CurrentBeatmapFolderString() string {
 		log.Println("BeatMapFolderString Second level pointer failure")
 		return "-4"
 	}
-
-	beatmapFolderStringSize, err := proc.ReadUint32(uintptr(beatmapFolderStringSecondLevel + 0x4))
-	if err != nil {
-		log.Println("BeatMapFolderStringSize Third level pointer failure")
-		return "-6"
-	}
-
-	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapFolderStringSize*2)) // fix repeating
+	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapFolderStringSecondLevel + 0x8)))
 	if err != nil {
 		log.Println("BeatMapFolderString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := string(beatmapStringResult)
-	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
-	return beatmapValidString
+	return beatmapStringResult
 }
 func CurrentBeatmapOsuFileString() string {
 
@@ -562,21 +546,14 @@ func CurrentBeatmapOsuFileString() string {
 		log.Println("BeatMapOsuFileString Second level pointer failure")
 		return "-4"
 	}
-
-	beatmapStringSize, err := proc.ReadUint32(uintptr(beatmapFolderStringSecondLevel + 0x4))
-	if err != nil {
-		log.Println("BeatMapString Third level pointer failure")
-		return "-6"
-	}
-
-	beatmapStringResult, err := proc.ReadBytes(uintptr(beatmapFolderStringSecondLevel+0x8), cast.ToInt(beatmapStringSize*2))
+	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapFolderStringSecondLevel + 0x8)))
 	if err != nil {
 		log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
-	beatmapString := string(beatmapStringResult)
-	beatmapValidString := strings.ToValidUTF8(beatmapString, "")
-	return beatmapValidString
+	// beatmapString := string(beatmapStringResult)
+	// beatmapValidString := strings.ToValidUTF8(beatmapString, "")
+	return beatmapStringResult
 }
 func CurrentBeatmapAR() float32 {
 	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x2C))
@@ -747,37 +724,6 @@ func CurrentAccuracy() float64 {
 		return -5
 	}
 	return currentCombo
-}
-
-//not so monkaW section
-func ValidCurrentBeatmapFolderString() string {
-	validCurrentBeatmapFolderString := strings.ToValidUTF8(CurrentBeatmapFolderString(), "")
-	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
-	strParts := strings.Split(t, "\u0018")
-
-	return strParts[0]
-}
-func ValidCurrentBeatmapString() string {
-	validCurrentBeatmapFolderString := strings.ToValidUTF8(CurrentBeatmapString(), "")
-	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
-	strParts := strings.Split(t, "\u0018")
-
-	return strParts[0]
-}
-func ValidCurrentBeatmapOsuFileString() string {
-	validCurrentBeatmapFolderString := strings.ToValidUTF8(CurrentBeatmapOsuFileString(), "")
-	t := strings.Replace(validCurrentBeatmapFolderString, "\u0000", "", -1)
-	strParts := strings.Split(t, "\u0018")
-
-	if strings.Contains(strParts[0], ".osu") == true {
-		strParts = strings.Split(strParts[0], ".osu")
-		strPartsString := cast.ToString(strParts[0])
-		strPartsString = strPartsString + ".osu"
-		strParts[0] = strPartsString
-
-	}
-
-	return strParts[0]
 }
 func CurrentPlayTime() int32 {
 	playTimeFirstLevel, err := proc.ReadUint32(playTime)
