@@ -47,6 +47,7 @@ var pp50 string
 var ppMiss string
 var ppMods string
 var pp string = ""
+var ppifFC string = ""
 var innerBGPath string = ""
 var updateTime int
 var isRunning = 0
@@ -299,6 +300,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentAppliedMods int32   `json:"appliedMods"`
 			CurrentMaxCombo    int32   `json:"maxCombo"`
 			Pp                 string  `json:"pp"`
+			PPifFC             string  `json:"ppIfFC"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -332,6 +334,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentAppliedMods: CurrentAppliedMods(),
 			CurrentMaxCombo:    CurrentMaxCombo(),
 			Pp:                 pp,
+			PPifFC:             ppifFC,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -369,6 +372,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
 					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
 					pp = PP()
+					ppifFC = PPifFC()
 					break
 
 				}
@@ -379,6 +383,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
 			pp = ""
+			ppifFC = ""
 
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
@@ -392,7 +397,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
 				newline := strings.Split(splitted, "\n")
 
-				for i := 1; i < len(newline)-1; i++ {
+				for i := 1; i < len(newline)-1; i++ { //TODO: Add proper exception handler
 					if len(newline[i]) > 0 {
 						elements := strings.Split(newline[i], ",")[2]
 						elementsInt := cast.ToInt(elements)
@@ -749,6 +754,12 @@ func CurrentPlayTime() int32 {
 func PP() string {
 	//fmt.Println(stdin)
 	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+	return strings.ToValidUTF8(cast.ToString(calc), "")
+}
+func PPifFC() string {
+	//fmt.Println(stdin)
+	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+" "+ppAcc+"%"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
 
 	return strings.ToValidUTF8(cast.ToString(calc), "")
 }
