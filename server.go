@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
-	parser "github.com/natsukagami/go-osu-parser"
 	"github.com/spf13/cast"
 )
 
@@ -27,7 +27,7 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
+var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
 var playTimeBase uintptr
 var playTime uintptr
 var currentBeatmapDataBase uint32
@@ -37,8 +37,6 @@ var playContainerFirstlevel uint32
 var playContainer38 uint32
 var fullPathToOsu string
 var osuFileStdIN string
-var minBPM float64
-var maxBPM float64
 var ourTime []int
 var lastObjectInt int
 var lastObject string
@@ -48,6 +46,10 @@ var pp100 string
 var pp50 string
 var ppMiss string
 var ppMods string
+var pp string = ""
+var innerBGPath string = ""
+var updateTime int
+var isRunning = 0
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -232,12 +234,15 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Client Connected")
 
-	osuBase = OsuBaseAddr()
-	currentBeatmapData = (osuBase - 0xC)
-	playTimeBase = OsuPlayTimeAddr()
-	playContainer = OsuplayContainer()
-	playContainerBase = (playContainer - 0x4)
-	playTime = (playTimeBase + 0x5)
+	if isRunning == 0 {
+		osuBase = OsuBaseAddr()
+		currentBeatmapData = (osuBase - 0xC)
+		playTimeBase = OsuPlayTimeAddr()
+		playContainer = OsuplayContainer()
+		playContainerBase = (playContainer - 0x4)
+		playTime = (playTimeBase + 0x5)
+		isRunning = 1
+	}
 
 	if err != nil {
 		log.Fatalln("is osu! running? (osu! status offset was not found)")
@@ -293,6 +298,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentGameMode    int32   `json:"gameMode"`
 			CurrentAppliedMods int32   `json:"appliedMods"`
 			CurrentMaxCombo    int32   `json:"maxCombo"`
+			Pp                 string  `json:"pp"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -306,8 +312,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapFolderString  string  `json:"bmFolder"`
 			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
 			CurrentPlayTime             int32   `json:"bmCurrentTime"`
-			MinBPM                      float64 `json:"bmMinBPM"`
-			MaxBPM                      float64 `json:"bmMaxBPM"`
+			InnerBGPath                 string  `json:"innerBG"`
 		}
 
 		type EverythingInMenu2 struct { //order sets here
@@ -326,6 +331,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentGameMode:    CurrentGameMode(),
 			CurrentAppliedMods: CurrentAppliedMods(),
 			CurrentMaxCombo:    CurrentMaxCombo(),
+			Pp:                 pp,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -346,9 +352,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapCS:            CurrentBeatmapCS(),
 			CurrentBeatmapHP:            CurrentBeatmapHP(),
 			CurrentPlayTime:             CurrentPlayTime(),
-
-			MinBPM: minBPM,
-			MaxBPM: maxBPM,
+			InnerBGPath:                 innerBGPath,
 		}
 		if osuStatusValue == 2 {
 
@@ -364,7 +368,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
 					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
-					fmt.Println(PP())
+					pp = PP()
 					break
 
 				}
@@ -374,6 +378,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
+			pp = ""
 
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
@@ -441,13 +446,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					log.Println(err)
 				}
 				if bgString != "" {
-					var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
-					var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
-					Cmd((fullBGCommand), true)
+					//var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
+					innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
+					//var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
+					//Cmd((fullBGCommand), true)
 				}
 
-				minBPM = CurrentBeatmapMinBPM()
-				maxBPM = CurrentBeatmapMaxBPM()
 				//fmt.Println(OsuHitobjects())
 			} else {
 				fmt.Println("osu file was not found")
@@ -468,7 +472,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		//if err != nil {
 		//	log.Println(err)
 		//}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 	}
 
@@ -482,6 +486,9 @@ func setupRoutes() {
 }
 
 func main() {
+	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
+	flag.Parse()
+	updateTime = *updateTimeAs
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
@@ -739,26 +746,11 @@ func CurrentPlayTime() int32 {
 
 	return cast.ToInt32(playTimeValue)
 }
-func CurrentBeatmapMinBPM() float64 {
-	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
-	if err != nil {
-		fmt.Println("CurrentBeatmapMinBPM error")
-	}
-	result := osuBeatmap.BpmMin
-	return result
-}
-func CurrentBeatmapMaxBPM() float64 {
-	osuBeatmap, err := parser.ParseFile(fullPathToOsu)
-	if err != nil {
-		fmt.Println("CurrentBeatmapMaxBPM error")
-	}
-	result := osuBeatmap.BpmMax
-	return result
-}
 func PP() string {
 	//fmt.Println(stdin)
-	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods, true)
-	return cast.ToString(calc)
+	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+	return strings.ToValidUTF8(cast.ToString(calc), "")
 }
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
