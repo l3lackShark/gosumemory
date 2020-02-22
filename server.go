@@ -27,7 +27,7 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "/media/dartandr/Dartandr HDD/games/osu!/Songs"
+var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
 var playTimeBase uintptr
 var playTime uintptr
 var currentBeatmapDataBase uint32
@@ -388,25 +388,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
 
-			j, err := ioutil.ReadFile(fullPathToOsu)
-			if err != nil {
-				fmt.Println("osu file was not found2")
-			}
-			osuFileStdIN = string(j)
-			if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
-				splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
-				newline := strings.Split(splitted, "\n")
-
-				for i := 1; i < len(newline)-1; i++ { //TODO: Add proper exception handler
-					if len(newline[i]) > 0 {
-						elements := strings.Split(newline[i], ",")[2]
-						elementsInt := cast.ToInt(elements)
-						ourTime = append(ourTime, elementsInt)
-
-					}
-				}
-			}
-
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
 				//fmt.Println(fullPathToOsu)
 				file, err := os.Open(fullPathToOsu)
@@ -415,6 +396,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					defer file.Close()
 				}
 				defer file.Close()
+
 				scanner := bufio.NewScanner(file)
 				var bgString string
 				for scanner.Scan() {
@@ -455,6 +437,25 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
 					//var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
 					//Cmd((fullBGCommand), true)
+					j, err := ioutil.ReadAll(file)
+					if err != nil {
+						fmt.Println("osu file was not found2")
+					}
+					osuFileStdIN = string(j)
+					fmt.Println(osuFileStdIN)
+					if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
+						splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
+						newline := strings.Split(splitted, "\n")
+
+						for i := 1; i < len(newline)-1; i++ { //TODO: Add proper exception handler
+							if len(newline[i]) > 0 {
+								elements := strings.Split(newline[i], ",")[2]
+								elementsInt := cast.ToInt(elements)
+								ourTime = append(ourTime, elementsInt)
+
+							}
+						}
+					}
 				}
 
 				//fmt.Println(OsuHitobjects())
