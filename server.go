@@ -111,7 +111,7 @@ func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
 }
 
 func OsuplayContainer() uintptr { //in hopes to deprecate this
-	cmd, err := exec.Command("OsuplayContainer.exe").Output()
+	cmd, err := exec.Command("OsuPlayContainer.exe").Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -177,19 +177,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		ws.WriteMessage(1, []byte("osu!status value was not found"))
 		log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
 	}
-	for osuStatusValue != 5 {
-		log.Println("please go to songselect in order to proceed!")
-		osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
-		if err != nil {
-			log.Fatalln("is osu! running? (osu! status was not found)")
-		}
-		ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
-
-		time.Sleep(500 * time.Millisecond)
-
-	}
-	fmt.Println("it seems that the client is in song select, you are good to go!")
-	time.Sleep(1 * time.Second)
 
 	log.Println("Client Connected")
 
@@ -201,6 +188,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
 		isRunning = 1
+		for osuStatusValue != 5 {
+			log.Println("please go to songselect in order to proceed!")
+			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
+			if err != nil {
+				log.Fatalln("is osu! running? (osu! status was not found)")
+			}
+			ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
+
+			time.Sleep(500 * time.Millisecond)
+
+			time.Sleep(1 * time.Second)
+
+		}
+		fmt.Println("it seems that the client is in song select, you are good to go!")
 	}
 
 	if err != nil {
@@ -247,18 +248,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		type PlayContainer struct {
-			CurrentHit300c     int16   `json:"300"`
-			CurrentHit100c     int16   `json:"100"`
-			CurrentHit50c      int16   `json:"50"`
-			CurrentHitMiss     int16   `json:"miss"`
-			CurrentAccuracy    float64 `json:"accuracy"`
-			CurrentScore       int32   `json:"score"`
-			CurrentCombo       int32   `json:"combo"`
-			CurrentGameMode    int32   `json:"gameMode"`
-			CurrentAppliedMods int32   `json:"appliedMods"`
-			CurrentMaxCombo    int32   `json:"maxCombo"`
-			Pp                 string  `json:"pp"`
-			PPifFC             string  `json:"ppIfFC"`
+			CurrentHit300c          int16   `json:"300"`
+			CurrentHit100c          int16   `json:"100"`
+			CurrentHit50c           int16   `json:"50"`
+			CurrentHitMiss          int16   `json:"miss"`
+			CurrentAccuracy         float64 `json:"accuracy"`
+			CurrentScore            int32   `json:"score"`
+			CurrentCombo            int32   `json:"combo"`
+			CurrentGameMode         int32   `json:"gameMode"`
+			CurrentAppliedMods      int32   `json:"appliedMods"`
+			CurrentMaxCombo         int32   `json:"maxCombo"`
+			CurrentPlayerHP         int8    `json:"playerHP"`
+			CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
+			Pp                      string  `json:"pp"`
+			PPifFC                  string  `json:"ppIfFC"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -281,18 +284,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		PlayContainerStruct := PlayContainer{
-			CurrentHit300c:     CurrentHit300c(),
-			CurrentHit100c:     CurrentHit100c(),
-			CurrentHit50c:      CurrentHit50c(),
-			CurrentHitMiss:     CurrentHitMiss(),
-			CurrentScore:       CurrentScore(),
-			CurrentAccuracy:    CurrentAccuracy(),
-			CurrentCombo:       CurrentCombo(),
-			CurrentGameMode:    CurrentGameMode(),
-			CurrentAppliedMods: CurrentAppliedMods(),
-			CurrentMaxCombo:    CurrentMaxCombo(),
-			Pp:                 pp,
-			PPifFC:             ppifFC,
+			CurrentHit300c:          CurrentHit300c(),
+			CurrentHit100c:          CurrentHit100c(),
+			CurrentHit50c:           CurrentHit50c(),
+			CurrentHitMiss:          CurrentHitMiss(),
+			CurrentScore:            CurrentScore(),
+			CurrentAccuracy:         CurrentAccuracy(),
+			CurrentCombo:            CurrentCombo(),
+			CurrentGameMode:         CurrentGameMode(),
+			CurrentAppliedMods:      CurrentAppliedMods(),
+			CurrentMaxCombo:         CurrentMaxCombo(),
+			CurrentPlayerHP:         CurrentPlayerHP(),
+			CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
+			Pp:                      pp,
+			PPifFC:                  ppifFC,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -697,6 +702,40 @@ func CurrentAccuracy() float64 {
 	currentCombo, err := proc.ReadFloat64(uintptr(comboSecondLevel + 0x14))
 	if err != nil {
 		log.Println("Accuracy result pointer failure")
+		return -5
+	}
+	return currentCombo
+}
+func CurrentPlayerHP() int8 {
+	if osuStatus != 2 {
+		return -1
+	}
+
+	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
+	if err != nil {
+		log.Println("CurrentPlayerHP Second level pointer failure")
+		return -4
+	}
+	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x1C))
+	if err != nil {
+		log.Println("CurrentPlayerHP result pointer failure")
+		return -5
+	}
+	return currentCombo
+}
+func CurrentPlayerHPSmoothed() int8 {
+	if osuStatus != 2 {
+		return -1
+	}
+
+	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
+	if err != nil {
+		log.Println("CurrentPlayerHPSmoothed Second level pointer failure")
+		return -4
+	}
+	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x14))
+	if err != nil {
+		log.Println("CurrentPlayerHPSmoothed result pointer failure")
 		return -5
 	}
 	return currentCombo
