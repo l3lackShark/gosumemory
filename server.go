@@ -429,7 +429,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		fmt.Println(cast.ToString(b))
 		ws.WriteMessage(1, []byte(b)) //sending data to the client
 
 		//if err != nil {
