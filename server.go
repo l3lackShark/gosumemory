@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -27,7 +28,7 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "/home/blackshark/drives/ps3drive/osu!/Songs"
+var baseDir string
 var playTimeBase uintptr
 var playTime uintptr
 var currentBeatmapDataBase uint32
@@ -51,6 +52,9 @@ var ppifFC string = ""
 var innerBGPath string = ""
 var updateTime int
 var isRunning = 0
+var workingDirectory string
+var operatingSystem int8
+var uintptrOsuStatus uintptr
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -71,102 +75,160 @@ func Cmd(cmd string, shell bool) []byte {
 }
 
 func OsuStatusAddr() uintptr { //in hopes to deprecate this
-	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
-	outStr := cast.ToString(x)
-	outStr = strings.Replace(outStr, " ", "", -1)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
 
-	input := outStr
-	if input == "" {
-		log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		osuBase = uintptr(outInt)
+
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
 	}
-	output := (input[3:])
-	yosuBase := firstN(output, 8)
-	check := strings.Contains(yosuBase, ",")
-	if check == true {
-		yosuBase = strings.Replace(yosuBase, ",", "", -1)
-	}
-	osuBaseString := "0x" + yosuBase
-	osuBaseUINT32 := cast.ToUint32(osuBaseString)
-	osuBase = uintptr(osuBaseUINT32)
 	if osuBase == 0 {
 		log.Fatalln("could not find osuStatusAddr, is osu! running?")
 	}
+
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 
 }
 func OsuBaseAddr() uintptr { //in hopes to deprecate this
-	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
-	outStr := cast.ToString(x)
-	outStr = strings.Replace(outStr, " ", "", -1)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuBaseAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
 
-	input := outStr
-	if input == "" {
-		log.Fatalln("OsuBase addr fail")
+		input := outStr
+		if input == "" {
+			log.Fatalln("OsuBase addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
 	}
-	output := (input[3:])
-	yosuBase := firstN(output, 8)
-	check := strings.Contains(yosuBase, ",")
-	if check == true {
-		yosuBase = strings.Replace(yosuBase, ",", "", -1)
-	}
-	osuBaseString := "0x" + yosuBase
-	osuBaseUINT32 := cast.ToUint32(osuBaseString)
-	osuBase = uintptr(osuBaseUINT32)
-	//println(CurrentBeatmapFolderString())
+
 	if osuBase == 0 {
 		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
+
+	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
 
 func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
-	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04;list;exit'", true)
-	outStr := cast.ToString(x)
-	outStr = strings.Replace(outStr, " ", "", -1)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
 
-	input := outStr
-	if input == "" {
-		log.Fatalln("OsuBase addr fail")
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("OsuBase addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
 	}
-	output := (input[3:])
-	yosuBase := firstN(output, 8)
-	check := strings.Contains(yosuBase, ",")
-	if check == true {
-		yosuBase = strings.Replace(yosuBase, ",", "", -1)
-	}
-	osuBaseString := "0x" + yosuBase
-	osuBaseUINT32 := cast.ToUint32(osuBaseString)
-	osuBase = uintptr(osuBaseUINT32)
-	//println(CurrentBeatmapFolderString())
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Fatalln("OsuPlayTimeAddr is not found")
 	}
+
+	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
 
 func OsuplayContainer() uintptr { //in hopes to deprecate this
-	x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
-	outStr := cast.ToString(x)
-	outStr = strings.Replace(outStr, " ", "", -1)
+	if operatingSystem == 1 {
 
-	input := outStr
-	if input == "" {
-		log.Fatalln("osuplayContainer addr fail")
-	}
-	output := (input[3:])
-	yosuBase := firstN(output, 8)
-	check := strings.Contains(yosuBase, ",")
-	if check == true {
-		yosuBase = strings.Replace(yosuBase, ",", "", -1)
-	}
-	osuBaseString := "0x" + yosuBase
+		cmd, err := exec.Command("OsuPlayContainer.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
 
-	osuBaseUINT32 := cast.ToUint32(osuBaseString)
-	osuBase = uintptr(osuBaseUINT32)
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("osuplayContainer addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
 	if osuBase == 0 {
-		log.Fatalln("Could not find osuplayContainer address, is osu! running?", "Address was:", osuBaseString)
+		log.Fatalln("Could not find osuplayContainer address, is osu! running?")
 	}
+
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
@@ -207,35 +269,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
 		log.Fatalln("is osu! running? (osu! process was not found)")
 	}
-	StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
-	osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
-	if err != nil {
-		ws.WriteMessage(1, []byte("osu!status offset was not found"))
-		log.Fatalln("osu!status offset was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
-	}
-	uintptrOsuStatus := uintptr(osuStatusOffset)
-	osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
-	if err != nil {
-		ws.WriteMessage(1, []byte("osu!status value was not found"))
-		log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
-	}
-	for osuStatusValue != 5 {
-		log.Println("please go to songselect in order to proceed!")
-		osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
-		if err != nil {
-			log.Fatalln("is osu! running? (osu! status was not found)")
-		}
-		ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
-
-		time.Sleep(500 * time.Millisecond)
-
-	}
-	fmt.Println("it seems that the client is in song select, you are good to go!")
-	time.Sleep(1 * time.Second)
-
-	log.Println("Client Connected")
-
 	if isRunning == 0 {
+		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
+		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
+		if err != nil {
+			ws.WriteMessage(1, []byte("osu!status offset was not found"))
+			log.Fatalln("osu!status offset was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		}
+		uintptrOsuStatus = uintptr(osuStatusOffset)
+		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
+		if err != nil {
+			ws.WriteMessage(1, []byte("osu!status value was not found"))
+			log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		}
+
 		osuBase = OsuBaseAddr()
 		currentBeatmapData = (osuBase - 0xC)
 		playTimeBase = OsuPlayTimeAddr()
@@ -243,11 +290,23 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
 		isRunning = 1
-	}
+		for osuStatusValue != 5 {
+			log.Println("please go to songselect in order to proceed!")
+			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
+			if err != nil {
+				log.Fatalln("is osu! running? (osu! status was not found)")
+			}
+			ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
 
-	if err != nil {
-		log.Fatalln("is osu! running? (osu! status offset was not found)")
+			time.Sleep(500 * time.Millisecond)
+
+			time.Sleep(1 * time.Second)
+
+		}
+		fmt.Println("it seems that the client is in song select, you are good to go!")
 	}
+	log.Println("Client Connected")
+
 	var tempCurrentBeatmapOsu string
 
 	for {
@@ -289,18 +348,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		type PlayContainer struct {
-			CurrentHit300c     int16   `json:"300"`
-			CurrentHit100c     int16   `json:"100"`
-			CurrentHit50c      int16   `json:"50"`
-			CurrentHitMiss     int16   `json:"miss"`
-			CurrentAccuracy    float64 `json:"accuracy"`
-			CurrentScore       int32   `json:"score"`
-			CurrentCombo       int32   `json:"combo"`
-			CurrentGameMode    int32   `json:"gameMode"`
-			CurrentAppliedMods int32   `json:"appliedMods"`
-			CurrentMaxCombo    int32   `json:"maxCombo"`
-			Pp                 string  `json:"pp"`
-			PPifFC             string  `json:"ppIfFC"`
+			CurrentHit300c          int16   `json:"300"`
+			CurrentHit100c          int16   `json:"100"`
+			CurrentHit50c           int16   `json:"50"`
+			CurrentHitMiss          int16   `json:"miss"`
+			CurrentAccuracy         float64 `json:"accuracy"`
+			CurrentScore            int32   `json:"score"`
+			CurrentCombo            int32   `json:"combo"`
+			CurrentGameMode         int32   `json:"gameMode"`
+			CurrentAppliedMods      int32   `json:"appliedMods"`
+			CurrentMaxCombo         int32   `json:"maxCombo"`
+			CurrentPlayerHP         int8    `json:"playerHP"`
+			CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
+			Pp                      string  `json:"pp"`
+			PPifFC                  string  `json:"ppIfFC"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -323,18 +384,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		PlayContainerStruct := PlayContainer{
-			CurrentHit300c:     CurrentHit300c(),
-			CurrentHit100c:     CurrentHit100c(),
-			CurrentHit50c:      CurrentHit50c(),
-			CurrentHitMiss:     CurrentHitMiss(),
-			CurrentScore:       CurrentScore(),
-			CurrentAccuracy:    CurrentAccuracy(),
-			CurrentCombo:       CurrentCombo(),
-			CurrentGameMode:    CurrentGameMode(),
-			CurrentAppliedMods: CurrentAppliedMods(),
-			CurrentMaxCombo:    CurrentMaxCombo(),
-			Pp:                 pp,
-			PPifFC:             ppifFC,
+			CurrentHit300c:          CurrentHit300c(),
+			CurrentHit100c:          CurrentHit100c(),
+			CurrentHit50c:           CurrentHit50c(),
+			CurrentHitMiss:          CurrentHitMiss(),
+			CurrentScore:            CurrentScore(),
+			CurrentAccuracy:         CurrentAccuracy(),
+			CurrentCombo:            CurrentCombo(),
+			CurrentGameMode:         CurrentGameMode(),
+			CurrentAppliedMods:      CurrentAppliedMods(),
+			CurrentMaxCombo:         CurrentMaxCombo(),
+			CurrentPlayerHP:         CurrentPlayerHP(),
+			CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
+			Pp:                      pp,
+			PPifFC:                  ppifFC,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -412,9 +475,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				file, err := os.Open(fullPathToOsu)
 				if err != nil {
 					log.Println(err, "in error")
-					file.Close()
+					defer file.Close()
 				}
-				file.Close()
+				defer file.Close()
 				scanner := bufio.NewScanner(file)
 				var bgString string
 				for scanner.Scan() {
@@ -471,7 +534,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-
 		ws.WriteMessage(1, []byte(b)) //sending data to the client
 
 		//if err != nil {
@@ -491,9 +553,25 @@ func setupRoutes() {
 }
 
 func main() {
+	if runtime.GOOS == "windows" {
+		fmt.Println("Hello from Windows")
+		operatingSystem = 1
+	}
+	if runtime.GOOS == "linux" {
+		fmt.Println("Hello from Linux")
+		operatingSystem = 2
+
+	}
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
+	workingDirectory = *path
+
+	if workingDirectory == "null" {
+		log.Fatalln("Please set up your osu! Songs directory. (see --help)")
+	}
+	baseDir = workingDirectory
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
@@ -737,6 +815,40 @@ func CurrentAccuracy() float64 {
 	}
 	return currentCombo
 }
+func CurrentPlayerHP() int8 {
+	if osuStatus != 2 {
+		return -1
+	}
+
+	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
+	if err != nil {
+		log.Println("CurrentPlayerHP Second level pointer failure")
+		return -4
+	}
+	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x1C))
+	if err != nil {
+		log.Println("CurrentPlayerHP result pointer failure")
+		return -5
+	}
+	return currentCombo
+}
+func CurrentPlayerHPSmoothed() int8 {
+	if osuStatus != 2 {
+		return -1
+	}
+
+	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
+	if err != nil {
+		log.Println("CurrentPlayerHPSmoothed Second level pointer failure")
+		return -4
+	}
+	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x14))
+	if err != nil {
+		log.Println("CurrentPlayerHPSmoothed result pointer failure")
+		return -5
+	}
+	return currentCombo
+}
 func CurrentPlayTime() int32 {
 	playTimeFirstLevel, err := proc.ReadUint32(playTime)
 	if err != nil {
@@ -752,16 +864,34 @@ func CurrentPlayTime() int32 {
 	return cast.ToInt32(playTimeValue)
 }
 func PP() string {
-	//fmt.Println(stdin)
-	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	return strings.ToValidUTF8(cast.ToString(calc), "")
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
 }
 func PPifFC() string {
-	//fmt.Println(stdin)
-	calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+" "+ppAcc+"%"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	return strings.ToValidUTF8(cast.ToString(calc), "")
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+" "+ppAcc+"%"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
 }
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
