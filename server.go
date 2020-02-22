@@ -27,7 +27,7 @@ var playContainer uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
-var baseDir string = "C:/Users/BlackShark/AppData/Local/osu!/Songs"
+var baseDir string
 var playTimeBase uintptr
 var playTime uintptr
 var currentBeatmapDataBase uint32
@@ -51,7 +51,7 @@ var ppifFC string = ""
 var innerBGPath string = ""
 var updateTime int
 var isRunning = 0
-var c string
+var workingDirectory string
 
 func OsuStatusAddr() uintptr { //in hopes to deprecate this
 	cmd, err := exec.Command("OsuStatusAddr.exe").Output()
@@ -449,9 +449,16 @@ func setupRoutes() {
 }
 
 func main() {
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
+	workingDirectory = *path
+
+	if workingDirectory == "null" {
+		log.Fatalln("Please set up your osu! Songs directory. (see --help)")
+	}
+	baseDir = workingDirectory
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
