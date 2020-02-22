@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -52,20 +53,60 @@ var innerBGPath string = ""
 var updateTime int
 var isRunning = 0
 var workingDirectory string
+var operatingSystem int8
+
+func Cmd(cmd string, shell bool) []byte {
+
+	if shell {
+		out, err := exec.Command("bash", "-c", cmd).Output()
+		if err != nil {
+			println("some error found", err)
+		}
+		return out
+	} else {
+		out, err := exec.Command(cmd).Output()
+		if err != nil {
+			println("some error found2", err)
+		}
+		return out
+
+	}
+}
 
 func OsuStatusAddr() uintptr { //in hopes to deprecate this
-	cmd, err := exec.Command("OsuStatusAddr.exe").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	outStr := cast.ToString(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	outInt := cast.ToUint32(outStr)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
 
-	osuBase = uintptr(outInt)
+		osuBase = uintptr(outInt)
+
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
 	if osuBase == 0 {
-		log.Fatalln("OsuStatusAddr is not found")
+		log.Fatalln("could not find osuStatusAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -73,18 +114,38 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 
 }
 func OsuBaseAddr() uintptr { //in hopes to deprecate this
-	cmd, err := exec.Command("OsuBaseAddr.exe").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	outStr := cast.ToString(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	outInt := cast.ToUint32(outStr)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuBaseAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
 
-	osuBase = uintptr(outInt)
+		input := outStr
+		if input == "" {
+			log.Fatalln("OsuBase addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
+
 	if osuBase == 0 {
-		log.Fatalln("OsuBaseAddr is not found")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -92,16 +153,36 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 }
 
 func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
-	cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	outStr := cast.ToString(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	outInt := cast.ToUint32(outStr)
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
 
-	osuBase = uintptr(outInt)
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("OsuBase addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
 	if osuBase == 0 {
 		log.Fatalln("OsuPlayTimeAddr is not found")
 	}
@@ -111,18 +192,40 @@ func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
 }
 
 func OsuplayContainer() uintptr { //in hopes to deprecate this
-	cmd, err := exec.Command("OsuPlayContainer.exe").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	outStr := cast.ToString(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	outInt := cast.ToUint32(outStr)
+	if operatingSystem == 1 {
 
-	osuBase = uintptr(outInt)
+		cmd, err := exec.Command("OsuPlayContainer.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("osuplayContainer addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
 	if osuBase == 0 {
-		log.Fatalln("OsuplayContainer is not found")
+		log.Fatalln("Could not find osuplayContainer address, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -453,6 +556,15 @@ func setupRoutes() {
 }
 
 func main() {
+	if runtime.GOOS == "windows" {
+		fmt.Println("Hello from Windows")
+		operatingSystem = 1
+	}
+	if runtime.GOOS == "linux" {
+		fmt.Println("Hello from Linux")
+		operatingSystem = 2
+
+	}
 	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
@@ -755,20 +867,33 @@ func CurrentPlayTime() int32 {
 	return cast.ToInt32(playTimeValue)
 }
 func PP() string {
-	calc, err := exec.Command("oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
-	if err != nil {
-		fmt.Println(err)
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
 	}
 
-	return strings.ToValidUTF8(cast.ToString(calc), "")
 }
 func PPifFC() string {
-	calc, err := exec.Command("oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
-	if err != nil {
-		fmt.Println(err)
-	}
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	return strings.ToValidUTF8(cast.ToString(calc), "")
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+" "+ppAcc+"%"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
 
 }
 func SliceIndex(limit int, predicate func(i int) bool) int {
