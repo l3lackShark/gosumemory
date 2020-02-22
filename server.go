@@ -442,7 +442,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 						fmt.Println("osu file was not found2")
 					}
 					osuFileStdIN = string(j)
-					fmt.Println(osuFileStdIN)
 					if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
 						splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
 						newline := strings.Split(splitted, "\n")
