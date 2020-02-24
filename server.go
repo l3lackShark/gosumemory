@@ -308,6 +308,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
+	//var tempOsuState uint16 = 2
 
 	for {
 
@@ -460,12 +461,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
 				newline := strings.Split(splitted, "\n")
 
-				for i := 1; i < len(newline)-1; i++ { //TODO: Add proper exception handler
-					if len(newline[i]) > 0 {
+				for i := 0; i < len(newline); i++ { //TODO: Add proper exception handler
+					if len(newline[i]) > 1 {
+						println(len(newline[i]))
+						println(newline[i])
 						elements := strings.Split(newline[i], ",")[2]
 						elementsInt := cast.ToInt(elements)
 						ourTime = append(ourTime, elementsInt)
-
 					}
 				}
 			}
@@ -873,7 +875,7 @@ func PP() string {
 		return strings.ToValidUTF8(cast.ToString(calc), "")
 	} else {
 		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+"+"+ppMods+" "+"-ojson", true)
-
+		//calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"-end"+lastObject+" "+ppAcc+"%"+" "+ppCombo+"x"+" "+ppMiss+"m"+" "+pp100+"x100"+" "+pp50+"x50"+" "+" "+"-ojson", true)
 		return strings.ToValidUTF8(cast.ToString(calc), "")
 	}
 
@@ -921,7 +923,7 @@ func ModsResolver(xor uint32) string {
 	ScoreV2 := uint32(1) << 29
 
 	if xor == NoMod {
-		return ""
+		return "NM"
 	}
 	if xor == NoFail {
 		return "NF"
