@@ -268,12 +268,15 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-	if procerr != nil { //TODO: refactor
+	for procerr != nil { //TODO: refactor
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
-		log.Fatalln("is osu! running? (osu! process was not found)")
+		log.Println("is osu! running? (osu! process was not found, waiting...)")
+		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		time.Sleep(5 * time.Second)
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
+		time.Sleep(5 * time.Second)            //hack to wait for the game
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
 		if err != nil {
