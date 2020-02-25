@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
+	rice "github.com/GeertJohan/go.rice"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cast"
 )
@@ -55,6 +57,7 @@ var isRunning = 0
 var workingDirectory string
 var operatingSystem int8
 var uintptrOsuStatus uintptr
+var jsonByte []byte
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -264,12 +267,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	if procerr != nil { //TODO: refactor
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
 		log.Fatalln("is osu! running? (osu! process was not found)")
 	}
 	if isRunning == 0 {
+		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
 		if err != nil {
@@ -283,13 +287,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
 		}
 
-		osuBase = OsuBaseAddr()
-		currentBeatmapData = (osuBase - 0xC)
-		playTimeBase = OsuPlayTimeAddr()
-		playContainer = OsuplayContainer()
-		playContainerBase = (playContainer - 0x4)
-		playTime = (playTimeBase + 0x5)
-		isRunning = 1
 		for osuStatusValue != 5 {
 			log.Println("please go to songselect in order to proceed!")
 			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
@@ -300,11 +297,24 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			time.Sleep(500 * time.Millisecond)
 
-			time.Sleep(1 * time.Second)
+		}
+
+		//time.Sleep(5 * time.Second)
+		osuBase = OsuBaseAddr()
+		currentBeatmapData = (osuBase - 0xC)
+		playTimeBase = OsuPlayTimeAddr()
+		playContainer = OsuplayContainer()
+		playContainerBase = (playContainer - 0x4)
+		playTime = (playTimeBase + 0x5)
+		isRunning = 1
+		if CurrentPlayTime() == -1 {
+			fmt.Println("Failed to get the correct offsets, retrying...")
+			restart()
 
 		}
-		fmt.Println("it seems that the client is in song select, you are good to go!")
+
 	}
+	fmt.Println("it seems that we got the correct offsets, you are good to go!")
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
@@ -312,17 +322,25 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	for {
 
-		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-		for procerr != nil {
-			log.Println("is osu! running? (osu! process was not found, terminating...)")
-			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-		}
-		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
+		osuStatusValue, osuStatusValueErr := proc.ReadUint16(uintptrOsuStatus)
 		if err != nil {
 			log.Println("osu! status could not be found...", err)
 
 		}
 		osuStatus = osuStatusValue
+		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		for procerr != nil {
+			log.Println("is osu! running? (osu! process was not found, waiting...)")
+			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+			time.Sleep(1 * time.Second)
+		}
+		if osuStatusValueErr != nil {
+
+			fmt.Println("It looks like we have a client restart!")
+			time.Sleep(10 * time.Second) // hack to wait for a client restart
+			restart()
+
+		}
 		//init base stuff
 		currentBeatmapDataBase, err = proc.ReadUint32(currentBeatmapData)
 		if err != nil {
@@ -463,8 +481,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				for i := 0; i < len(newline); i++ { //TODO: Add proper exception handler
 					if len(newline[i]) > 1 {
-						println(len(newline[i]))
-						println(newline[i])
 						elements := strings.Split(newline[i], ",")[2]
 						elementsInt := cast.ToInt(elements)
 						ourTime = append(ourTime, elementsInt)
@@ -532,11 +548,11 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			P: PlayContainerStruct,
 			D: MenuContainerStruct,
 		}
-		b, err := json.Marshal(group)
+		jsonByte, err = json.Marshal(group)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		ws.WriteMessage(1, []byte(b)) //sending data to the client
+		ws.WriteMessage(1, []byte(jsonByte)) //sending data to the client
 
 		//if err != nil {
 		//	log.Println(err)
@@ -564,7 +580,7 @@ func main() {
 		operatingSystem = 2
 
 	}
-	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -574,8 +590,57 @@ func main() {
 		log.Fatalln("Please set up your osu! Songs directory. (see --help)")
 	}
 	baseDir = workingDirectory
+	go HTTPServer()
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
+}
+func restart() {
+	isRunning = 0
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+	if procerr != nil { //TODO: refactor
+		log.Fatalln("is osu! running? (osu! process was not found)")
+	}
+	if isRunning == 0 {
+		fmt.Println("Client Connected, please go to song select and check this console back.")
+		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
+		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
+		if err != nil {
+			log.Fatalln("osu!status offset was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		}
+		uintptrOsuStatus = uintptr(osuStatusOffset)
+		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
+		if err != nil {
+			log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		}
+
+		for osuStatusValue != 5 {
+			log.Println("please go to songselect in order to proceed!")
+			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
+			if err != nil {
+				log.Fatalln("is osu! running? (osu! status was not found)")
+			}
+
+			time.Sleep(500 * time.Millisecond)
+
+			time.Sleep(1 * time.Second)
+
+		}
+		osuBase = OsuBaseAddr()
+		currentBeatmapData = (osuBase - 0xC)
+		playTimeBase = OsuPlayTimeAddr()
+		playContainer = OsuplayContainer()
+		playContainerBase = (playContainer - 0x4)
+		playTime = (playTimeBase + 0x5)
+		isRunning = 1
+		if CurrentPlayTime() == -1 {
+			fmt.Println("Failed to get the correct offsets, retrying...")
+			restart()
+
+		}
+
+		fmt.Println("it seems that we got the correct offsets, you are good to go!")
+	}
+
 }
 
 func firstN(s string, n int) string {
@@ -855,12 +920,12 @@ func CurrentPlayTime() int32 {
 	playTimeFirstLevel, err := proc.ReadUint32(playTime)
 	if err != nil {
 		log.Println("playTime Base level failure")
-		return 0
+		return -1
 	}
 	playTimeValue, err := proc.ReadUint32(uintptr(playTimeFirstLevel))
 	if err != nil {
 		log.Println("playTime Result level failure")
-		return 0
+		return -1
 	}
 
 	return cast.ToInt32(playTimeValue)
@@ -991,6 +1056,11 @@ func ModsResolver(xor uint32) string {
 	if xor == Hidden+Easy {
 		return "EZHD" // we actually support that
 	}
-	return ""
+	return "NM"
 
+}
+func HTTPServer() {
+	router := mux.NewRouter()
+	router.PathPrefix("/").Handler(http.FileServer(rice.MustFindBox("static").HTTPBox()))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -1,0 +1,190 @@
+:root {
+  --light-green: #83A87C;
+  --dark-green: #456255;
+  --dirty-green: #5B7557;
+  --darkest-green: #202E28;
+}
+* {
+  padding: 0;
+  margin: 0;
+}
+html, body {
+  font-size: 44px !important;
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  /* background: radial-gradient(#ffffff, #cacaca); */
+  width: 1060px;
+  height: 500px;
+  overflow: hidden;
+}
+.flexer {
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    display: flex;
+}
+.main {
+    top: 22px;
+    width: 1050px;
+    height: 180px;
+}
+.background {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    z-index: 0;
+}
+.map {
+    width: 450px;
+    height: 100%;
+    border-radius: 20px;
+    border: 4px solid rgb(168, 124, 124);
+    box-shadow: 0 4px 0 rgb(117, 87, 87),0 8px 30px rgba(0, 0, 0, .5);
+    overflow: hidden;
+}
+.link {
+    position: relative;
+    padding: 40px 0px;
+    z-index: 1;
+}
+.label {
+    align-items: center;
+    position: relative;
+    display: flex;
+    margin-bottom: 30px;
+}
+.pp-icon {
+    width: 50px;
+    height: 50px;
+    margin-right: 20px;
+    background: linear-gradient(45deg, var(--light-green), var(--dark-green));
+    border-radius: 50%;
+    box-shadow: 0 4px 0 var(--dirty-green), 0 4px 20px rgba(0, 0, 0, .8);
+}
+.pp-icon i {
+    font-size: 32px;
+    position: absolute;
+    color: white;
+    right: -20px;
+    bottom: -20px;
+    width: 32px;
+    height: 32px;
+    padding: 12px;
+    background: linear-gradient(45deg, var(--dirty-green), var(--darkest-green));
+    border-radius: 50%;
+    transform: scale(.5);
+    box-shadow: 0 0 5px rgba(0, 0, 0, .5);
+}
+.pp-icon span {width: 30px;height: 30px;background: white;border-radius: 50%;box-shadow: 0 0 4px black;}
+.label>span {
+    text-transform: uppercase;
+    background: linear-gradient(45deg, var(--light-green) 20%, var(--dark-green) 200%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 0 black) drop-shadow(0 2px 0 black);
+}
+.performance-points {
+    width: 458px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+.link i {
+    background: linear-gradient(45deg, rgb(168, 124, 124), #624545);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0px 3px 10px var(--dirty-green));
+}
+.link span {text-shadow: 0 4px 0 black;}
+._pp span {
+    padding: 0 20px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, .5);
+    /*linear-gradient(180deg, var(--light-green) 0%, var(--dark-green) 130%);*/
+    background: linear-gradient(180deg, rgb(163, 124, 168) 0%, #5d4562 130%);
+    border-radius: 12px;
+    box-shadow: 0 6px 0 #5d4562 , 0 4px 20px rgba(0, 0, 0, .7);
+}
+.hits {
+    width: 458px;
+    margin-top: 30px;
+}
+.label.__hits {justify-content: flex-end;}
+
+.hits-icon {
+    width: 60px;
+    height: 50px;
+    margin-left: 20px;
+    background: linear-gradient(45deg, var(--light-green), var(--dark-green));
+    border-radius: 12px;
+    box-shadow: 0 4px 0 var(--dirty-green), 0 4px 20px rgba(0, 0, 0, .8);
+}
+
+.hits-icon:before {
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 12px;
+    background: white;
+    border-radius: 100px;
+}
+
+.label.__pp {justify-content: flex-start;}
+
+._hits span {
+    border-radius: 12px;
+    padding: 4px 16px;
+    margin: 0 8px;
+
+    text-shadow: 0 4px black;
+}
+
+._hits {
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    display: flex;
+}
+
+._hits span:nth-child(1) {
+    background: linear-gradient(180deg, var(--light-green), var(--dark-green));
+    box-shadow: 0 6px 0 #202E28, 0 8px 20px rgba(0, 0, 0, .8);
+}
+
+._hits span:nth-child(2) {
+    background: linear-gradient(180deg, #A8A17C, #757057);
+    box-shadow: 0 7px 0 #423F31, 0 8px 20px rgba(0, 0, 0, .8);
+}
+
+._hits span:nth-child(3) {
+    background: linear-gradient(180deg, #A87C7C, #755757);
+    box-shadow: 0 6px 0 #423131, 0 8px 20px rgba(0, 0, 0, .8);
+}
+
+.link:before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 15px;
+    width: 240px;
+    height: 8px;
+    background: rgb(168, 124, 124);
+    border-radius: 20px;
+    box-shadow: 0 3px 0 rgb(117, 87, 87), 0 0 10px rgba(0, 0, 0, 1);
+    transform: translateX(-50%);
+}
+.background:before {
+    content: '';
+    position: absolute;top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(0deg, black, transparent);
+}
+.background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
