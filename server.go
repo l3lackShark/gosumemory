@@ -326,10 +326,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	for {
 
 		osuStatusValue, osuStatusValueErr := proc.ReadUint16(uintptrOsuStatus)
-		if err != nil {
-			log.Println("osu! status could not be found...", err)
-
-		}
 		osuStatus = osuStatusValue
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		for procerr != nil {
@@ -337,7 +333,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 			time.Sleep(1 * time.Second)
 		}
-		if osuStatusValueErr != nil {
+		if osuStatusValueErr != nil { //TODO Refactor, doesn't always work
 
 			fmt.Println("It looks like we have a client restart!")
 			time.Sleep(10 * time.Second) // hack to wait for a client restart
@@ -364,7 +360,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 			playContainer38, err = proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x38)
 			if err != nil {
-				log.Println("playContainer38 pointer failure")
+				//	log.Println("playContainer38 pointer failure")
 
 			}
 		}
@@ -423,12 +419,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
-		if strings.HasSuffix(CurrentBeatmapOsuFileString(), ".osu") == false {
-			println(".osu ends with ???")
-		}
-		if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
-			println("beatmapstring ends with ???")
-		}
+		// if strings.HasSuffix(CurrentBeatmapOsuFileString(), ".osu") == false {
+		// 	println(".osu ends with ???")
+		// }
+		// if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
+		// 	println("beatmapstring ends with ???")
+		// }
 		MenuContainerStruct := EverythingInMenu{CurrentState: osuStatus,
 			CurrentBeatmapID:            CurrentBeatmapID(),
 			CurrentBeatmapSetID:         CurrentBeatmapSetID(),
@@ -475,7 +471,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
 			if err != nil {
-				fmt.Println("osu file was not found2")
+				//fmt.Println("osu file was not found2")
 			}
 			osuFileStdIN = string(j)
 			if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
@@ -543,7 +539,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				//fmt.Println(OsuHitobjects())
 			} else {
-				fmt.Println("osu file was not found")
+				//	fmt.Println("osu file was not found")
 			}
 
 		}
@@ -575,11 +571,11 @@ func setupRoutes() {
 
 func main() {
 	if runtime.GOOS == "windows" {
-		fmt.Println("Hello from Windows")
+		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050")
 		operatingSystem = 1
 	}
 	if runtime.GOOS == "linux" {
-		fmt.Println("Hello from Linux")
+		fmt.Println("Hello from Linux, Please add a browser source in obs to http://127.0.0.1:24050")
 		operatingSystem = 2
 
 	}
@@ -657,7 +653,7 @@ func CurrentBeatmapID() uint32 { //currentbeatmapdata
 
 	currentBeatmapID, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0xC4))
 	if err != nil {
-		log.Println("CurrentBeatmapID result pointer failure")
+		//log.Println("CurrentBeatmapID result pointer failure")
 		return 0
 	}
 	return currentBeatmapID
@@ -665,7 +661,7 @@ func CurrentBeatmapID() uint32 { //currentbeatmapdata
 func CurrentBeatmapSetID() uint32 {
 	currentSetBeatmapID, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0xC8))
 	if err != nil {
-		log.Println("CurrentBeatmapSetID result pointer failure")
+		//log.Println("CurrentBeatmapSetID result pointer failure")
 		return 0
 	}
 	return currentSetBeatmapID
@@ -673,13 +669,13 @@ func CurrentBeatmapSetID() uint32 {
 func CurrentBeatmapString() string {
 	beatmapStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x7C))
 	if err != nil {
-		log.Println("BeatMapString Second level pointer failure")
+		//log.Println("BeatMapString Second level pointer failure")
 		return "-4"
 	}
 
 	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapStringSecondLevel + 0x8)))
 	if err != nil {
-		log.Println("BeatMapString Third level pointer failure")
+		//	log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
 	return beatmapStringResult
@@ -689,12 +685,12 @@ func CurrentBeatmapFolderString() string {
 
 	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x74))
 	if err != nil {
-		log.Println("BeatMapFolderString Second level pointer failure")
+		//	log.Println("BeatMapFolderString Second level pointer failure")
 		return "-4"
 	}
 	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapFolderStringSecondLevel + 0x8)))
 	if err != nil {
-		log.Println("BeatMapFolderString Third level pointer failure")
+		//	log.Println("BeatMapFolderString Third level pointer failure")
 		return "-5"
 	}
 	return beatmapStringResult
@@ -703,12 +699,12 @@ func CurrentBeatmapOsuFileString() string {
 
 	beatmapFolderStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x8C))
 	if err != nil {
-		log.Println("BeatMapOsuFileString Second level pointer failure")
+		//log.Println("BeatMapOsuFileString Second level pointer failure")
 		return "-4"
 	}
 	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapFolderStringSecondLevel + 0x8)))
 	if err != nil {
-		log.Println("BeatMapString Third level pointer failure")
+		//	log.Println("BeatMapString Third level pointer failure")
 		return "-5"
 	}
 	// beatmapString := string(beatmapStringResult)
@@ -718,7 +714,7 @@ func CurrentBeatmapOsuFileString() string {
 func CurrentBeatmapAR() float32 {
 	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x2C))
 	if err != nil {
-		log.Println("AR result level pointer failure")
+		//	log.Println("AR result level pointer failure")
 		return -5
 	}
 	return currentSetBeatmapID
@@ -726,7 +722,7 @@ func CurrentBeatmapAR() float32 {
 func CurrentBeatmapCS() float32 {
 	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x30))
 	if err != nil {
-		log.Println("CS result level pointer failure")
+		//	log.Println("CS result level pointer failure")
 		return -4
 	}
 	return currentSetBeatmapID
@@ -734,7 +730,7 @@ func CurrentBeatmapCS() float32 {
 func CurrentBeatmapHP() float32 {
 	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x34))
 	if err != nil {
-		log.Println("HP result level pointer failure")
+		//	log.Println("HP result level pointer failure")
 		return -5
 	}
 	return currentSetBeatmapID
@@ -742,7 +738,7 @@ func CurrentBeatmapHP() float32 {
 func CurrentBeatmapOD() float32 {
 	currentSetBeatmapID, err := proc.ReadFloat32(uintptr(currentBeatmapDataFirtLevel + 0x38))
 	if err != nil {
-		log.Println("OD result level pointer failure")
+		//	log.Println("OD result level pointer failure")
 		return -5
 	}
 	return currentSetBeatmapID
@@ -755,17 +751,17 @@ func CurrentAppliedMods() int32 {
 	}
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x1C))
 	if err != nil {
-		log.Println("CurrentCombo result pointer failure")
+		//		log.Println("CurrentCombo result pointer failure")
 		return -5
 	}
 	xorVal1, err := proc.ReadInt32(uintptr(currentCombo + 0xC))
 	if err != nil {
-		log.Println("CurrentCombo result pointer failure")
+		//	log.Println("CurrentCombo result pointer failure")
 		return -6
 	}
 	xorVal2, err := proc.ReadInt32(uintptr(currentCombo + 0x8))
 	if err != nil {
-		log.Println("CurrentCombo result pointer failure")
+		//	log.Println("CurrentCombo result pointer failure")
 		return -7
 	}
 	val := xorVal2 ^ xorVal1
@@ -778,7 +774,7 @@ func CurrentCombo() int32 {
 
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x90))
 	if err != nil {
-		log.Println("CurrentCombo result pointer failure")
+		//	log.Println("CurrentCombo result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -790,7 +786,7 @@ func CurrentMaxCombo() int32 {
 
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x68))
 	if err != nil {
-		log.Println("CurrentCombo result pointer failure")
+		//		log.Println("CurrentCombo result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -802,7 +798,7 @@ func CurrentHit100c() int16 {
 
 	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x84)) //2 bytes
 	if err != nil {
-		log.Println("CurrentHit100c result pointer failure")
+		//	log.Println("CurrentHit100c result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -813,7 +809,7 @@ func CurrentHit300c() int16 {
 	}
 	current300, err := proc.ReadInt16(uintptr(playContainer38 + 0x86)) //2 bytes
 	if err != nil {
-		log.Println("CurrentHit300c result pointer failure")
+		//		log.Println("CurrentHit300c result pointer failure")
 		return -5
 	}
 	//currentgeki, err := proc.ReadInt16(uintptr(comboSecondLevel + 0x8A)) //2 bytes
@@ -827,7 +823,7 @@ func CurrentHit50c() int16 {
 
 	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x88)) //2 bytes
 	if err != nil {
-		log.Println("CurrentHitMiss result pointer failure")
+		//	log.Println("CurrentHitMiss result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -839,7 +835,7 @@ func CurrentHitMiss() int16 {
 
 	currentCombo, err := proc.ReadInt16(uintptr(playContainer38 + 0x8E)) //2 bytes
 	if err != nil {
-		log.Println("CurrentHitMiss result pointer failure")
+		//		log.Println("CurrentHitMiss result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -851,7 +847,7 @@ func CurrentScore() int32 {
 
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x74))
 	if err != nil {
-		log.Println("CurrentScore result pointer failure")
+		//	log.Println("CurrentScore result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -863,7 +859,7 @@ func CurrentGameMode() int32 {
 
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x64))
 	if err != nil {
-		log.Println("GameMode result pointer failure")
+		//		log.Println("GameMode result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -875,12 +871,12 @@ func CurrentAccuracy() float64 {
 
 	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x48)
 	if err != nil {
-		log.Println("Accuracy Second level pointer failure")
+		//	log.Println("Accuracy Second level pointer failure")
 		return -4
 	}
 	currentCombo, err := proc.ReadFloat64(uintptr(comboSecondLevel + 0x14))
 	if err != nil {
-		log.Println("Accuracy result pointer failure")
+		//		log.Println("Accuracy result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -892,12 +888,12 @@ func CurrentPlayerHP() int8 {
 
 	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
 	if err != nil {
-		log.Println("CurrentPlayerHP Second level pointer failure")
+		//		log.Println("CurrentPlayerHP Second level pointer failure")
 		return -4
 	}
 	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x1C))
 	if err != nil {
-		log.Println("CurrentPlayerHP result pointer failure")
+		//	log.Println("CurrentPlayerHP result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -909,12 +905,12 @@ func CurrentPlayerHPSmoothed() int8 {
 
 	comboSecondLevel, err := proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x40)
 	if err != nil {
-		log.Println("CurrentPlayerHPSmoothed Second level pointer failure")
+		//	log.Println("CurrentPlayerHPSmoothed Second level pointer failure")
 		return -4
 	}
 	currentCombo, err := proc.ReadInt8(uintptr(comboSecondLevel + 0x14))
 	if err != nil {
-		log.Println("CurrentPlayerHPSmoothed result pointer failure")
+		//		log.Println("CurrentPlayerHPSmoothed result pointer failure")
 		return -5
 	}
 	return currentCombo
@@ -922,12 +918,12 @@ func CurrentPlayerHPSmoothed() int8 {
 func CurrentPlayTime() int32 {
 	playTimeFirstLevel, err := proc.ReadUint32(playTime)
 	if err != nil {
-		log.Println("playTime Base level failure")
+		//	log.Println("playTime Base level failure")
 		return -1
 	}
 	playTimeValue, err := proc.ReadUint32(uintptr(playTimeFirstLevel))
 	if err != nil {
-		log.Println("playTime Result level failure")
+		//	log.Println("playTime Result level failure")
 		return -1
 	}
 
@@ -1065,5 +1061,5 @@ func ModsResolver(xor uint32) string {
 func HTTPServer() {
 	router := mux.NewRouter()
 	router.PathPrefix("/").Handler(http.FileServer(rice.MustFindBox("static").HTTPBox()))
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":24050", router))
 }
