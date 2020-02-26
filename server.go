@@ -15,8 +15,7 @@ import (
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
-	rice "github.com/GeertJohan/go.rice"
-	"github.com/gorilla/mux"
+	"github.com/gobuffalo/packr"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cast"
 )
@@ -309,7 +308,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		playContainer = OsuplayContainer()
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
-		isRunning = 1
+
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
 			restart()
@@ -317,6 +316,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+	isRunning = 1
 	fmt.Println("it seems that we got the correct offsets, you are good to go!")
 	log.Println("Client Connected")
 
@@ -571,15 +571,15 @@ func setupRoutes() {
 
 func main() {
 	if runtime.GOOS == "windows" {
-		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050")
+		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
 		operatingSystem = 1
 	}
 	if runtime.GOOS == "linux" {
-		fmt.Println("Hello from Linux, Please add a browser source in obs to http://127.0.0.1:24050")
+		fmt.Println("Hello from Linux, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
 		operatingSystem = 2
 
 	}
-	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -1059,7 +1059,18 @@ func ModsResolver(xor uint32) string {
 
 }
 func HTTPServer() {
-	router := mux.NewRouter()
-	router.PathPrefix("/").Handler(http.FileServer(rice.MustFindBox("static").HTTPBox()))
-	log.Fatal(http.ListenAndServe(":24050", router))
+	box := packr.NewBox("./index")
+	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir("./index/Songs"))))
+	http.Handle("/", http.FileServer(box))
+	http.HandleFunc("/json", handler)
+	http.ListenAndServe(":24050", nil)
+}
+func handler(w http.ResponseWriter, r *http.Request) {
+	if isRunning == 1 {
+		fmt.Fprintf(w, cast.ToString(jsonByte))
+
+	} else {
+		fmt.Fprintf(w, "osu! is not fully loaded!")
+	}
+
 }
