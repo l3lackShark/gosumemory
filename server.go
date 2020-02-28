@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
-	"github.com/gobuffalo/packr"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cast"
 )
@@ -47,8 +46,14 @@ var ppCombo string
 var pp100 string
 var pp50 string
 var ppMiss string
-var ppMods string
+var ppMods string = ""
 var pp string = ""
+var ppSS string = ""
+var pp99 string = ""
+var pp98 string = ""
+var pp97 string = ""
+var pp96 string = ""
+var pp95 string = ""
 var ppifFC string = ""
 var innerBGPath string = ""
 var updateTime int
@@ -57,6 +62,7 @@ var workingDirectory string
 var operatingSystem int8
 var uintptrOsuStatus uintptr
 var jsonByte []byte
+var isPizdec int8 = 0
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -271,11 +277,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
 		log.Println("is osu! running? (osu! process was not found, waiting...)")
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-		time.Sleep(5 * time.Second)
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
-		time.Sleep(5 * time.Second)            //hack to wait for the game
+		//	time.Sleep(5 * time.Second)            //hack to wait for the game
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
 		if err != nil {
@@ -325,21 +330,24 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	for {
 
-		osuStatusValue, osuStatusValueErr := proc.ReadUint16(uintptrOsuStatus)
+		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
 		osuStatus = osuStatusValue
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		for procerr != nil {
+			isPizdec = 1
+			fmt.Println("isPizdec = 1")
 			log.Println("is osu! running? (osu! process was not found, waiting...)")
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 			time.Sleep(1 * time.Second)
 		}
-		if osuStatusValueErr != nil { //TODO Refactor, doesn't always work
-
+		if isPizdec == 1 {
 			fmt.Println("It looks like we have a client restart!")
+			isPizdec = 0
+			fmt.Println("isPizdec = 0")
 			time.Sleep(10 * time.Second) // hack to wait for a client restart
 			restart()
-
 		}
+
 		//init base stuff
 		currentBeatmapDataBase, err = proc.ReadUint32(currentBeatmapData)
 		if err != nil {
@@ -375,6 +383,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentCombo            int32   `json:"combo"`
 			CurrentGameMode         int32   `json:"gameMode"`
 			CurrentAppliedMods      int32   `json:"appliedMods"`
+			PpMods                  string  `json:"appliedModsString"`
 			CurrentMaxCombo         int32   `json:"maxCombo"`
 			CurrentPlayerHP         int8    `json:"playerHP"`
 			CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
@@ -394,6 +403,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
 			CurrentPlayTime             int32   `json:"bmCurrentTime"`
 			InnerBGPath                 string  `json:"innerBG"`
+			PpSS                        string  `json:"ppSS"`
+			Pp99                        string  `json:"pp99"`
+			Pp98                        string  `json:"pp98"`
+			Pp97                        string  `json:"pp97"`
+			Pp96                        string  `json:"pp96"`
+			Pp95                        string  `json:"pp95"`
 		}
 
 		type EverythingInMenu2 struct { //order sets here
@@ -416,6 +431,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
 			Pp:                      pp,
 			PPifFC:                  ppifFC,
+			PpMods:                  ppMods,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -437,6 +453,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapHP:            CurrentBeatmapHP(),
 			CurrentPlayTime:             CurrentPlayTime(),
 			InnerBGPath:                 innerBGPath,
+			PpSS:                        ppSS,
+			Pp99:                        pp99,
+			Pp98:                        pp98,
+			Pp97:                        pp97,
+			Pp96:                        pp96,
+			Pp95:                        pp95,
 		}
 		if osuStatusValue == 2 {
 
@@ -452,13 +474,22 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
 					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
-					pp = PP()
+					pp = PP()                                                                    //current pp
 					ppifFC = PPifFC()
+
 					break
 
 				}
 			}
 
+		}
+		if osuStatus == 5 || osuStatus == 4 { //TODO: Refactor
+			ppSS = PPSS()
+			pp99 = PP99()
+			pp98 = PP98()
+			pp97 = PP97()
+			pp96 = PP96()
+			pp95 = PP95()
 		}
 
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
@@ -579,7 +610,7 @@ func main() {
 		operatingSystem = 2
 
 	}
-	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -779,6 +810,7 @@ func CurrentCombo() int32 {
 	}
 	return currentCombo
 }
+
 func CurrentMaxCombo() int32 {
 	if osuStatus != 2 {
 		return -1
@@ -959,6 +991,96 @@ func PPifFC() string {
 	}
 
 }
+func PPSS() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "100%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"100%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
+func PP99() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "99%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"99%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
+func PP98() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "98%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"98%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
+func PP97() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "97%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"97%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
+func PP96() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "96%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"96%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
+func PP95() string {
+	if operatingSystem == 1 {
+		calc, err := exec.Command("oppai.exe", fullPathToOsu, "95%", "+"+ppMods, "-ojson").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	} else {
+		calc := Cmd("oppai"+" "+"\""+fullPathToOsu+"\""+" "+"95%"+" "+"+"+ppMods+" "+"-ojson", true)
+
+		return strings.ToValidUTF8(cast.ToString(calc), "")
+	}
+
+}
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
 		if predicate(i) {
@@ -968,6 +1090,9 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 func ModsResolver(xor uint32) string {
+	if xor >= 2048 {
+		xor = xor - 2048 //autoplay hack, TODO: Refactor Only works with STD
+	}
 	NoMod := uint32(0)
 	NoFail := uint32(1) << 0
 	Easy := uint32(1) << 1
@@ -1059,9 +1184,12 @@ func ModsResolver(xor uint32) string {
 
 }
 func HTTPServer() {
-	box := packr.NewBox("./index")
-	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir("./index/Songs"))))
-	http.Handle("/", http.FileServer(box))
+
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
+	//box := packr.NewBox("./index")
+	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(workingDirectory))))
+	//	http.Handle("/", http.FileServer(box))
 	http.HandleFunc("/json", handler)
 	http.ListenAndServe(":24050", nil)
 }
