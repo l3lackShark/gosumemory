@@ -69,7 +69,7 @@ var reqRestart int8 = 0
 func Cmd(cmd string, shell bool) []byte {
 
 	if shell {
-		out, err := exec.Command("bash", "-c", cmd).Output()
+		out, err := exec.Command("sh", "-c", cmd).Output()
 		if err != nil {
 			println("some error found", err)
 		}
