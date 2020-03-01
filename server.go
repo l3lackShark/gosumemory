@@ -39,6 +39,8 @@ var playContainerFirstlevel uint32
 var playContainer38 uint32
 var fullPathToOsu string
 var osuFileStdIN string
+
+//Gameplay pp related
 var ourTime []int
 var lastObjectInt int
 var lastObject string
@@ -49,6 +51,8 @@ var pp50 string
 var ppMiss string
 var ppMods string = ""
 var pp string = ""
+
+//Menu pp related
 var ppSS string = ""
 var pp99 string = ""
 var pp98 string = ""
@@ -63,8 +67,7 @@ var workingDirectory string
 var operatingSystem int8
 var uintptrOsuStatus uintptr
 var jsonByte []byte
-var isPizdec int8 = 0
-var counter string
+var reqRestart int8 = 0
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -282,8 +285,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (if you closed the game, pleae restart the program.))")
 		}
-
-		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
@@ -340,22 +341,22 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		osuStatus = osuStatusValue
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		for procerr != nil {
-			isPizdec = 1
-			fmt.Println("isPizdec = 1")
+			reqRestart = 1
+			fmt.Println("reqRestart = 1")
 			log.Println("is osu! running? (osu! process was not found, waiting...)")
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 			time.Sleep(1 * time.Second)
 		}
-		if isPizdec == 1 {
+		if reqRestart == 1 {
 			if operatingSystem == 1 {
 				fmt.Println("It looks like we have a client restart!")
-				isPizdec = 0
-				fmt.Println("isPizdec = 0")
+				reqRestart = 0
+				fmt.Println("reqRestart = 0")
 				time.Sleep(10 * time.Second) // hack to wait for a client restart
 				restart()
 			} else {
 				fmt.Println("We don't support client restart on linux yet!")
-				isPizdec = 0 // Assuming that it was just a matter of losing the process
+				reqRestart = 0 // Assuming that it was just a matter of losing the process
 			}
 
 		}
@@ -484,24 +485,14 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
 				ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 				ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-				ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
+				ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
 				pp = PP()                                                                    //current pp
 				ppifFC = PPifFC()
 
-				break
+				break // Is the break really needed here?
 
 			}
 		}
-
-		// if osuStatus == 5 || osuStatus == 4 { //TODO: Refactor
-		// 	ppSS = PPSS()
-		// 	pp99 = PP99()
-		// 	pp98 = PP98()
-		// 	pp97 = PP97()
-		// 	pp96 = PP96()
-		// 	pp95 = PP95()
-		// }
-
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
 			pp = ""
@@ -518,7 +509,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
 			if err != nil {
-				//fmt.Println("osu file was not found2")
+				//	fmt.Println("osu file was not found2")
 			}
 			osuFileStdIN = string(j)
 			if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
@@ -546,30 +537,25 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				var bgString string
 				for scanner.Scan() {
 
-					//fmt.Println(scanner.Text())
 					if strings.Contains(scanner.Text(), ".jpg") == true {
 						bg := strings.Split(scanner.Text(), "\"")
 						bgString = (bg[1])
 						break
-						//log.Fatalln(scanner.Text())
 					}
 					if strings.Contains(scanner.Text(), ".png") == true {
 						bg := strings.Split(scanner.Text(), "\"")
 						bgString = (bg[1])
-						//log.Fatalln(scanner.Text())
 						break
 					}
 					if strings.Contains(scanner.Text(), ".JPG") == true {
 						bg := strings.Split(scanner.Text(), "\"")
 						bgString = (bg[1])
-						//log.Fatalln(scanner.Text())
 						break
 					}
 					if strings.Contains(scanner.Text(), ".PNG") == true {
 						bg := strings.Split(scanner.Text(), "\"")
 						bgString = (bg[1])
 						break
-						//log.Fatalln(scanner.Text())
 					} else {
 						bgString = ""
 					}
@@ -586,7 +572,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				//fmt.Println(OsuHitobjects())
 			} else {
-				//	fmt.Println("osu file was not found")
+				fmt.Println("osu file was not found")
 			}
 
 		}
@@ -606,10 +592,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 	}
-
-	// listen indefinitely for new messages coming
-	// through on our WebSocket connection
-	reader(ws)
 }
 
 func setupRoutes() {
@@ -617,11 +599,6 @@ func setupRoutes() {
 }
 
 func main() {
-
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Enter text: ")
-	// counter, _ = reader.ReadString('\n')
-
 	if runtime.GOOS == "windows" {
 		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
 		operatingSystem = 1
