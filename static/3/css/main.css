@@ -1,0 +1,69 @@
+:root {
+  --color-bg: #7ca8a4;
+  --color2-bg: #45625F;
+  --color-100: #83A87C;
+  --color2-100: #456255;
+  --color-50: #A8A87C;
+  --color2-50: #626245;
+  --color-0: #A87C7C;
+  --color2-0: #624545;
+}
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+::selection {background: #ffffff !important;}
+html, body {
+  text-shadow: 0 1px 0 black, 0 2px 0 black;
+  font-size: 40px;
+  font-family: 'Roboto', sans-serif;
+  color: white;
+  width: 1920px;
+  height: 1080px;
+  /*background: #8c8c8c;*/
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+}
+.main {
+    position: relative;
+    width: 600px;
+    margin: 20px;
+}
+.stat {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    display: flex;
+    height: 80px;
+    padding: 0 10px;
+    background: linear-gradient(125deg, var(--color-bg), var(--color2-bg));
+    border-radius: 250px;
+    box-shadow: 0 6px 0 var(--color2-bg), 0 10px 20px black;
+    z-index: 1;
+}
+.pp {width: 30%;}
+.hits {
+    display: flex;
+    width: 70%;
+}
+.hits>* {
+    width: 33.3%;
+}
+.hits>*>span {
+    padding: 5px 15px;
+    border-radius: 10px;
+}
+.h100 span {
+    background: linear-gradient(45deg, var(--color-100), var(--color2-100));
+    box-shadow: 0 4px 0 var(--color2-100), 0 3px 10px rgba(0, 0, 0, .5);
+}
+.h50 span {
+    background: linear-gradient(45deg, var(--color-50), var(--color2-50));
+    box-shadow: 0 4px 0 var(--color2-50), 0 3px 10px rgba(0, 0, 0, .5);
+}
+.h0 span {
+    background: linear-gradient(45deg, var(--color-0), var(--color2-0));
+    box-shadow: 0 4px 0 var(--color2-0), 0 3px 10px rgba(0, 0, 0, .5);
+}

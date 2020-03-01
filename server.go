@@ -1,18 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
@@ -526,51 +523,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
-				//fmt.Println(fullPathToOsu)
-				file, err := os.Open(fullPathToOsu)
-				if err != nil {
-					log.Println(err, "in error")
-					defer file.Close()
-				}
-				defer file.Close()
-				scanner := bufio.NewScanner(file)
-				var bgString string
-				for scanner.Scan() {
+				var bgString string = CurrentBeatmapBackgroundString()
 
-					if strings.Contains(scanner.Text(), ".jpg") == true {
-						bg := strings.Split(scanner.Text(), "\"")
-						bgString = (bg[1])
-						break
-					}
-					if strings.Contains(scanner.Text(), ".png") == true {
-						bg := strings.Split(scanner.Text(), "\"")
-						bgString = (bg[1])
-						break
-					}
-					if strings.Contains(scanner.Text(), ".JPG") == true {
-						bg := strings.Split(scanner.Text(), "\"")
-						bgString = (bg[1])
-						break
-					}
-					if strings.Contains(scanner.Text(), ".PNG") == true {
-						bg := strings.Split(scanner.Text(), "\"")
-						bgString = (bg[1])
-						break
-					} else {
-						bgString = ""
-					}
-				}
-				if err := scanner.Err(); err != nil {
-					log.Println(err)
-				}
 				if bgString != "" {
-					//var fullPathToBG string = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString)
 					innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
-					//var fullBGCommand string = fmt.Sprintf("ln -nsf " + "\"" + fullPathToBG + "\"" + " " + "$PWD" + "/bg.png")
-					//Cmd((fullBGCommand), true)
+					fmt.Println(innerBGPath)
 				}
 
-				//fmt.Println(OsuHitobjects())
 			} else {
 				fmt.Println("osu file was not found")
 			}
@@ -589,6 +548,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		//if err != nil {
 		//	log.Println(err)
 		//}
+		fmt.Println(CurrentBeatmapBackgroundString())
 		time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 	}
@@ -608,27 +568,27 @@ func main() {
 		operatingSystem = 2
 
 	}
-	if operatingSystem == 2 { // hack to fix "Too many open files"
-		var rLimit syscall.Rlimit
-		err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-		if err != nil {
-			fmt.Println("Error Getting Rlimit ", err)
-		}
-		fmt.Println(rLimit)
-		rLimit.Max = 999999
-		rLimit.Cur = 999999
-		err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-		if err != nil {
-			fmt.Println("Error Setting Rlimit ", err)
-		}
-		err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-		if err != nil {
-			fmt.Println("Error Getting Rlimit ", err)
-		}
-		fmt.Println("Rlimit Final", rLimit)
-	}
+	// if operatingSystem == 2 { // hack to fix "Too many open files"
+	// 	var rLimit syscall.Rlimit
+	// 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	// 	if err != nil {
+	// 		fmt.Println("Error Getting Rlimit ", err)
+	// 	}
+	// 	fmt.Println(rLimit)
+	// 	rLimit.Max = 999999
+	// 	rLimit.Cur = 999999
+	// 	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	// 	if err != nil {
+	// 		fmt.Println("Error Setting Rlimit ", err)
+	// 	}
+	// 	err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	// 	if err != nil {
+	// 		fmt.Println("Error Getting Rlimit ", err)
+	// 	}
+	// 	fmt.Println("Rlimit Final", rLimit)
+	// }
 
-	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -725,6 +685,21 @@ func CurrentBeatmapString() string {
 	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapStringSecondLevel + 0x8)))
 	if err != nil {
 		//	log.Println("BeatMapString Third level pointer failure")
+		return "-5"
+	}
+	return beatmapStringResult
+}
+
+func CurrentBeatmapBackgroundString() string {
+	beatmapStringSecondLevel, err := proc.ReadUint32(uintptr(currentBeatmapDataFirtLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapBackgroundString Second level pointer failure")
+		return "-4"
+	}
+
+	beatmapStringResult, err := proc.ReadNullTerminatedUTF16String((uintptr(beatmapStringSecondLevel + 0x8)))
+	if err != nil {
+		//	log.Println("CurrentBeatmapBackgroundString Third level pointer failure")
 		return "-5"
 	}
 	return beatmapStringResult
