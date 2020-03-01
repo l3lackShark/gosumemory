@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
@@ -63,6 +64,7 @@ var operatingSystem int8
 var uintptrOsuStatus uintptr
 var jsonByte []byte
 var isPizdec int8 = 0
+var counter string
 
 func Cmd(cmd string, shell bool) []byte {
 
@@ -275,7 +277,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	for procerr != nil { //TODO: refactor
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
-		log.Println("is osu! running? (osu! process was not found, waiting...)")
+		if operatingSystem == 1 {
+			log.Println("is osu! running? (osu! process was not found, waiting...)")
+		} else {
+			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (if you closed the game, pleae restart the program.))")
+		}
+
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	}
 	if isRunning == 0 {
@@ -326,7 +333,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
-	//var tempOsuState uint16 = 2
 
 	for {
 
@@ -341,11 +347,17 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(1 * time.Second)
 		}
 		if isPizdec == 1 {
-			fmt.Println("It looks like we have a client restart!")
-			isPizdec = 0
-			fmt.Println("isPizdec = 0")
-			time.Sleep(10 * time.Second) // hack to wait for a client restart
-			restart()
+			if operatingSystem == 1 {
+				fmt.Println("It looks like we have a client restart!")
+				isPizdec = 0
+				fmt.Println("isPizdec = 0")
+				time.Sleep(10 * time.Second) // hack to wait for a client restart
+				restart()
+			} else {
+				fmt.Println("We don't support client restart on linux yet!")
+				isPizdec = 0 // Assuming that it was just a matter of losing the process
+			}
+
 		}
 
 		//init base stuff
@@ -460,37 +472,35 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			Pp96:                        pp96,
 			Pp95:                        pp95,
 		}
-		if osuStatusValue == 2 {
 
-			for _, hitObjectTime := range ourTime {
+		for _, hitObjectTime := range ourTime {
 
-				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
+			if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
 
-					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
-					lastObject = cast.ToString(lastObjectInt)
-					ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
-					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
-					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
-					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
-					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-					ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
-					pp = PP()                                                                    //current pp
-					ppifFC = PPifFC()
+				lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
+				lastObject = cast.ToString(lastObjectInt)
+				ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
+				pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
+				pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
+				ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
+				ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
+				ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once)
+				pp = PP()                                                                    //current pp
+				ppifFC = PPifFC()
 
-					break
+				break
 
-				}
 			}
+		}
 
-		}
-		if osuStatus == 5 || osuStatus == 4 { //TODO: Refactor
-			ppSS = PPSS()
-			pp99 = PP99()
-			pp98 = PP98()
-			pp97 = PP97()
-			pp96 = PP96()
-			pp95 = PP95()
-		}
+		// if osuStatus == 5 || osuStatus == 4 { //TODO: Refactor
+		// 	ppSS = PPSS()
+		// 	pp99 = PP99()
+		// 	pp98 = PP98()
+		// 	pp97 = PP97()
+		// 	pp96 = PP96()
+		// 	pp95 = PP95()
+		// }
 
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
@@ -499,6 +509,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
+			ppSS = PPSS()
+			pp99 = PP99()
+			pp98 = PP98()
+			pp97 = PP97()
+			pp96 = PP96()
+			pp95 = PP95()
 
 			j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
 			if err != nil {
@@ -601,6 +617,11 @@ func setupRoutes() {
 }
 
 func main() {
+
+	// reader := bufio.NewReader(os.Stdin)
+	// fmt.Print("Enter text: ")
+	// counter, _ = reader.ReadString('\n')
+
 	if runtime.GOOS == "windows" {
 		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
 		operatingSystem = 1
@@ -610,7 +631,27 @@ func main() {
 		operatingSystem = 2
 
 	}
-	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	if operatingSystem == 2 { // hack to fix "Too many open files"
+		var rLimit syscall.Rlimit
+		err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+		if err != nil {
+			fmt.Println("Error Getting Rlimit ", err)
+		}
+		fmt.Println(rLimit)
+		rLimit.Max = 999999
+		rLimit.Cur = 999999
+		err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+		if err != nil {
+			fmt.Println("Error Setting Rlimit ", err)
+		}
+		err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+		if err != nil {
+			fmt.Println("Error Getting Rlimit ", err)
+		}
+		fmt.Println("Rlimit Final", rLimit)
+	}
+
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -1089,6 +1130,8 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	}
 	return -1
 }
+
+// ModsResolver is just a placeholder for now, needs proper logic or at least switch statements
 func ModsResolver(xor uint32) string {
 	if xor >= 2048 {
 		xor = xor - 2048 //autoplay hack, TODO: Refactor Only works with STD
