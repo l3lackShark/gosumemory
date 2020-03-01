@@ -23,6 +23,7 @@ var osuBase uintptr
 var osuStatus uint16
 var currentBeatmapData uintptr
 var playContainer uintptr
+var inMenuAppliedModsBase uintptr
 var playContainerBase uintptr
 var serverBeatmapString string
 var outStrLoop string
@@ -157,6 +158,45 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 
 	if osuBase == 0 {
 		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+	}
+
+	//println(CurrentBeatmapFolderString())
+	return osuBase
+}
+
+func OsuInMenuModsAddr() uintptr { //in hopes to deprecate this
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("InMenuAppliedModsAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+
+		osuBase = uintptr(outInt)
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;55 8B EC 57 56 53 83 EC 3C 8B F1 8B CE;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("OsuBase addr fail")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
+	if osuBase == 0 {
+		log.Fatalln("OsuPlayTimeAddr is not found")
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -319,6 +359,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		playContainer = OsuplayContainer()
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
+		inMenuAppliedModsBase = OsuInMenuModsAddr()
 
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
@@ -770,7 +811,7 @@ func CurrentBeatmapOD() float32 {
 // ------------------- PlayContainer
 func CurrentAppliedMods() int32 {
 	if osuStatus != 2 {
-		return -1
+		return inMenuAppliedModsValue()
 	}
 	currentCombo, err := proc.ReadInt32(uintptr(playContainer38 + 0x1C))
 	if err != nil {
@@ -851,6 +892,19 @@ func CurrentHit50c() int16 {
 		return -5
 	}
 	return currentCombo
+}
+func inMenuAppliedModsValue() int32 {
+	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsBase + 0x4C)) //2 bytes
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return -5
+	}
+	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel + 0xA8)) //2 bytes
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return -5
+	}
+	return inMenuAppliedModsResult
 }
 func CurrentHitMiss() int16 {
 	if osuStatus != 2 {
