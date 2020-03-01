@@ -527,7 +527,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				if bgString != "" {
 					innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
-					fmt.Println(innerBGPath)
 				}
 
 			} else {
@@ -548,7 +547,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		//if err != nil {
 		//	log.Println(err)
 		//}
-		fmt.Println(CurrentBeatmapBackgroundString())
 		time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 	}
