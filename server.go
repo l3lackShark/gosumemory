@@ -20,6 +20,7 @@ import (
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 
 var osuBase uintptr
+var bpmBase uintptr
 var osuStatus uint16
 var currentBeatmapData uintptr
 var playContainer uintptr
@@ -37,6 +38,7 @@ var playContainerFirstlevel uint32
 var playContainer38 uint32
 var fullPathToOsu string
 var osuFileStdIN string
+var currentHitObjectStats string = ""
 
 //Gameplay pp related
 var ourTime []int
@@ -100,6 +102,46 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 
 	} else {
 		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
+		outStr := cast.ToString(x)
+		outStr = strings.Replace(outStr, " ", "", -1)
+
+		input := outStr
+		if input == "" {
+			log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		}
+		output := (input[3:])
+		yosuBase := firstN(output, 8)
+		check := strings.Contains(yosuBase, ",")
+		if check == true {
+			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		}
+		osuBaseString := "0x" + yosuBase
+		osuBaseUINT32 := cast.ToUint32(osuBaseString)
+		osuBase = uintptr(osuBaseUINT32)
+	}
+	if osuBase == 0 {
+		log.Fatalln("could not find osuStatusAddr, is osu! running?")
+	}
+
+	//println(CurrentBeatmapFolderString())
+	return osuBase
+
+}
+func OsuBPMAddr() uintptr { //in hopes to deprecate this
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("OsuBPMAddr.exe").Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+
+		osuBase = uintptr(outInt)
+
+	} else {
+		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;?? ?? ?? ?? 8B 40 08 89 86 4C 01 00 00 C6;list;exit'", true)
 		outStr := cast.ToString(x)
 		outStr = strings.Replace(outStr, " ", "", -1)
 
@@ -320,13 +362,14 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if operatingSystem == 1 {
 			log.Println("is osu! running? (osu! process was not found, waiting...)")
 			time.Sleep(1 * time.Second)
+			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		} else {
 			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (if you closed the game, pleae restart the program.))")
 		}
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
-		//	time.Sleep(5 * time.Second)            //hack to wait for the game
+		time.Sleep(7 * time.Second)            //hack to wait for the game
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
 		if err != nil {
@@ -360,6 +403,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
 		inMenuAppliedModsBase = OsuInMenuModsAddr()
+		bpmBase = OsuBPMAddr()
 
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
@@ -373,6 +417,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
+	var tempCurrentAppliedMods int32
 
 	for {
 
@@ -434,7 +479,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentScore            int32   `json:"score"`
 			CurrentCombo            int32   `json:"combo"`
 			CurrentGameMode         int32   `json:"gameMode"`
-			CurrentAppliedMods      int32   `json:"appliedMods"`
 			PpMods                  string  `json:"appliedModsString"`
 			CurrentMaxCombo         int32   `json:"maxCombo"`
 			CurrentPlayerHP         int8    `json:"playerHP"`
@@ -453,8 +497,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentBeatmapString        string  `json:"bmInfo"`
 			CurrentBeatmapFolderString  string  `json:"bmFolder"`
 			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
+			CurrentHitObjectStats       string  `json:"bmStats"`
 			CurrentPlayTime             int32   `json:"bmCurrentTime"`
 			InnerBGPath                 string  `json:"innerBG"`
+			CurrentAppliedMods          int32   `json:"appliedMods"`
 			PpSS                        string  `json:"ppSS"`
 			Pp99                        string  `json:"pp99"`
 			Pp98                        string  `json:"pp98"`
@@ -477,7 +523,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			CurrentAccuracy:         CurrentAccuracy(),
 			CurrentCombo:            CurrentCombo(),
 			CurrentGameMode:         CurrentGameMode(),
-			CurrentAppliedMods:      CurrentAppliedMods(),
 			CurrentMaxCombo:         CurrentMaxCombo(),
 			CurrentPlayerHP:         CurrentPlayerHP(),
 			CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
@@ -493,17 +538,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		// if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
 		// 	println("beatmapstring ends with ???")
 		// }
-		MenuContainerStruct := EverythingInMenu{CurrentState: osuStatus,
+		MenuContainerStruct := EverythingInMenu{
+			CurrentState:                osuStatus,
 			CurrentBeatmapID:            CurrentBeatmapID(),
 			CurrentBeatmapSetID:         CurrentBeatmapSetID(),
 			CurrentBeatmapString:        CurrentBeatmapString(),
 			CurrentBeatmapFolderString:  CurrentBeatmapFolderString(),
 			CurrentBeatmapOsuFileString: CurrentBeatmapOsuFileString(),
+			CurrentAppliedMods:          CurrentAppliedMods(),
 			CurrentBeatmapAR:            CurrentBeatmapAR(),
 			CurrentBeatmapOD:            CurrentBeatmapOD(),
 			CurrentBeatmapCS:            CurrentBeatmapCS(),
 			CurrentBeatmapHP:            CurrentBeatmapHP(),
 			CurrentPlayTime:             CurrentPlayTime(),
+			CurrentHitObjectStats:       currentHitObjectStats,
 			InnerBGPath:                 innerBGPath,
 			PpSS:                        ppSS,
 			Pp99:                        pp99,
@@ -524,13 +572,22 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
 				ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 				ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-				ppMods = ModsResolver(cast.ToUint32(PlayContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
+				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
 				pp = PP()                                                                    //current pp
 				ppifFC = PPifFC()
 
 				break // Is the break really needed here?
 
 			}
+		}
+		if MenuContainerStruct.CurrentAppliedMods != tempCurrentAppliedMods || MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
+			ppSS = PPSS()
+			pp99 = PP99()
+			pp98 = PP98()
+			pp97 = PP97()
+			pp96 = PP96()
+			pp95 = PP95()
+			tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
 		}
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
@@ -539,13 +596,8 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
 			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
-			ppSS = PPSS()
-			pp99 = PP99()
-			pp98 = PP98()
-			pp97 = PP97()
-			pp96 = PP96()
-			pp95 = PP95()
 
+			currentHitObjectStats = CurrentHitObjectStatsString()
 			j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
 			if err != nil {
 				//	fmt.Println("osu file was not found2")
@@ -897,7 +949,7 @@ func inMenuAppliedModsValue() int32 {
 	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsBase + 0x4C)) //2 bytes
 	if err != nil {
 		//	log.Println("CurrentHitMiss result pointer failure")
-		return -5
+		return -1
 	}
 	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel + 0xA8)) //2 bytes
 	if err != nil {
@@ -905,6 +957,34 @@ func inMenuAppliedModsValue() int32 {
 		return -5
 	}
 	return inMenuAppliedModsResult
+}
+func CurrentHitObjectStatsString() string {
+	CurrentHitObjectStatsStringFirstLevel, err := proc.ReadInt32(uintptr(bpmBase))
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return "-1"
+	}
+	CurrentHitObjectStatsStringSecondLevel, err := proc.ReadInt32(uintptr(CurrentHitObjectStatsStringFirstLevel + 0x4))
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return "-2"
+	}
+	CurrentHitObjectStatsStringThirdLevel, err := proc.ReadInt32(uintptr(CurrentHitObjectStatsStringSecondLevel + 0x20))
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return "-3"
+	}
+	CurrentHitObjectStatsStringFourthLevel, err := proc.ReadInt32(uintptr(CurrentHitObjectStatsStringThirdLevel + 0x2F4))
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return "-4"
+	}
+	CurrentHitObjectStatsStringResult, err := proc.ReadNullTerminatedUTF16String(uintptr(CurrentHitObjectStatsStringFourthLevel + 0x8))
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return "-5"
+	}
+	return CurrentHitObjectStatsStringResult
 }
 func CurrentHitMiss() int16 {
 	if osuStatus != 2 {
