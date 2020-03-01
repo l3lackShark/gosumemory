@@ -279,6 +279,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		ws.WriteMessage(1, []byte("osu!.exe not found"))
 		if operatingSystem == 1 {
 			log.Println("is osu! running? (osu! process was not found, waiting...)")
+			time.Sleep(1 * time.Millisecond)
 		} else {
 			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (if you closed the game, pleae restart the program.))")
 		}
