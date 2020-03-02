@@ -762,7 +762,7 @@ func main() {
 	// 	fmt.Println("Rlimit Final", rLimit)
 	// }
 
-	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
