@@ -574,23 +574,26 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			Pp95:                        pp95,
 		}
 
-		for _, hitObjectTime := range ourTime {
+		if PlayContainerStruct.CurrentMaxCombo >= 1 {
 
-			if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
+			for _, hitObjectTime := range ourTime {
 
-				lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
-				lastObject = cast.ToString(lastObjectInt)
-				ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
-				pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
-				pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
-				ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
-				ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
-				pp = PP()                                                                    //current pp
-				ppifFC = PPifFC()
+				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
 
-				break // Is the break really needed here?
+					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
+					lastObject = cast.ToString(lastObjectInt)
+					ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
+					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
+					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
+					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
+					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
+					ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
+					pp = PP()                                                                    //current pp
+					ppifFC = PPifFC()
 
+					break // Is the break really needed here?
+
+				}
 			}
 		}
 		if MenuContainerStruct.CurrentAppliedMods != tempCurrentAppliedMods || MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
