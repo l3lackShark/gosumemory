@@ -118,6 +118,7 @@ func OsuStatusAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuStatusAddr: 0x%x\n", osuBase)
 
 	} else {
 		maps, err := readMaps(int(proc.PID))
@@ -152,7 +153,7 @@ func OsuBPMAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuBPMAddr.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -160,6 +161,7 @@ func OsuBPMAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuBPMAddr: 0x%x\n", osuBase)
 
 	} else {
 		maps, err := readMaps(int(proc.PID))
@@ -196,13 +198,14 @@ func OsuBaseAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuBaseAddr.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
 		outStr = strings.Replace(outStr, "\r", "", -1)
 		outInt := cast.ToUint32(outStr)
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuBaseAddr: 0x%x\n", osuBase)
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
@@ -238,7 +241,7 @@ func OsuInMenuModsAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("InMenuAppliedModsAddr.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -246,6 +249,7 @@ func OsuInMenuModsAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuBaseAddr: 0x%x\n", osuBase)
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
@@ -281,7 +285,7 @@ func OsuPlayTimeAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -289,6 +293,7 @@ func OsuPlayTimeAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuPlayTimeAddr: 0x%x\n", osuBase)
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
@@ -325,7 +330,7 @@ func OsuplayContainer() uintptr {
 
 		cmd, err := exec.Command("OsuPlayContainer.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -333,6 +338,7 @@ func OsuplayContainer() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
+		fmt.Printf("OsuPlayContainer: 0x%x\n", osuBase)
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
@@ -425,17 +431,22 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			ws.WriteMessage(1, []byte("osu!status value was not found"))
 			log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
 		}
-
-		for osuStatusValue != 5 {
-			log.Println("please go to songselect in order to proceed!")
+		for {
+			fmt.Println("please go to songselect or playmode in order to proceed!")
 			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
 			if err != nil {
 				fmt.Println("It looks like we lost the process, performing a restart...")
 				restart()
 			}
-			ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
-
+			if osuStatusValue == 2 {
+				break
+			}
+			if osuStatusValue == 5 {
+				break
+			}
 			time.Sleep(500 * time.Millisecond)
+
+			// time.Sleep(1 * time.Second)
 
 		}
 
@@ -791,14 +802,19 @@ func restart() {
 			log.Println("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
 		}
 
-		for osuStatusValue != 5 {
-			log.Println("please go to songselect in order to proceed!")
+		for {
+			fmt.Println("please go to songselect or playmode in order to proceed!")
 			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
 			if err != nil {
 				fmt.Println("It looks like we lost the process, performing a restart...")
 				restart()
 			}
-
+			if osuStatusValue == 2 {
+				break
+			}
+			if osuStatusValue == 5 {
+				break
+			}
 			time.Sleep(500 * time.Millisecond)
 
 			// time.Sleep(1 * time.Second)
@@ -1172,7 +1188,7 @@ func PP() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1187,7 +1203,7 @@ func PPifFC() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1202,7 +1218,7 @@ func PPSS() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "100%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1217,7 +1233,7 @@ func PP99() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "99%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1232,7 +1248,7 @@ func PP98() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "98%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1247,7 +1263,7 @@ func PP97() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "97%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1262,7 +1278,7 @@ func PP96() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("oppai.exe", fullPathToOsu, "96%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
