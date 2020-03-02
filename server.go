@@ -99,6 +99,13 @@ func Cmd(cmd string, shell bool) []byte {
 }
 
 func OsuStatusAddr() uintptr {
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+	for procerr != nil {
+		fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		time.Sleep(1 * time.Second)
+
+	}
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
 		if err != nil {
@@ -114,24 +121,26 @@ func OsuStatusAddr() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			//log.Fatal(err)
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			//log.Fatal(err)
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "48 83 F8 04 73 1E")
 		if err != nil {
-			log.Fatal(err)
+			//log.Fatal(err)
 		}
 		fmt.Printf("OsuStatusAddr: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
 		osuBase = uintptr(base)
 	}
 
-	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+	for osuBase == 0 {
+		fmt.Println("osu! is not fully loaded yet, waiting...")
+		time.Sleep(1 * time.Second)
+		OsuStatusAddr()
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -373,19 +382,21 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(1 * time.Second)
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		} else {
-			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (client (re)start case might still work)")
+			log.Println("is osu! running? (osu! process was not found, waiting...)")
 			time.Sleep(1 * time.Second)
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		}
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to the SongSelect and check this console back.")
-		time.Sleep(7 * time.Second)            //hack to wait for the game
+		//time.Sleep(7 * time.Second)            //hack to wait for the game
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
-		if err != nil {
-			ws.WriteMessage(1, []byte("osu!status offset was not found"))
-			log.Fatalln("osu!status offset was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		for err != nil {
+			log.Println("osu!status offset was not found, retrying...")
+			StaticOsuStatusAddr = OsuStatusAddr()
+			osuStatusOffset, err = proc.ReadUint32(StaticOsuStatusAddr - 0x4)
+			time.Sleep(250 * time.Millisecond)
 		}
 		uintptrOsuStatus = uintptr(osuStatusOffset)
 		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
@@ -398,7 +409,8 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			log.Println("please go to songselect in order to proceed!")
 			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
 			if err != nil {
-				log.Fatalln("is osu! running? (osu! status was not found)")
+				fmt.Println("It looks like we lost the process, performing a restart...")
+				restart()
 			}
 			ws.WriteMessage(1, []byte("osu! is not in SongSelect!"))
 
@@ -447,12 +459,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("It looks like we have a client restart!")
 				reqRestart = 0
 				fmt.Println("reqRestart = 0")
-				time.Sleep(10 * time.Second) // hack to wait for a client restart
+				//time.Sleep(10 * time.Second) // hack to wait for a client restart
 				restart()
 			} else {
-				fmt.Println("We don't support client restart on linux yet! (it might still work, attempting...)")
-				reqRestart = 0               // Assuming that it was just a matter of losing the process
-				time.Sleep(10 * time.Second) // hack to wait for a client restart
+				fmt.Println("It looks like we have a client restart!")
+				reqRestart = 0 // Assuming that it was just a matter of losing the process
+				//time.Sleep(10 * time.Second) // hack to wait for a client restart
 				restart()
 			}
 
@@ -713,32 +725,40 @@ func main() {
 func restart() {
 	isRunning = 0
 	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-	if procerr != nil { //TODO: refactor
-		log.Fatalln("is osu! running? (osu! process was not found)")
+	for procerr != nil {
+		reqRestart = 1
+		fmt.Println("reqRestart = 1")
+		log.Println("is osu! running? (osu! process was not found, waiting...)")
+		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		time.Sleep(1 * time.Second)
 	}
 	if isRunning == 0 {
 		fmt.Println("Client Connected, please go to song select and check this console back.")
 		StaticOsuStatusAddr := OsuStatusAddr() //we should only check for this address once.
 		osuStatusOffset, err := proc.ReadUint32(StaticOsuStatusAddr - 0x4)
-		if err != nil {
-			log.Fatalln("osu!status offset was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+		for err != nil {
+			log.Println("osu!status offset was not found, retrying...")
+			StaticOsuStatusAddr = OsuStatusAddr()
+			osuStatusOffset, err = proc.ReadUint32(StaticOsuStatusAddr - 0x4)
+			time.Sleep(250 * time.Millisecond)
 		}
 		uintptrOsuStatus = uintptr(osuStatusOffset)
 		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
 		if err != nil {
-			log.Fatalln("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
+			log.Println("osu!status value was not found, are you sure that osu!stable is running? If so, please report this to GitHub!")
 		}
 
 		for osuStatusValue != 5 {
 			log.Println("please go to songselect in order to proceed!")
 			osuStatusValue, err = proc.ReadUint16(uintptrOsuStatus)
 			if err != nil {
-				log.Fatalln("is osu! running? (osu! status was not found)")
+				fmt.Println("It looks like we lost the process, performing a restart...")
+				restart()
 			}
 
 			time.Sleep(500 * time.Millisecond)
 
-			time.Sleep(1 * time.Second)
+			// time.Sleep(1 * time.Second)
 
 		}
 		osuBase = OsuBaseAddr()
