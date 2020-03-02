@@ -163,16 +163,19 @@ func OsuBPMAddr() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "?? ?? ?? ?? 8B 40 08 89 86 4C 01 00 00 C6")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		fmt.Printf("OsuBPMAddr: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
@@ -180,7 +183,8 @@ func OsuBPMAddr() uintptr {
 	}
 
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -201,16 +205,19 @@ func OsuBaseAddr() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "F8 01 74 04 83 65")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		fmt.Printf("OsuBaseAddr: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
@@ -218,7 +225,8 @@ func OsuBaseAddr() uintptr {
 	}
 
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -240,16 +248,19 @@ func OsuInMenuModsAddr() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "55 8B EC 57 56 53 83 EC 3C 8B F1 8B CE")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		fmt.Printf("OsuInMenuModsAddr: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
@@ -257,7 +268,8 @@ func OsuInMenuModsAddr() uintptr {
 	}
 
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -279,16 +291,19 @@ func OsuPlayTimeAddr() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		fmt.Printf("OsuPlayTimeAddr: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
@@ -296,7 +311,8 @@ func OsuPlayTimeAddr() uintptr {
 	}
 
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -319,16 +335,19 @@ func OsuplayContainer() uintptr {
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		defer mem.Close()
 		base, err := scan(mem, maps, "85 C9 74 1F 8D 55 F0 8B 01")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
 		}
 		fmt.Printf("base: 0x%x\n", base)
 		// osuBaseString := "0x" + yosuBase
@@ -336,7 +355,8 @@ func OsuplayContainer() uintptr {
 	}
 
 	if osuBase == 0 {
-		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
 	}
 
 	//println(CurrentBeatmapFolderString())
