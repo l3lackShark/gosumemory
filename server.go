@@ -397,7 +397,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(1 * time.Second)
 			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		} else {
-			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (if you closed the game, pleae restart the program.))")
+			log.Println("is osu! running? (We don't support client restarts on linux, assuming that we just lost the process for a second, retrying... (client (re)start case might still work)")
+			time.Sleep(1 * time.Second)
+			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		}
 	}
 	if isRunning == 0 {
