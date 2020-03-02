@@ -112,15 +112,11 @@ func OsuStatusAddr() uintptr {
 		osuBase = uintptr(outInt)
 
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -156,15 +152,11 @@ func OsuBPMAddr() uintptr {
 		osuBase = uintptr(outInt)
 
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -198,15 +190,11 @@ func OsuBaseAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 		osuBase = uintptr(outInt)
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -241,15 +229,11 @@ func OsuInMenuModsAddr() uintptr {
 
 		osuBase = uintptr(outInt)
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -284,15 +268,11 @@ func OsuPlayTimeAddr() uintptr {
 
 		osuBase = uintptr(outInt)
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -328,15 +308,11 @@ func OsuplayContainer() uintptr {
 
 		osuBase = uintptr(outInt)
 	} else {
-		pids, err := findProcess(osuRegex)
+		maps, err := readMaps(int(proc.PID))
 		if err != nil {
 			log.Fatal(err)
 		}
-		maps, err := readMaps(pids[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -1497,38 +1473,6 @@ func parsePattern(s string) (*pattern, error) {
 var (
 	errNoPIDMatched = errors.New("No PID matched the criteria")
 )
-
-func findProcess(re *regexp.Regexp) ([]int, error) {
-	info, err := ioutil.ReadDir("/proc")
-	if err != nil {
-		return nil, err
-	}
-	var results []int
-	for _, dir := range info {
-		if pid, err := strconv.Atoi(dir.Name()); err == nil {
-			results = append(results, pid)
-		}
-	}
-	var pids []int
-	for _, pid := range results {
-		f, err := os.Open(fmt.Sprintf("/proc/%d/cmdline", pid))
-		if err != nil {
-			continue
-		}
-		defer f.Close()
-		contents, err := ioutil.ReadAll(f)
-		if err != nil {
-			continue
-		}
-		if re.Match(contents) {
-			pids = append(pids, pid)
-		}
-	}
-	if len(pids) == 0 {
-		return nil, errNoPIDMatched
-	}
-	return pids, nil
-}
 
 var (
 	errPatternNotFound = errors.New("Pattern not found")
