@@ -472,8 +472,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				time.Sleep(10 * time.Second) // hack to wait for a client restart
 				restart()
 			} else {
-				fmt.Println("We don't support client restart on linux yet!")
-				reqRestart = 0 // Assuming that it was just a matter of losing the process
+				fmt.Println("We don't support client restart on linux yet! (it might still work, attempting...)")
+				reqRestart = 0               // Assuming that it was just a matter of losing the process
+				time.Sleep(10 * time.Second) // hack to wait for a client restart
+				restart()
 			}
 
 		}
@@ -764,6 +766,8 @@ func restart() {
 		playContainer = OsuplayContainer()
 		playContainerBase = (playContainer - 0x4)
 		playTime = (playTimeBase + 0x5)
+		inMenuAppliedModsBase = OsuInMenuModsAddr()
+		bpmBase = OsuBPMAddr()
 		isRunning = 1
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
