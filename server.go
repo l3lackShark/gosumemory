@@ -75,6 +75,7 @@ var operatingSystem int8
 var uintptrOsuStatus uintptr
 var jsonByte []byte
 var reqRestart int8 = 0
+var tempCounter int16 = 0
 
 var (
 	osuRegex = regexp.MustCompile(`.*osu!\.exe.*`)
@@ -455,246 +456,267 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-	isRunning = 1
+
 	fmt.Println("it seems that we got the correct offsets, you are good to go!")
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
 	// var tempCurrentAppliedMods int32
 
-	for {
+	if isRunning == 0 {
+		for {
+			isRunning = 1
+			osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
+			osuStatus = osuStatusValue
+			var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+			for procerr != nil {
+				reqRestart = 1
+				fmt.Println("reqRestart = 1")
+				log.Println("is osu! running? (osu! process was not found, waiting...)")
+				proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+				time.Sleep(1 * time.Second)
+			}
+			if reqRestart == 1 {
+				if operatingSystem == 1 {
+					fmt.Println("It looks like we have a client restart!")
+					reqRestart = 0
+					fmt.Println("reqRestart = 0")
+					//time.Sleep(10 * time.Second) // hack to wait for a client restart
+					restart()
+				} else {
+					fmt.Println("It looks like we have a client restart!")
+					reqRestart = 0 // Assuming that it was just a matter of losing the process
+					//time.Sleep(10 * time.Second) // hack to wait for a client restart
+					restart()
+				}
 
-		osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
-		osuStatus = osuStatusValue
-		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-		for procerr != nil {
-			reqRestart = 1
-			fmt.Println("reqRestart = 1")
-			log.Println("is osu! running? (osu! process was not found, waiting...)")
-			proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
-			time.Sleep(1 * time.Second)
-		}
-		if reqRestart == 1 {
-			if operatingSystem == 1 {
-				fmt.Println("It looks like we have a client restart!")
-				reqRestart = 0
-				fmt.Println("reqRestart = 0")
-				//time.Sleep(10 * time.Second) // hack to wait for a client restart
-				restart()
-			} else {
-				fmt.Println("It looks like we have a client restart!")
-				reqRestart = 0 // Assuming that it was just a matter of losing the process
-				//time.Sleep(10 * time.Second) // hack to wait for a client restart
-				restart()
 			}
 
-		}
-
-		//init base stuff
-		currentBeatmapDataBase, err = proc.ReadUint32(currentBeatmapData)
-		if err != nil {
-			log.Println("currentBeatmapDataBase Base level failure")
-		}
-		currentBeatmapDataFirtLevel, err = proc.ReadUint32(uintptr(currentBeatmapDataBase))
-		if err != nil {
-			log.Println("currentBeatmapDataFirtLevel First level pointer failure")
-		}
-		if osuStatus == 2 {
-			playContainerBaseAddr, err = proc.ReadUint32(playContainerBase)
+			//init base stuff
+			currentBeatmapDataBase, err = proc.ReadUint32(currentBeatmapData)
 			if err != nil {
-				log.Println("playContainerBaseAddr Base level failure")
+				log.Println("currentBeatmapDataBase Base level failure")
 			}
-			playContainerFirstlevel, err = proc.ReadUint32(uintptr(playContainerBaseAddr))
+			currentBeatmapDataFirtLevel, err = proc.ReadUint32(uintptr(currentBeatmapDataBase))
 			if err != nil {
-				log.Println("playContainerFirstlevel pointer failure")
+				log.Println("currentBeatmapDataFirtLevel First level pointer failure")
 			}
-			playContainer38, err = proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x38)
-			if err != nil {
-				//	log.Println("playContainer38 pointer failure")
-
-			}
-		}
-
-		type PlayContainer struct {
-			CurrentHit300c  int16   `json:"300"`
-			CurrentHit100c  int16   `json:"100"`
-			CurrentHit50c   int16   `json:"50"`
-			CurrentHitMiss  int16   `json:"miss"`
-			CurrentAccuracy float64 `json:"accuracy"`
-			CurrentScore    int32   `json:"score"`
-			CurrentCombo    int32   `json:"combo"`
-			CurrentGameMode int32   `json:"gameMode"`
-			PpMods          string  `json:"appliedModsString"`
-			CurrentMaxCombo int32   `json:"maxCombo"`
-			// CurrentPlayerHP         int8    `json:"playerHP"`
-			// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
-			Pp     string `json:"pp"`
-			PPifFC string `json:"ppIfFC"`
-		}
-		type EverythingInMenu struct {
-			CurrentState                uint16  `json:"osuState"`
-			CurrentBeatmapID            uint32  `json:"bmID"`
-			CurrentBeatmapSetID         uint32  `json:"bmSetID"`
-			CurrentBeatmapCS            float32 `json:"CS"`
-			CurrentBeatmapAR            float32 `json:"AR"`
-			CurrentBeatmapOD            float32 `json:"OD"`
-			CurrentBeatmapHP            float32 `json:"HP"`
-			CurrentBeatmapString        string  `json:"bmInfo"`
-			CurrentBeatmapFolderString  string  `json:"bmFolder"`
-			CurrentBeatmapOsuFileString string  `json:"pathToBM"`
-			CurrentHitObjectStats       string  `json:"bmStats"`
-			CurrentPlayTime             int32   `json:"bmCurrentTime"`
-			InnerBGPath                 string  `json:"innerBG"`
-			CurrentAppliedMods          int32   `json:"appliedMods"`
-			PpSS                        string  `json:"ppSS"`
-			Pp99                        string  `json:"pp99"`
-			Pp98                        string  `json:"pp98"`
-			Pp97                        string  `json:"pp97"`
-			Pp96                        string  `json:"pp96"`
-			Pp95                        string  `json:"pp95"`
-		}
-
-		type EverythingInMenu2 struct { //order sets here
-			D EverythingInMenu `json:"menuContainer"`
-			P PlayContainer    `json:"gameplayContainer"`
-		}
-
-		PlayContainerStruct := PlayContainer{
-			CurrentHit300c:  CurrentHit300c(),
-			CurrentHit100c:  CurrentHit100c(),
-			CurrentHit50c:   CurrentHit50c(),
-			CurrentHitMiss:  CurrentHitMiss(),
-			CurrentScore:    CurrentScore(),
-			CurrentAccuracy: CurrentAccuracy(),
-			CurrentCombo:    CurrentCombo(),
-			CurrentGameMode: CurrentGameMode(),
-			CurrentMaxCombo: CurrentMaxCombo(),
-			// CurrentPlayerHP:         CurrentPlayerHP(),
-			// CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
-			Pp:     pp,
-			PPifFC: ppifFC,
-			PpMods: ppMods,
-		}
-
-		//println(ValidCurrentBeatmapFolderString())
-		// if strings.HasSuffix(CurrentBeatmapOsuFileString(), ".osu") == false {
-		// 	println(".osu ends with ???")
-		// }
-		// if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
-		// 	println("beatmapstring ends with ???")
-		// }
-		MenuContainerStruct := EverythingInMenu{
-			CurrentState:                osuStatus,
-			CurrentBeatmapID:            CurrentBeatmapID(),
-			CurrentBeatmapSetID:         CurrentBeatmapSetID(),
-			CurrentBeatmapString:        CurrentBeatmapString(),
-			CurrentBeatmapFolderString:  CurrentBeatmapFolderString(),
-			CurrentBeatmapOsuFileString: CurrentBeatmapOsuFileString(),
-			CurrentAppliedMods:          CurrentAppliedMods(),
-			CurrentBeatmapAR:            CurrentBeatmapAR(),
-			CurrentBeatmapOD:            CurrentBeatmapOD(),
-			CurrentBeatmapCS:            CurrentBeatmapCS(),
-			CurrentBeatmapHP:            CurrentBeatmapHP(),
-			CurrentPlayTime:             CurrentPlayTime(),
-			CurrentHitObjectStats:       currentHitObjectStats,
-			InnerBGPath:                 innerBGPath,
-			PpSS:                        ppSS,
-			Pp99:                        pp99,
-			Pp98:                        pp98,
-			Pp97:                        pp97,
-			Pp96:                        pp96,
-			Pp95:                        pp95,
-		}
-
-		if PlayContainerStruct.CurrentMaxCombo >= 1 {
-
-			for _, hitObjectTime := range ourTime {
-
-				if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
-
-					lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
-					lastObject = cast.ToString(lastObjectInt)
-					ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
-					pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
-					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
-					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
-					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-					//TODO: Should only be called once
-					pp = PP() //current pp
-					ppifFC = PPifFC()
-
-					break // Is the break really needed here?
+			if osuStatus == 2 {
+				playContainerBaseAddr, err = proc.ReadUint32(playContainerBase)
+				if err != nil {
+					log.Println("playContainerBaseAddr Base level failure")
+				}
+				playContainerFirstlevel, err = proc.ReadUint32(uintptr(playContainerBaseAddr))
+				if err != nil {
+					log.Println("playContainerFirstlevel pointer failure")
+				}
+				playContainer38, err = proc.ReadUint32(uintptr(playContainerFirstlevel) + 0x38)
+				if err != nil {
+					//	log.Println("playContainer38 pointer failure")
 
 				}
 			}
-		}
-		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
-			ourTime = nil
-			pp = ""
-			ppifFC = ""
 
-			tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
-			fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
-
-			currentHitObjectStats = CurrentHitObjectStatsString()
-			j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
-			if err != nil {
-				//	fmt.Println("osu file was not found2")
+			type PlayContainer struct {
+				CurrentHit300c  int16   `json:"300"`
+				CurrentHit100c  int16   `json:"100"`
+				CurrentHit50c   int16   `json:"50"`
+				CurrentHitMiss  int16   `json:"miss"`
+				CurrentAccuracy float64 `json:"accuracy"`
+				CurrentScore    int32   `json:"score"`
+				CurrentCombo    int32   `json:"combo"`
+				CurrentGameMode int32   `json:"gameMode"`
+				PpMods          string  `json:"appliedModsString"`
+				CurrentMaxCombo int32   `json:"maxCombo"`
+				// CurrentPlayerHP         int8    `json:"playerHP"`
+				// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
+				Pp     string `json:"pp"`
+				PPifFC string `json:"ppIfFC"`
 			}
-			osuFileStdIN = string(j)
-			if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
-				splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
-				newline := strings.Split(splitted, "\n")
+			type EverythingInMenu struct {
+				CurrentState                uint16  `json:"osuState"`
+				CurrentBeatmapID            uint32  `json:"bmID"`
+				CurrentBeatmapSetID         uint32  `json:"bmSetID"`
+				CurrentBeatmapCS            float32 `json:"CS"`
+				CurrentBeatmapAR            float32 `json:"AR"`
+				CurrentBeatmapOD            float32 `json:"OD"`
+				CurrentBeatmapHP            float32 `json:"HP"`
+				CurrentBeatmapString        string  `json:"bmInfo"`
+				CurrentBeatmapFolderString  string  `json:"bmFolder"`
+				CurrentBeatmapOsuFileString string  `json:"pathToBM"`
+				CurrentHitObjectStats       string  `json:"bmStats"`
+				CurrentPlayTime             int32   `json:"bmCurrentTime"`
+				InnerBGPath                 string  `json:"innerBG"`
+				CurrentAppliedMods          int32   `json:"appliedMods"`
+				PpSS                        string  `json:"ppSS"`
+				Pp99                        string  `json:"pp99"`
+				Pp98                        string  `json:"pp98"`
+				Pp97                        string  `json:"pp97"`
+				Pp96                        string  `json:"pp96"`
+				Pp95                        string  `json:"pp95"`
+			}
 
-				for i := 0; i < len(newline); i++ { //TODO: Add proper exception handler
-					if len(newline[i]) > 1 {
-						elements := strings.Split(newline[i], ",")[2]
-						elementsInt := cast.ToInt(elements)
-						ourTime = append(ourTime, elementsInt)
+			type EverythingInMenu2 struct { //order sets here
+				D EverythingInMenu `json:"menuContainer"`
+				P PlayContainer    `json:"gameplayContainer"`
+			}
+
+			PlayContainerStruct := PlayContainer{
+				CurrentHit300c:  CurrentHit300c(),
+				CurrentHit100c:  CurrentHit100c(),
+				CurrentHit50c:   CurrentHit50c(),
+				CurrentHitMiss:  CurrentHitMiss(),
+				CurrentScore:    CurrentScore(),
+				CurrentAccuracy: CurrentAccuracy(),
+				CurrentCombo:    CurrentCombo(),
+				CurrentGameMode: CurrentGameMode(),
+				CurrentMaxCombo: CurrentMaxCombo(),
+				// CurrentPlayerHP:         CurrentPlayerHP(),
+				// CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
+				Pp:     pp,
+				PPifFC: ppifFC,
+				PpMods: ppMods,
+			}
+
+			//println(ValidCurrentBeatmapFolderString())
+			// if strings.HasSuffix(CurrentBeatmapOsuFileString(), ".osu") == false {
+			// 	println(".osu ends with ???")
+			// }
+			// if strings.HasSuffix(CurrentBeatmapString(), "]") == false {
+			// 	println("beatmapstring ends with ???")
+			// }
+			MenuContainerStruct := EverythingInMenu{
+				CurrentState:                osuStatus,
+				CurrentBeatmapID:            CurrentBeatmapID(),
+				CurrentBeatmapSetID:         CurrentBeatmapSetID(),
+				CurrentBeatmapString:        CurrentBeatmapString(),
+				CurrentBeatmapFolderString:  CurrentBeatmapFolderString(),
+				CurrentBeatmapOsuFileString: CurrentBeatmapOsuFileString(),
+				CurrentAppliedMods:          CurrentAppliedMods(),
+				CurrentBeatmapAR:            CurrentBeatmapAR(),
+				CurrentBeatmapOD:            CurrentBeatmapOD(),
+				CurrentBeatmapCS:            CurrentBeatmapCS(),
+				CurrentBeatmapHP:            CurrentBeatmapHP(),
+				CurrentPlayTime:             CurrentPlayTime(),
+				CurrentHitObjectStats:       currentHitObjectStats,
+				InnerBGPath:                 innerBGPath,
+				PpSS:                        ppSS,
+				Pp99:                        pp99,
+				Pp98:                        pp98,
+				Pp97:                        pp97,
+				Pp96:                        pp96,
+				Pp95:                        pp95,
+			}
+			if osuStatus == 2 {
+				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Refactor
+			}
+
+			if PlayContainerStruct.CurrentMaxCombo >= 1 {
+
+				for _, hitObjectTime := range ourTime {
+
+					if int32(hitObjectTime) >= MenuContainerStruct.CurrentPlayTime { //TODO: Fix inaccuracy
+
+						lastObjectInt = SliceIndex(len(ourTime), func(i int) bool { return ourTime[i] == hitObjectTime })
+						lastObject = cast.ToString(lastObjectInt)
+						ppAcc = cast.ToString(PlayContainerStruct.CurrentAccuracy)
+						pp100 = cast.ToString(PlayContainerStruct.CurrentHit100c)
+						pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
+						ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
+						ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
+						//TODO: Should only be called once
+						pp = PP() //current pp
+						ppifFC = PPifFC()
+
+						break // Is the break really needed here?
+
 					}
 				}
 			}
+			if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
+				ourTime = nil
+				pp = ""
+				ppifFC = ""
 
-			if strings.HasSuffix(fullPathToOsu, ".osu") == true {
-				var bgString string = CurrentBeatmapBackgroundString()
+				tempCurrentBeatmapOsu = MenuContainerStruct.CurrentBeatmapOsuFileString
+				fullPathToOsu = fmt.Sprintf(baseDir + "/" + MenuContainerStruct.CurrentBeatmapFolderString + "/" + MenuContainerStruct.CurrentBeatmapOsuFileString)
 
-				if bgString != "" {
-					innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
+				currentHitObjectStats = CurrentHitObjectStatsString()
+				j, err := ioutil.ReadFile(fullPathToOsu) // possibe file open exc
+				if err != nil {
+					//	fmt.Println("osu file was not found2")
+				}
+				osuFileStdIN = string(j)
+				if strings.Contains(osuFileStdIN, "[HitObjects]") == true {
+					splitted := strings.Split(osuFileStdIN, "[HitObjects]")[1]
+					newline := strings.Split(splitted, "\n")
+
+					for i := 0; i < len(newline); i++ { //TODO: Add proper exception handler
+						if len(newline[i]) > 1 {
+							elements := strings.Split(newline[i], ",")[2]
+							elementsInt := cast.ToInt(elements)
+							ourTime = append(ourTime, elementsInt)
+						}
+					}
 				}
 
-			} else {
-				fmt.Println("osu file was not found")
+				if strings.HasSuffix(fullPathToOsu, ".osu") == true {
+					var bgString string = CurrentBeatmapBackgroundString()
+
+					if bgString != "" {
+						innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
+					}
+
+				} else {
+					fmt.Println("osu file was not found")
+				}
+
 			}
+			if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
+				tempCounter = 0
+
+				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
+				ppSS = PPSS()
+				pp99 = PP99()
+				pp98 = PP98()
+				pp97 = PP97()
+				pp96 = PP96()
+				pp95 = PP95()
+				// tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
+			} else if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 2 && tempCounter <= 30 {
+				tempCounter++
+				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
+				ppSS = PPSS()
+				pp99 = PP99()
+				pp98 = PP98()
+				pp97 = PP97()
+				pp96 = PP96()
+				pp95 = PP95()
+			}
+			group := EverythingInMenu2{
+				P: PlayContainerStruct,
+				D: MenuContainerStruct,
+			}
+			jsonByte, err = json.Marshal(group)
+			if err != nil {
+				fmt.Println("error:", err)
+			}
+			ws.WriteMessage(1, []byte(jsonByte)) //sending data to the client
+
+			//if err != nil {
+			//	log.Println(err)
+			//}
+			time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 		}
-		if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
-			ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
-			ppSS = PPSS()
-			pp99 = PP99()
-			pp98 = PP98()
-			pp97 = PP97()
-			pp96 = PP96()
-			pp95 = PP95()
-			// tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
+	} else {
+		for {
+			ws.WriteMessage(1, []byte(jsonByte))
+			time.Sleep(time.Duration(updateTime) * time.Millisecond)
 		}
-		group := EverythingInMenu2{
-			P: PlayContainerStruct,
-			D: MenuContainerStruct,
-		}
-		jsonByte, err = json.Marshal(group)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		ws.WriteMessage(1, []byte(jsonByte)) //sending data to the client
-
-		//if err != nil {
-		//	log.Println(err)
-		//}
-		time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 	}
 }
-
 func setupRoutes() {
 	http.HandleFunc("/ws", wsEndpoint)
 }
