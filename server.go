@@ -1,14 +1,21 @@
 package main
 
 import (
+	"bufio"
+	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,25 +76,29 @@ var uintptrOsuStatus uintptr
 var jsonByte []byte
 var reqRestart int8 = 0
 
+var (
+	osuRegex = regexp.MustCompile(`.*osu!\.exe.*`)
+)
+
 func Cmd(cmd string, shell bool) []byte {
 
 	if shell {
 		out, err := exec.Command("sh", "-c", cmd).Output()
 		if err != nil {
-			println("some error found", err)
+			//	println("some error found", err)
 		}
 		return out
 	} else {
 		out, err := exec.Command(cmd).Output()
 		if err != nil {
-			println("some error found2", err)
+			//	println("some error found2", err)
 		}
 		return out
 
 	}
 }
 
-func OsuStatusAddr() uintptr { //in hopes to deprecate this
+func OsuStatusAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
 		if err != nil {
@@ -101,33 +112,37 @@ func OsuStatusAddr() uintptr { //in hopes to deprecate this
 		osuBase = uintptr(outInt)
 
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;48 83 F8 04 73 1E;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "48 83 F8 04 73 1E")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("OsuStatusAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
+
 	if osuBase == 0 {
-		log.Fatalln("could not find osuStatusAddr, is osu! running?")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
 	return osuBase
-
 }
-func OsuBPMAddr() uintptr { //in hopes to deprecate this
+
+func OsuBPMAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuBPMAddr.exe").Output()
 		if err != nil {
@@ -141,33 +156,37 @@ func OsuBPMAddr() uintptr { //in hopes to deprecate this
 		osuBase = uintptr(outInt)
 
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;?? ?? ?? ?? 8B 40 08 89 86 4C 01 00 00 C6;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("osu! is probably not fully loaded, please load the game up and try again!")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "?? ?? ?? ?? 8B 40 08 89 86 4C 01 00 00 C6")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("OsuBPMAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
+
 	if osuBase == 0 {
-		log.Fatalln("could not find osuStatusAddr, is osu! running?")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
 	return osuBase
-
 }
-func OsuBaseAddr() uintptr { //in hopes to deprecate this
+
+func OsuBaseAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuBaseAddr.exe").Output()
 		if err != nil {
@@ -179,23 +198,26 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 		outInt := cast.ToUint32(outStr)
 		osuBase = uintptr(outInt)
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;F8 01 74 04 83;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("OsuBase addr fail")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "F8 01 74 04 83 65")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("OsuBaseAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
 
 	if osuBase == 0 {
@@ -206,7 +228,7 @@ func OsuBaseAddr() uintptr { //in hopes to deprecate this
 	return osuBase
 }
 
-func OsuInMenuModsAddr() uintptr { //in hopes to deprecate this
+func OsuInMenuModsAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("InMenuAppliedModsAddr.exe").Output()
 		if err != nil {
@@ -219,33 +241,37 @@ func OsuInMenuModsAddr() uintptr { //in hopes to deprecate this
 
 		osuBase = uintptr(outInt)
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;55 8B EC 57 56 53 83 EC 3C 8B F1 8B CE;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("OsuBase addr fail")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "55 8B EC 57 56 53 83 EC 3C 8B F1 8B CE")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("OsuInMenuModsAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
+
 	if osuBase == 0 {
-		log.Fatalln("OsuPlayTimeAddr is not found")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
 
-func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
+func OsuPlayTimeAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
 		if err != nil {
@@ -258,33 +284,37 @@ func OsuPlayTimeAddr() uintptr { //in hopes to deprecate this
 
 		osuBase = uintptr(outInt)
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("OsuBase addr fail")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("OsuPlayTimeAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
+
 	if osuBase == 0 {
-		log.Fatalln("OsuPlayTimeAddr is not found")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
 
-func OsuplayContainer() uintptr { //in hopes to deprecate this
+func OsuplayContainer() uintptr {
 	if operatingSystem == 1 {
 
 		cmd, err := exec.Command("OsuPlayContainer.exe").Output()
@@ -298,27 +328,30 @@ func OsuplayContainer() uintptr { //in hopes to deprecate this
 
 		osuBase = uintptr(outInt)
 	} else {
-		x := Cmd("scanmem -p `pgrep osu\\!.exe` -e -c 'option scan_data_type bytearray;85 C9 74 1F 8D 55 F0 8B 01;list;exit'", true)
-		outStr := cast.ToString(x)
-		outStr = strings.Replace(outStr, " ", "", -1)
-
-		input := outStr
-		if input == "" {
-			log.Fatalln("osuplayContainer addr fail")
+		pids, err := findProcess(osuRegex)
+		if err != nil {
+			log.Fatal(err)
 		}
-		output := (input[3:])
-		yosuBase := firstN(output, 8)
-		check := strings.Contains(yosuBase, ",")
-		if check == true {
-			yosuBase = strings.Replace(yosuBase, ",", "", -1)
+		maps, err := readMaps(pids[0])
+		if err != nil {
+			log.Fatal(err)
 		}
-		osuBaseString := "0x" + yosuBase
-
-		osuBaseUINT32 := cast.ToUint32(osuBaseString)
-		osuBase = uintptr(osuBaseUINT32)
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", pids[0])) //TODO: Should only read the mem once
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "85 C9 74 1F 8D 55 F0 8B 01")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("base: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
 	}
+
 	if osuBase == 0 {
-		log.Fatalln("Could not find osuplayContainer address, is osu! running?")
+		log.Fatalln("Could not find OsuBaseAddr, is osu! running?")
 	}
 
 	//println(CurrentBeatmapFolderString())
@@ -471,20 +504,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		type PlayContainer struct {
-			CurrentHit300c          int16   `json:"300"`
-			CurrentHit100c          int16   `json:"100"`
-			CurrentHit50c           int16   `json:"50"`
-			CurrentHitMiss          int16   `json:"miss"`
-			CurrentAccuracy         float64 `json:"accuracy"`
-			CurrentScore            int32   `json:"score"`
-			CurrentCombo            int32   `json:"combo"`
-			CurrentGameMode         int32   `json:"gameMode"`
-			PpMods                  string  `json:"appliedModsString"`
-			CurrentMaxCombo         int32   `json:"maxCombo"`
-			CurrentPlayerHP         int8    `json:"playerHP"`
-			CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
-			Pp                      string  `json:"pp"`
-			PPifFC                  string  `json:"ppIfFC"`
+			CurrentHit300c  int16   `json:"300"`
+			CurrentHit100c  int16   `json:"100"`
+			CurrentHit50c   int16   `json:"50"`
+			CurrentHitMiss  int16   `json:"miss"`
+			CurrentAccuracy float64 `json:"accuracy"`
+			CurrentScore    int32   `json:"score"`
+			CurrentCombo    int32   `json:"combo"`
+			CurrentGameMode int32   `json:"gameMode"`
+			PpMods          string  `json:"appliedModsString"`
+			CurrentMaxCombo int32   `json:"maxCombo"`
+			// CurrentPlayerHP         int8    `json:"playerHP"`
+			// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
+			Pp     string `json:"pp"`
+			PPifFC string `json:"ppIfFC"`
 		}
 		type EverythingInMenu struct {
 			CurrentState                uint16  `json:"osuState"`
@@ -515,20 +548,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		PlayContainerStruct := PlayContainer{
-			CurrentHit300c:          CurrentHit300c(),
-			CurrentHit100c:          CurrentHit100c(),
-			CurrentHit50c:           CurrentHit50c(),
-			CurrentHitMiss:          CurrentHitMiss(),
-			CurrentScore:            CurrentScore(),
-			CurrentAccuracy:         CurrentAccuracy(),
-			CurrentCombo:            CurrentCombo(),
-			CurrentGameMode:         CurrentGameMode(),
-			CurrentMaxCombo:         CurrentMaxCombo(),
-			CurrentPlayerHP:         CurrentPlayerHP(),
-			CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
-			Pp:                      pp,
-			PPifFC:                  ppifFC,
-			PpMods:                  ppMods,
+			CurrentHit300c:  CurrentHit300c(),
+			CurrentHit100c:  CurrentHit100c(),
+			CurrentHit50c:   CurrentHit50c(),
+			CurrentHitMiss:  CurrentHitMiss(),
+			CurrentScore:    CurrentScore(),
+			CurrentAccuracy: CurrentAccuracy(),
+			CurrentCombo:    CurrentCombo(),
+			CurrentGameMode: CurrentGameMode(),
+			CurrentMaxCombo: CurrentMaxCombo(),
+			// CurrentPlayerHP:         CurrentPlayerHP(),
+			// CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
+			Pp:     pp,
+			PPifFC: ppifFC,
+			PpMods: ppMods,
 		}
 
 		//println(ValidCurrentBeatmapFolderString())
@@ -680,7 +713,7 @@ func main() {
 	// 	fmt.Println("Rlimit Final", rLimit)
 	// }
 
-	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -1330,3 +1363,167 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+type mmap struct {
+	Start    uintptr
+	End      uintptr
+	Perms    string
+	Offset   uintptr
+	DevMajor int
+	DevMinor int
+	Inode    int
+	Path     string
+}
+
+func (m *mmap) Size() uintptr {
+	return m.End - m.Start
+}
+
+func scan(f *os.File, maps []mmap, pattern string) (uint32, error) {
+	var largestMap uintptr
+	for _, amap := range maps {
+		if amap.Perms[0] != 'r' || amap.Perms[2] != 'x' {
+			continue
+		}
+		if amap.Size() > largestMap {
+			largestMap = amap.Size()
+		}
+	}
+	pat, err := parsePattern(pattern)
+	if err != nil {
+		return 0, err
+	}
+	buf := make([]byte, largestMap)
+	for _, amap := range maps {
+		if amap.Perms[0] != 'r' || amap.Perms[2] != 'x' {
+			continue
+		}
+		size := amap.Size()
+		_, err := f.Seek(int64(amap.Start), 0)
+		if err != nil {
+			return 0, err
+		}
+		_, err = io.ReadFull(f, buf[0:size])
+		if err != nil {
+			continue
+		}
+		needle := pat.Bytes[0]
+		mask := pat.Mask[0]
+		var j uintptr
+	outer:
+		for j = 0; (j + 4) < size; j += 1 {
+			haystack := binary.LittleEndian.Uint32(buf[j : j+4])
+			if needle^haystack&mask == 0 {
+				for k := range pat.Bytes {
+					needle := pat.Bytes[k]
+					mask := pat.Mask[k]
+					haystack := binary.LittleEndian.Uint32(
+						buf[j+uintptr(4*k) : j+4+uintptr(4*k)])
+					if needle^haystack&mask != 0 {
+						continue outer
+					}
+				}
+				return uint32(amap.Start) + uint32(j), nil
+			}
+		}
+	}
+	return 0, errPatternNotFound
+}
+
+func readMaps(pid int) ([]mmap, error) {
+	f, err := os.Open(fmt.Sprintf("/proc/%d/maps", pid))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var maps []mmap
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		var amap mmap
+		_, err := fmt.Sscanf(
+			s.Text(), "%x-%x %s %x %x:%x %d %s",
+			&amap.Start, &amap.End, &amap.Perms, &amap.Offset,
+			&amap.DevMajor, &amap.DevMinor, &amap.Inode, &amap.Path,
+		)
+		if err != nil && err != io.EOF {
+			continue
+		}
+		maps = append(maps, amap)
+	}
+	return maps, nil
+}
+
+type pattern struct {
+	Bytes []uint32
+	Mask  []uint32
+}
+
+func parsePattern(s string) (*pattern, error) {
+	var bytes, mask []byte
+	for _, bytestr := range strings.Split(s, " ") {
+		if bytestr == "??" {
+			bytes = append(bytes, 0x00)
+			mask = append(mask, 0x00)
+			continue
+		}
+		b, err := strconv.ParseUint(bytestr, 16, 8)
+		if err != nil {
+			return nil, err
+		}
+		bytes = append(bytes, byte(b))
+		mask = append(mask, 0xFF)
+	}
+	var p pattern
+	for i := 0; i < len(bytes); i += 4 {
+		var byt, mas uint32
+		for i, b := range bytes[i : i+4] {
+			byt |= uint32(b) << (i * 8)
+		}
+		for i, m := range mask[i : i+4] {
+			mas |= uint32(m) << (i * 8)
+		}
+		p.Bytes = append(p.Bytes, byt)
+		p.Mask = append(p.Mask, mas)
+	}
+	return &p, nil
+}
+
+var (
+	errNoPIDMatched = errors.New("No PID matched the criteria")
+)
+
+func findProcess(re *regexp.Regexp) ([]int, error) {
+	info, err := ioutil.ReadDir("/proc")
+	if err != nil {
+		return nil, err
+	}
+	var results []int
+	for _, dir := range info {
+		if pid, err := strconv.Atoi(dir.Name()); err == nil {
+			results = append(results, pid)
+		}
+	}
+	var pids []int
+	for _, pid := range results {
+		f, err := os.Open(fmt.Sprintf("/proc/%d/cmdline", pid))
+		if err != nil {
+			continue
+		}
+		defer f.Close()
+		contents, err := ioutil.ReadAll(f)
+		if err != nil {
+			continue
+		}
+		if re.Match(contents) {
+			pids = append(pids, pid)
+		}
+	}
+	if len(pids) == 0 {
+		return nil, errNoPIDMatched
+	}
+	return pids, nil
+}
+
+var (
+	errPatternNotFound = errors.New("Pattern not found")
+)
