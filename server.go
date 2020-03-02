@@ -109,7 +109,7 @@ func OsuStatusAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
 		if err != nil {
-			fmt.Println(err)
+			OsuStatusAddr()
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -460,7 +460,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client Connected")
 
 	var tempCurrentBeatmapOsu string
-	var tempCurrentAppliedMods int32
+	// var tempCurrentAppliedMods int32
 
 	for {
 
@@ -619,23 +619,14 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					pp50 = cast.ToString(PlayContainerStruct.CurrentHit50c)
 					ppCombo = cast.ToString(PlayContainerStruct.CurrentMaxCombo)
 					ppMiss = cast.ToString(PlayContainerStruct.CurrentHitMiss)
-					ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Should only be called once
-					pp = PP()                                                                    //current pp
+					//TODO: Should only be called once
+					pp = PP() //current pp
 					ppifFC = PPifFC()
 
 					break // Is the break really needed here?
 
 				}
 			}
-		}
-		if MenuContainerStruct.CurrentAppliedMods != tempCurrentAppliedMods || MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
-			ppSS = PPSS()
-			pp99 = PP99()
-			pp98 = PP98()
-			pp97 = PP97()
-			pp96 = PP96()
-			pp95 = PP95()
-			tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
 		}
 		if MenuContainerStruct.CurrentBeatmapOsuFileString != tempCurrentBeatmapOsu {
 			ourTime = nil
@@ -675,6 +666,16 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("osu file was not found")
 			}
 
+		}
+		if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
+			ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
+			ppSS = PPSS()
+			pp99 = PP99()
+			pp98 = PP98()
+			pp97 = PP97()
+			pp96 = PP96()
+			pp95 = PP95()
+			// tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
 		}
 		group := EverythingInMenu2{
 			P: PlayContainerStruct,
@@ -728,7 +729,7 @@ func main() {
 	// 	fmt.Println("Rlimit Final", rLimit)
 	// }
 
-	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
