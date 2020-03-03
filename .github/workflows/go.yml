@@ -31,5 +31,5 @@ jobs:
       # Artifact name
         name: server
       # Directory containing files to upload
-        path: .
+        path: $PWD
         
