@@ -537,7 +537,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				CurrentScore    int32   `json:"score"`
 				CurrentCombo    int32   `json:"combo"`
 				CurrentGameMode int32   `json:"gameMode"`
-				PpMods          string  `json:"appliedModsString"`
 				CurrentMaxCombo int32   `json:"maxCombo"`
 				// CurrentPlayerHP         int8    `json:"playerHP"`
 				// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
@@ -559,6 +558,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				CurrentPlayTime             int32   `json:"bmCurrentTime"`
 				InnerBGPath                 string  `json:"innerBG"`
 				CurrentAppliedMods          int32   `json:"appliedMods"`
+				PpMods                      string  `json:"appliedModsString"`
 				PpSS                        string  `json:"ppSS"`
 				Pp99                        string  `json:"pp99"`
 				Pp98                        string  `json:"pp98"`
@@ -586,7 +586,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				// CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
 				Pp:     pp,
 				PPifFC: ppifFC,
-				PpMods: ppMods,
 			}
 
 			//println(ValidCurrentBeatmapFolderString())
@@ -617,6 +616,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				Pp97:                        pp97,
 				Pp96:                        pp96,
 				Pp95:                        pp95,
+				PpMods:                      ppMods,
 			}
 			if osuStatus == 2 {
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Refactor
@@ -762,7 +762,7 @@ func main() {
 	// 	fmt.Println("Rlimit Final", rLimit)
 	// }
 
-	path := flag.String("path", "null", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
@@ -1313,100 +1313,8 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-// ModsResolver is just a placeholder for now, needs proper logic or at least switch statements
 func ModsResolver(xor uint32) string {
-	if xor >= 2048 {
-		xor = xor - 2048 //autoplay hack, TODO: Refactor Only works with STD
-	}
-	NoMod := uint32(0)
-	NoFail := uint32(1) << 0
-	Easy := uint32(1) << 1
-	//TouchDevice := uint32(1) << 2
-	Hidden := uint32(1) << 3
-	HardRock := uint32(1) << 4
-	SuddenDeath := uint32(1) << 5
-	DoubleTime := uint32(1) << 6
-	Relax := uint32(1) << 7
-	HalfTime := uint32(1) << 8
-	Nightcore := uint32(1) << 9
-	Flashlight := uint32(1) << 10
-	Autoplay := uint32(1) << 11
-	SpunOut := uint32(1) << 12
-	AutoPilot := uint32(1) << 13
-	Perfect := uint32(1) << 14
-	ScoreV2 := uint32(1) << 29
-
-	if xor == NoMod {
-		return "NM"
-	}
-	if xor == NoFail {
-		return "NF"
-	}
-	if xor == Easy {
-		return "EZ"
-	}
-	if xor == Hidden {
-		return "HD"
-	}
-	if xor == HardRock {
-		return "HR"
-	}
-	if xor == SuddenDeath {
-		return "SD"
-	}
-	if xor == DoubleTime {
-		return "DT"
-	}
-	if xor == Relax {
-		return ""
-	}
-	if xor == HalfTime {
-		return "HT"
-	}
-	if xor == Nightcore {
-		return "NC"
-	}
-	if xor == Flashlight {
-		return "FL"
-	}
-	if xor == Autoplay {
-		return ""
-	}
-	if xor == SpunOut {
-		return ""
-	}
-	if xor == AutoPilot {
-		return ""
-	}
-	if xor == Perfect {
-		return ""
-	}
-	if xor == ScoreV2 {
-		return "" // we actually support that
-	}
-	if xor == Hidden+DoubleTime {
-		return "HDDT" // we actually support that
-	}
-	if xor == Hidden+HardRock {
-		return "HDHR" // we actually support that
-	}
-	if xor == Hidden+DoubleTime+HardRock {
-		return "HDDTHR" // we actually support that
-	}
-	if xor == Hidden+DoubleTime+HardRock+Flashlight {
-		return "HDHRDTFL" // we actually support that
-	}
-	if xor == Hidden+DoubleTime+Easy {
-		return "EZHDDT" // we actually support that
-	}
-	if xor == DoubleTime+Easy {
-		return "EZDT" // we actually support that
-	}
-	if xor == Hidden+Easy {
-		return "EZHD" // we actually support that
-	}
-	return "NM"
-
+	return Mods(xor).String()
 }
 func HTTPServer() {
 
