@@ -28,6 +28,7 @@ var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 
 var osuBase uintptr
 var bpmBase uintptr
+var songsFolderAddr uintptr
 var osuStatus uint16
 var currentBeatmapData uintptr
 var playContainer uintptr
@@ -108,7 +109,7 @@ func OsuStatusAddr() uintptr {
 
 	}
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("OsuStatusAddr.exe").Output()
+		cmd, err := exec.Command("deps/OsuStatusAddr.exe").Output()
 		if err != nil {
 			OsuStatusAddr()
 		}
@@ -148,10 +149,43 @@ func OsuStatusAddr() uintptr {
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
+func OsuSongsFolderAddr() uintptr {
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+	for procerr != nil {
+		fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		time.Sleep(1 * time.Second)
+
+	}
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("deps/OsuSongsFolderAddr.exe").Output()
+		if err != nil {
+			OsuSongsFolderAddr()
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+
+		osuBase = uintptr(outInt)
+		fmt.Printf("OsuSongsFolderAddr: 0x%x\n", osuBase)
+
+	} else {
+		log.Println("We don't support automatic search for Songs folder path, please start the program with --help")
+	}
+
+	if osuBase == 0 {
+		log.Println("Could not find OsuSongsFolderAddr, is osu! running? (retrying)")
+		restart()
+	}
+
+	//println(CurrentBeatmapFolderString())
+	return osuBase
+}
 
 func OsuBPMAddr() uintptr {
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("OsuBPMAddr.exe").Output()
+		cmd, err := exec.Command("deps/OsuBPMAddr.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -196,7 +230,7 @@ func OsuBPMAddr() uintptr {
 
 func OsuBaseAddr() uintptr {
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("OsuBaseAddr.exe").Output()
+		cmd, err := exec.Command("deps/OsuBaseAddr.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -239,7 +273,7 @@ func OsuBaseAddr() uintptr {
 
 func OsuInMenuModsAddr() uintptr {
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("InMenuAppliedModsAddr.exe").Output()
+		cmd, err := exec.Command("deps/InMenuAppliedModsAddr.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -249,7 +283,7 @@ func OsuInMenuModsAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
-		fmt.Printf("OsuBaseAddr: 0x%x\n", osuBase)
+		fmt.Printf("OsuInMenuModsAddr: 0x%x\n", osuBase)
 	} else {
 		maps, err := readMaps(int(proc.PID))
 		if err != nil {
@@ -262,7 +296,7 @@ func OsuInMenuModsAddr() uintptr {
 			restart()
 		}
 		defer mem.Close()
-		base, err := scan(mem, maps, "55 8B EC 57 56 53 83 EC 3C 8B F1 8B CE")
+		base, err := scan(mem, maps, "2C 02 0A 00")
 		if err != nil {
 			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
 			restart()
@@ -283,7 +317,7 @@ func OsuInMenuModsAddr() uintptr {
 
 func OsuPlayTimeAddr() uintptr {
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("OsuPlayTimeAddr.exe").Output()
+		cmd, err := exec.Command("deps/OsuPlayTimeAddr.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -328,7 +362,7 @@ func OsuPlayTimeAddr() uintptr {
 func OsuplayContainer() uintptr {
 	if operatingSystem == 1 {
 
-		cmd, err := exec.Command("OsuPlayContainer.exe").Output()
+		cmd, err := exec.Command("deps/OsuPlayContainer.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -451,6 +485,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//time.Sleep(5 * time.Second)
+		songsFolderAddr = OsuSongsFolderAddr()
 		osuBase = OsuBaseAddr()
 		currentBeatmapData = (osuBase - 0xC)
 		playTimeBase = OsuPlayTimeAddr()
@@ -675,16 +710,22 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 					var bgString string = CurrentBeatmapBackgroundString()
 
 					if bgString != "" {
+						for bgString == "-5" {
+							fmt.Println("Retry!")
+							bgString = CurrentBeatmapBackgroundString()
+						}
 						innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
 					}
 
 				} else {
-					fmt.Println("osu file was not found")
+					fmt.Println("skipping bg reloading")
 				}
-
 			}
-			if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
+			if osuStatusValue != 2 {
 				tempCounter = 0
+			}
+
+			if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
 
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
 				ppSS = PPSS()
@@ -694,7 +735,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				pp96 = PP96()
 				pp95 = PP95()
 				// tempCurrentAppliedMods = MenuContainerStruct.CurrentAppliedMods
-			} else if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 2 && tempCounter <= 30 {
+			} else if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 2 && tempCounter <= 5 {
 				tempCounter++
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods))
 				ppSS = PPSS()
@@ -717,6 +758,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			//if err != nil {
 			//	log.Println(err)
 			//}
+			//fmt.Println(countOpenFiles())
 			time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 		}
@@ -732,6 +774,14 @@ func setupRoutes() {
 	http.HandleFunc("/ws", wsEndpoint)
 }
 
+func countOpenFiles() int64 {
+	out, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("lsof -p %v", os.Getpid())).Output()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	lines := strings.Split(string(out), "\n")
+	return int64(len(lines) - 1)
+}
 func main() {
 	if runtime.GOOS == "windows" {
 		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
@@ -742,6 +792,7 @@ func main() {
 		operatingSystem = 2
 
 	}
+
 	// if operatingSystem == 2 { // hack to fix "Too many open files"
 	// 	var rLimit syscall.Rlimit
 	// 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
@@ -763,7 +814,7 @@ func main() {
 	// }
 
 	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
-	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
+	updateTimeAs := flag.Int("update", 50, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
 	workingDirectory = *path
@@ -1043,12 +1094,17 @@ func CurrentHit50c() int16 {
 	return currentCombo
 }
 func inMenuAppliedModsValue() int32 {
-	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsBase + 0x4C)) //2 bytes
+	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsBase - 0x4)) //2 bytes
 	if err != nil {
 		//	log.Println("CurrentHitMiss result pointer failure")
 		return -1
 	}
-	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel + 0xA8)) //2 bytes
+	inMenuAppliedModsSecondLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel + 0x44)) //2 bytes
+	if err != nil {
+		//	log.Println("CurrentHitMiss result pointer failure")
+		return -2
+	}
+	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsSecondLevel + 0xCAC)) //2 bytes
 	if err != nil {
 		//	log.Println("CurrentHitMiss result pointer failure")
 		return -5
@@ -1184,9 +1240,13 @@ func CurrentPlayTime() int32 {
 
 	return cast.ToInt32(playTimeValue)
 }
+
+// func ResolveSongsFolder() string {
+// 	songsBase, err := proc.ReadUint32(songsFolderAddr)
+// }
 func PP() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1201,7 +1261,7 @@ func PP() string {
 }
 func PPifFC() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, ppAcc+"%", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1216,7 +1276,7 @@ func PPifFC() string {
 }
 func PPSS() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "100%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "100%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1231,7 +1291,7 @@ func PPSS() string {
 }
 func PP99() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "99%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "99%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1246,7 +1306,7 @@ func PP99() string {
 }
 func PP98() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "98%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "98%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1261,7 +1321,7 @@ func PP98() string {
 }
 func PP97() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "97%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "97%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1276,7 +1336,7 @@ func PP97() string {
 }
 func PP96() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "96%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "96%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1291,7 +1351,7 @@ func PP96() string {
 }
 func PP95() string {
 	if operatingSystem == 1 {
-		calc, err := exec.Command("oppai.exe", fullPathToOsu, "95%", "+"+ppMods, "-ojson").Output()
+		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "95%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
 			fmt.Println(err)
 		}
