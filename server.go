@@ -71,6 +71,7 @@ var ppifFC string = ""
 var innerBGPath string = ""
 var updateTime int
 var isRunning = 0
+var isInit = 0
 var workingDirectory string
 var operatingSystem int8
 var uintptrOsuStatus uintptr
@@ -160,7 +161,7 @@ func OsuSongsFolderAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("deps/OsuSongsFolderAddr.exe").Output()
 		if err != nil {
-			OsuSongsFolderAddr()
+			log.Println("Could not get Songs folder from memory, please manually specify it (see --help)")
 		}
 		outStr := cast.ToString(cmd)
 		outStr = strings.Replace(outStr, "\n", "", -1)
@@ -171,7 +172,9 @@ func OsuSongsFolderAddr() uintptr {
 		fmt.Printf("OsuSongsFolderAddr: 0x%x\n", osuBase)
 
 	} else {
-		log.Println("We don't support automatic search for Songs folder path, please start the program with --help")
+		if workingDirectory == "auto" {
+			log.Println("We don't support automatic search for Songs folder path, please start the program with --help")
+		}
 	}
 
 	if osuBase == 0 {
@@ -403,6 +406,17 @@ func OsuplayContainer() uintptr {
 	//println(CurrentBeatmapFolderString())
 	return osuBase
 }
+func InitBaseStuff() {
+	songsFolderAddr = OsuSongsFolderAddr()
+	osuBase = OsuBaseAddr()
+	currentBeatmapData = (osuBase - 0xC)
+	playTimeBase = OsuPlayTimeAddr()
+	playContainer = OsuplayContainer()
+	playContainerBase = (playContainer - 0x4)
+	playTime = (playTimeBase + 0x5)
+	inMenuAppliedModsBase = OsuInMenuModsAddr()
+	bpmBase = OsuBPMAddr()
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -485,15 +499,20 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//time.Sleep(5 * time.Second)
-		songsFolderAddr = OsuSongsFolderAddr()
-		osuBase = OsuBaseAddr()
-		currentBeatmapData = (osuBase - 0xC)
-		playTimeBase = OsuPlayTimeAddr()
-		playContainer = OsuplayContainer()
-		playContainerBase = (playContainer - 0x4)
-		playTime = (playTimeBase + 0x5)
-		inMenuAppliedModsBase = OsuInMenuModsAddr()
-		bpmBase = OsuBPMAddr()
+
+		if isInit == 0 { //TODO: This should be global, possible CPU leakage
+			isInit = 1
+			InitBaseStuff()
+			if workingDirectory == "auto" && operatingSystem == 1 {
+				workingDirectory = ResolveSongsFolder()
+				baseDir = workingDirectory
+				fmt.Println("Found Songs directory in: " + baseDir)
+				http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(workingDirectory))))
+			} else {
+				baseDir = workingDirectory
+				http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(workingDirectory))))
+			}
+		}
 
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
@@ -509,9 +528,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	var tempCurrentBeatmapOsu string
 	// var tempCurrentAppliedMods int32
 
-	if isRunning == 0 {
+	if isRunning == 0 { //TODO: Is this even correct?
+		isRunning = 1
 		for {
-			isRunning = 1
 			osuStatusValue, err := proc.ReadUint16(uintptrOsuStatus)
 			osuStatus = osuStatusValue
 			var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -523,18 +542,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				time.Sleep(1 * time.Second)
 			}
 			if reqRestart == 1 {
-				if operatingSystem == 1 {
-					fmt.Println("It looks like we have a client restart!")
-					reqRestart = 0
-					fmt.Println("reqRestart = 0")
-					//time.Sleep(10 * time.Second) // hack to wait for a client restart
-					restart()
-				} else {
-					fmt.Println("It looks like we have a client restart!")
-					reqRestart = 0 // Assuming that it was just a matter of losing the process
-					//time.Sleep(10 * time.Second) // hack to wait for a client restart
-					restart()
-				}
+				fmt.Println("It looks like we have a client restart!")
+				reqRestart = 0
+				fmt.Println("reqRestart = 0")
+				restart()
 
 			}
 
@@ -813,16 +824,14 @@ func main() {
 	// 	fmt.Println("Rlimit Final", rLimit)
 	// }
 
-	path := flag.String("path", "C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
+	path := flag.String("path", "auto", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
 	updateTimeAs := flag.Int("update", 50, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
 	workingDirectory = *path
-
-	if workingDirectory == "null" {
-		log.Fatalln("Please set up your osu! Songs directory. (see --help)")
+	if workingDirectory == "auto" {
+		fmt.Println("Will try to find Songs folder... (auto flag is set in --path) ")
 	}
-	baseDir = workingDirectory
 	go HTTPServer()
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8085", nil))
@@ -871,14 +880,7 @@ func restart() {
 			// time.Sleep(1 * time.Second)
 
 		}
-		osuBase = OsuBaseAddr()
-		currentBeatmapData = (osuBase - 0xC)
-		playTimeBase = OsuPlayTimeAddr()
-		playContainer = OsuplayContainer()
-		playContainerBase = (playContainer - 0x4)
-		playTime = (playTimeBase + 0x5)
-		inMenuAppliedModsBase = OsuInMenuModsAddr()
-		bpmBase = OsuBPMAddr()
+		InitBaseStuff()
 		isRunning = 1
 		if CurrentPlayTime() == -1 {
 			fmt.Println("Failed to get the correct offsets, retrying...")
@@ -1241,9 +1243,30 @@ func CurrentPlayTime() int32 {
 	return cast.ToInt32(playTimeValue)
 }
 
-// func ResolveSongsFolder() string {
-// 	songsBase, err := proc.ReadUint32(songsFolderAddr)
-// }
+func ResolveSongsFolder() string {
+
+	songsInitAddr, err := proc.ReadUint32(songsFolderAddr - 0x4)
+	if err != nil {
+		//	log.Println("playTime Base level failure")
+		return "-1"
+	}
+	songsBase, err := proc.ReadUint32(uintptr(songsInitAddr + 0x3F8))
+	if err != nil {
+		//	log.Println("playTime Base level failure")
+		return "-2"
+	}
+	songsFirstLevel, err := proc.ReadUint32(uintptr(songsBase))
+	if err != nil {
+		//	log.Println("playTime Base level failure")
+		return "-3"
+	}
+	songsResult, err := proc.ReadNullTerminatedUTF16String(uintptr(songsFirstLevel + 0x8))
+	if err != nil {
+		//	log.Println("playTime Base level failure")
+		return "-5"
+	}
+	return songsResult
+}
 func PP() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "-end"+lastObject, ppAcc+"%", ppCombo+"x", ppMiss+"m", pp100+"x100", pp50+"x50", "+"+ppMods, "-ojson").Output()
@@ -1353,7 +1376,7 @@ func PP95() string {
 	if operatingSystem == 1 {
 		calc, err := exec.Command("deps/oppai.exe", fullPathToOsu, "95%", "+"+ppMods, "-ojson").Output()
 		if err != nil {
-			fmt.Println(err)
+			// fmt.Println(err)
 		}
 
 		return strings.ToValidUTF8(cast.ToString(calc), "")
@@ -1381,7 +1404,7 @@ func HTTPServer() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
 	//box := packr.NewBox("./index")
-	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(workingDirectory))))
+	// http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(workingDirectory))))
 	//	http.Handle("/", http.FileServer(box))
 	http.HandleFunc("/json", handler)
 	http.ListenAndServe(":24050", nil)
