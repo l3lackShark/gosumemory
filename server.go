@@ -21,6 +21,7 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
+	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cast"
 )
 
@@ -173,7 +174,7 @@ func OsuSongsFolderAddr() uintptr {
 
 	} else {
 		if workingDirectory == "auto" {
-			log.Println("We don't support automatic search for Songs folder path, please start the program with --help")
+			log.Fatalln("We don't support automatic search for Songs folder path, please start the program with --help")
 		}
 	}
 
@@ -299,7 +300,7 @@ func OsuInMenuModsAddr() uintptr {
 			restart()
 		}
 		defer mem.Close()
-		base, err := scan(mem, maps, "2C 02 0A 00")
+		base, err := scan(mem, maps, "C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00")
 		if err != nil {
 			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
 			restart()
@@ -414,7 +415,7 @@ func InitBaseStuff() {
 	playContainer = OsuplayContainer()
 	playContainerBase = (playContainer - 0x4)
 	playTime = (playTimeBase + 0x5)
-	inMenuAppliedModsBase = OsuInMenuModsAddr()
+	inMenuAppliedModsBase = (OsuInMenuModsAddr() + 0x9)
 	bpmBase = OsuBPMAddr()
 }
 
@@ -719,12 +720,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 				if strings.HasSuffix(fullPathToOsu, ".osu") == true {
 					var bgString string = CurrentBeatmapBackgroundString()
-
-					if bgString != "" {
-						for bgString == "-5" {
-							fmt.Println("Retry!")
-							bgString = CurrentBeatmapBackgroundString()
-						}
+					if bgString != "-5" {
 						innerBGPath = MenuContainerStruct.CurrentBeatmapFolderString + "/" + bgString
 					}
 
@@ -733,7 +729,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if osuStatusValue != 2 {
-				tempCounter = 0
+				tempCounter = 06
 			}
 
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
@@ -794,6 +790,7 @@ func countOpenFiles() int64 {
 	return int64(len(lines) - 1)
 }
 func main() {
+	// doUpdate()
 	if runtime.GOOS == "windows" {
 		fmt.Println("Hello from Windows, Please add a browser source in obs to http://127.0.0.1:24050 or refresh the page if you already did that.")
 		operatingSystem = 1
@@ -1096,17 +1093,12 @@ func CurrentHit50c() int16 {
 	return currentCombo
 }
 func inMenuAppliedModsValue() int32 {
-	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsBase - 0x4)) //2 bytes
+	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(inMenuAppliedModsBase)
 	if err != nil {
 		//	log.Println("CurrentHitMiss result pointer failure")
 		return -1
 	}
-	inMenuAppliedModsSecondLevel, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel + 0x44)) //2 bytes
-	if err != nil {
-		//	log.Println("CurrentHitMiss result pointer failure")
-		return -2
-	}
-	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsSecondLevel + 0xCAC)) //2 bytes
+	inMenuAppliedModsResult, err := proc.ReadInt32(uintptr(inMenuAppliedModsFirstLevel))
 	if err != nil {
 		//	log.Println("CurrentHitMiss result pointer failure")
 		return -5
@@ -1250,17 +1242,19 @@ func ResolveSongsFolder() string {
 		//	log.Println("playTime Base level failure")
 		return "-1"
 	}
-	songsBase, err := proc.ReadUint32(uintptr(songsInitAddr + 0x3F8))
+	songsBase, err := proc.ReadUint32(uintptr(songsInitAddr + 0x34))
 	if err != nil {
 		//	log.Println("playTime Base level failure")
 		return "-2"
 	}
-	songsFirstLevel, err := proc.ReadUint32(uintptr(songsBase))
+	songsFirstLevel, err := proc.ReadUint32(uintptr(songsBase + 0x10))
 	if err != nil {
 		//	log.Println("playTime Base level failure")
 		return "-3"
 	}
-	songsResult, err := proc.ReadNullTerminatedUTF16String(uintptr(songsFirstLevel + 0x8))
+
+	songsResult, err := proc.ReadNullTerminatedUTF16String(uintptr(songsFirstLevel + 0x20))
+
 	if err != nil {
 		//	log.Println("playTime Base level failure")
 		return "-5"
@@ -1550,3 +1544,16 @@ var (
 var (
 	errPatternNotFound = errors.New("Pattern not found")
 )
+
+func doUpdate(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	err = update.Apply(resp.Body, update.Options{})
+	if err != nil {
+		// error handling
+	}
+	return err
+}
