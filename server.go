@@ -21,7 +21,7 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
-	"github.com/inconshreveable/go-update"
+	// "github.com/inconshreveable/go-update"
 	"github.com/spf13/cast"
 )
 
@@ -235,7 +235,7 @@ func OsuBPMAddr() uintptr {
 
 func OsuLeaderAddr() uintptr {
 	if operatingSystem == 1 {
-		cmd, err := exec.Command("deps/OsuBPMAddr.exe").Output()
+		cmd, err := exec.Command("deps/OsuLeaderAddr.exe").Output()
 		if err != nil {
 			//fmt.Println(err)
 		}
@@ -1592,15 +1592,15 @@ var (
 	errPatternNotFound = errors.New("Pattern not found")
 )
 
-func doUpdate(url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	err = update.Apply(resp.Body, update.Options{})
-	if err != nil {
-		// error handling
-	}
-	return err
-}
+// func doUpdate(url string) error {
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer resp.Body.Close()
+// 	err = update.Apply(resp.Body, update.Options{})
+// 	if err != nil {
+// 		// error handling
+// 	}
+// 	return err
+// }
