@@ -29,6 +29,7 @@ var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 
 var osuBase uintptr
 var bpmBase uintptr
+var leaderBase uintptr
 var songsFolderAddr uintptr
 var osuStatus uint16
 var currentBeatmapData uintptr
@@ -232,6 +233,51 @@ func OsuBPMAddr() uintptr {
 	return osuBase
 }
 
+func OsuLeaderAddr() uintptr {
+	if operatingSystem == 1 {
+		cmd, err := exec.Command("deps/OsuBPMAddr.exe").Output()
+		if err != nil {
+			//fmt.Println(err)
+		}
+		outStr := cast.ToString(cmd)
+		outStr = strings.Replace(outStr, "\n", "", -1)
+		outStr = strings.Replace(outStr, "\r", "", -1)
+		outInt := cast.ToUint32(outStr)
+
+		osuBase = uintptr(outInt)
+		fmt.Printf("OsuBPMAddr: 0x%x\n", osuBase)
+
+	} else {
+		maps, err := readMaps(int(proc.PID))
+		if err != nil {
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
+		}
+		mem, err := os.Open(fmt.Sprintf("/proc/%d/mem", proc.PID)) //TODO: Should only read the mem once
+		if err != nil {
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
+		}
+		defer mem.Close()
+		base, err := scan(mem, maps, "A1 ?? ?? ?? ??  8B 50 04 8B 0D")
+		if err != nil {
+			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
+			restart()
+		}
+		fmt.Printf("OsuBPMAddr: 0x%x\n", base)
+		// osuBaseString := "0x" + yosuBase
+		osuBase = uintptr(base)
+	}
+
+	if osuBase == 0 {
+		log.Println("Could not find OsuBaseAddr, is osu! running? (retrying)")
+		restart()
+	}
+
+	//println(CurrentBeatmapFolderString())
+	return osuBase
+}
+
 func OsuBaseAddr() uintptr {
 	if operatingSystem == 1 {
 		cmd, err := exec.Command("deps/OsuBaseAddr.exe").Output()
@@ -417,6 +463,7 @@ func InitBaseStuff() {
 	playTime = (playTimeBase + 0x5)
 	inMenuAppliedModsBase = (OsuInMenuModsAddr() + 0x9)
 	bpmBase = OsuBPMAddr()
+	leaderBase = (OsuLeaderAddr() + 0x1)
 }
 
 var upgrader = websocket.Upgrader{
