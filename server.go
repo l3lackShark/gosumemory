@@ -21,7 +21,7 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/gorilla/websocket"
-	// "github.com/inconshreveable/go-update"
+	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cast"
 )
 
@@ -61,6 +61,7 @@ var pp50 string
 var ppMiss string
 var ppMods string = ""
 var pp string = ""
+var leaderStruct uint32
 
 //Menu pp related
 var ppSS string = ""
@@ -245,7 +246,7 @@ func OsuLeaderAddr() uintptr {
 		outInt := cast.ToUint32(outStr)
 
 		osuBase = uintptr(outInt)
-		fmt.Printf("OsuBPMAddr: 0x%x\n", osuBase)
+		fmt.Printf("OsuLeaderAddr: 0x%x\n", osuBase)
 
 	} else {
 		maps, err := readMaps(int(proc.PID))
@@ -464,6 +465,40 @@ func InitBaseStuff() {
 	inMenuAppliedModsBase = (OsuInMenuModsAddr() + 0x9)
 	bpmBase = OsuBPMAddr()
 	leaderBase = (OsuLeaderAddr() + 0x1)
+}
+
+func ResolveLeaderBoardStruct() uint32 {
+	baseLevel, err := proc.ReadUint32(uintptr(leaderBase))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	firstLevel, err := proc.ReadUint32(uintptr(baseLevel + 0x4))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	secondLevel, err := proc.ReadUint32(uintptr(firstLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	thirdLevel, err := proc.ReadUint32(uintptr(secondLevel + 0x24))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	fourthLevel, err := proc.ReadUint32(uintptr(thirdLevel + 0x4))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	result, err := proc.ReadUint32(uintptr(fourthLevel + 0x4))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return result
 }
 
 var upgrader = websocket.Upgrader{
@@ -713,6 +748,11 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				PpMods:                      ppMods,
 			}
 			if osuStatus == 2 {
+				leaderStruct = ResolveLeaderBoardStruct()
+				if leaderStruct != 0x0 {
+					fmt.Printf("LeaderboartStructAddr is: 0x%x\n", uintptr(leaderStruct))
+				}
+
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Refactor
 			}
 
@@ -776,7 +816,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if osuStatusValue != 2 {
-				tempCounter = 06
+				tempCounter = 0
 			}
 
 			if strings.HasSuffix(fullPathToOsu, ".osu") == true && osuStatus == 4 || osuStatus == 5 {
@@ -1592,15 +1632,15 @@ var (
 	errPatternNotFound = errors.New("Pattern not found")
 )
 
-// func doUpdate(url string) error {
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer resp.Body.Close()
-// 	err = update.Apply(resp.Body, update.Options{})
-// 	if err != nil {
-// 		// error handling
-// 	}
-// 	return err
-// }
+func doUpdate(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	err = update.Apply(resp.Body, update.Options{})
+	if err != nil {
+		// error handling
+	}
+	return err
+}
