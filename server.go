@@ -467,6 +467,30 @@ func InitBaseStuff() {
 	leaderBase = (OsuLeaderAddr() + 0x1)
 }
 
+func LeaderPosition() uint32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	firstLevel, err := proc.ReadUint32(uintptr(baseLevel + 0x24))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	secondLevel, err := proc.ReadUint32(uintptr(firstLevel + 0x10))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	result, err := proc.ReadUint32(uintptr(secondLevel + 0x2C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	fmt.Printf("The chain is: %x %x %x %x\n", baseLevel, firstLevel, secondLevel, cast.ToUint32(result))
+	return result
+}
 func ResolveLeaderBoardStruct() uint32 {
 	baseLevel, err := proc.ReadUint32(uintptr(leaderBase))
 	if err != nil {
@@ -750,7 +774,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			if osuStatus == 2 {
 				leaderStruct = ResolveLeaderBoardStruct()
 				if leaderStruct != 0x0 {
-					fmt.Printf("LeaderboartStructAddr is: 0x%x\n", uintptr(leaderStruct))
+					fmt.Printf("LeaderboardtStructAddr is: 0x%x\n", uintptr(leaderStruct))
+					fmt.Printf("LeaderboardPosition is: %x\n", LeaderPosition())
+
 				}
 
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Refactor
@@ -1468,12 +1494,14 @@ func PP95() string {
 	}
 
 }
+
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
 		if predicate(i) {
 			return i
 		}
 	}
+
 	return -1
 }
 
