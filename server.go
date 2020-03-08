@@ -260,7 +260,7 @@ func OsuLeaderAddr() uintptr {
 			restart()
 		}
 		defer mem.Close()
-		base, err := scan(mem, maps, "A1 ?? ?? ?? ??  8B 50 04 8B 0D")
+		base, err := scan(mem, maps, "A1 ?? ?? ?? ?? 8B 50 04 8B 0D")
 		if err != nil {
 			fmt.Println("It looks like we got a client restart mid getting offsets, trying to recover.. (waiting for the game to launch)")
 			restart()
