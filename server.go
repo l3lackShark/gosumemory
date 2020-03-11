@@ -51,8 +51,11 @@ var fullPathToOsu string
 var osuFileStdIN string
 var currentHitObjectStats string = ""
 
+var isArrayReady int32
+
 //Gameplay pp related
 var ourTime []int
+var arrayOffsets []uintptr
 var lastObjectInt int
 var lastObject string
 var ppAcc string
@@ -487,6 +490,27 @@ func LeaderCurrentPlayerStruct() uint32 {
 	return secondLevel
 }
 
+func ResolveSlotsArray(offset uint32) uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + offset)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func slotsAddresses() []uintptr {
+	var x uint32 = 0
+	for i := 0; i <= 63; {
+		x = x + 4
+		arrayOffsets = append(arrayOffsets, ResolveSlotsArray(x))
+		i++
+	}
+	// fmt.Println(arrayOffsets)
+	isArrayReady = 1
+	return arrayOffsets
+
+}
+
 func ResolveSlot1Array() uintptr {
 	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x8)) //first slot
 	if err != nil {
@@ -496,7 +520,11 @@ func ResolveSlot1Array() uintptr {
 	return uintptr(baseLevel)
 }
 func Slot1Name() string {
-	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot1Array() + 0x8))
+	if isArrayReady != 1 {
+		return "-0.5"
+	}
+
+	baseLevel, err := proc.ReadUint32(arrayOffsets[1] + 0x8)
 	if err != nil {
 		//log.Println("CurrentBeatmapSetID result pointer failure")
 		return "-1"
@@ -1669,6 +1697,709 @@ func Slot10Mods() string {
 	value := xor1 ^ xor2
 	return ModsResolver(cast.ToUint32(value))
 }
+func ResolveSlot11Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x30)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot11Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot11Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot11Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot11ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot11Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot11Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot11Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot11Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot11Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+func ResolveSlot12Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x34)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot12Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot12Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot12Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot12ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot12Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot12Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot12Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot12Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot12Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+func ResolveSlot13Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x38)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot13Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot13Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot13Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot13ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot13Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot13Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot13Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot13Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot13Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+func ResolveSlot14Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x3C)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot14Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot14Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot14Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot14ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot14Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot14Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot14Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot14Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot14Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+func ResolveSlot15Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x40)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot15Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot15Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot15Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot15ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot15Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot15Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot15Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot15Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot15Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+func ResolveSlot16Array() uintptr {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveLeaderBoardStruct() + 0x44)) //first slot
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return 0x0
+	}
+	return uintptr(baseLevel)
+}
+func Slot16Name() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(baseLevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	return result
+}
+func Slot16Score() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x74))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot16Combo() int32 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt32(uintptr(baseLevel + 0x68))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot16ThreeHundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x86))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return -2
+	}
+	return result
+}
+func Slot16Hundred() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x84))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot16Fifty() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x88))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot16Miss() int16 {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		return -1
+	}
+	result, err := proc.ReadInt16(uintptr(baseLevel + 0x8E))
+	if err != nil {
+		return -2
+	}
+	return result
+}
+func Slot16Mods() string {
+	baseLevel, err := proc.ReadUint32(uintptr(ResolveSlot16Array() + 0x20))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-1"
+	}
+	seclevel, err := proc.ReadUint32(uintptr(baseLevel + 0x1C))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-2"
+	}
+	xor1, err := proc.ReadInt32(uintptr(seclevel + 0x8))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-3"
+	}
+	xor2, err := proc.ReadInt32(uintptr(seclevel + 0xC))
+	if err != nil {
+		//log.Println("CurrentBeatmapSetID result pointer failure")
+		return "-4"
+	}
+	value := xor1 ^ xor2
+	return ModsResolver(cast.ToUint32(value))
+}
+
 func LeaderPosition() int32 {
 	result, err := proc.ReadInt32(uintptr(LeaderCurrentPlayerStruct() + 0x2C))
 	if err != nil {
@@ -2182,6 +2913,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				leaderStruct = ResolveLeaderBoardStruct()
 				if leaderStruct != 0x0 {
 					fmt.Printf("LeaderboardtStructAddr is: 0x%x\n", uintptr(leaderStruct))
+					fmt.Println(slotsAddresses())
 					// fmt.Printf("LeaderboardPosition is: %x\n", LeaderPosition())
 					// fmt.Println(LeaderCurrentName())
 
