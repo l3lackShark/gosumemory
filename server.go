@@ -60,6 +60,7 @@ var pp50 string
 var ppMiss string
 var ppMods string = ""
 var pp string = ""
+var hitErrorArray []int32
 
 //Menu pp related
 var ppSS string = ""
@@ -587,8 +588,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				CurrentMaxCombo int32   `json:"maxCombo"`
 				// CurrentPlayerHP         int8    `json:"playerHP"`
 				// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
-				Pp     string `json:"pp"`
-				PPifFC string `json:"ppIfFC"`
+				Pp            string  `json:"pp"`
+				PPifFC        string  `json:"ppIfFC"`
+				HitErrorArray []int32 `json:"hitErrorRAW"`
 			}
 			type EverythingInMenu struct {
 				CurrentState                uint16  `json:"osuState"`
@@ -631,8 +633,9 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 				CurrentMaxCombo: CurrentMaxCombo(),
 				// CurrentPlayerHP:         CurrentPlayerHP(),
 				// CurrentPlayerHPSmoothed: CurrentPlayerHPSmoothed(),
-				Pp:     pp,
-				PPifFC: ppifFC,
+				Pp:            pp,
+				PPifFC:        ppifFC,
+				HitErrorArray: hitErrorArray,
 			}
 
 			//println(ValidCurrentBeatmapFolderString())
@@ -667,6 +670,10 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			}
 			if osuStatus == 2 {
 				ppMods = ModsResolver(cast.ToUint32(MenuContainerStruct.CurrentAppliedMods)) //TODO: Refactor
+				hitErrorArray, err = readHitErrorArray()
+				if err != nil {
+					log.Println("Failed to parse HitError Array: ", err)
+				}
 			}
 
 			if PlayContainerStruct.CurrentMaxCombo >= 1 {
@@ -765,7 +772,6 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 			//if err != nil {
 			//	log.Println(err)
 			//}
-			//fmt.Println(countOpenFiles())
 			time.Sleep(time.Duration(updateTime) * time.Millisecond)
 
 		}
@@ -822,7 +828,7 @@ func main() {
 	// }
 
 	path := flag.String("path", "auto", "Path to osu! Songs directory ex: C:\\Users\\BlackShark\\AppData\\Local\\osu!\\Songs")
-	updateTimeAs := flag.Int("update", 50, "How fast should we update the values? (in milliseconds)")
+	updateTimeAs := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
 	updateTime = *updateTimeAs
 	workingDirectory = *path
@@ -1092,6 +1098,46 @@ func CurrentHit50c() int16 {
 	}
 	return currentCombo
 }
+func ResolveHitErrorStruct() uint32 {
+	base, err := proc.ReadUint32(uintptr(playContainer38 + 0x38))
+	if err != nil {
+		return 0
+	}
+	data, err := proc.ReadUint32(uintptr(base + 0x4))
+	if err != nil {
+		return 0
+	}
+	return data
+}
+
+func ResolveHitErrorArray(offset uint32) int32 {
+	baseLevel, err := proc.ReadInt32(uintptr(ResolveHitErrorStruct() + offset))
+	//log.Println("CurrentBeatmapSetID result pointer failure")
+	if err != nil {
+		return 0x0
+	}
+	return baseLevel
+}
+
+func readHitErrorArray() ([]int32, error) {
+	base, err := proc.ReadUint32(uintptr(playContainer38 + 0x38))
+	if err != nil {
+		return nil, err
+	}
+	leng, err := proc.ReadUint32(uintptr(base + 0xC))
+	if err != nil {
+		return nil, err
+	}
+	buf := make([]byte, leng*4)
+	var buf32 []int32
+	var i uint32 = 0
+	for i = 0; int(i+3) < len(buf); i += 3 {
+		buf32 = append(buf32, ResolveHitErrorArray(i))
+		i++
+	}
+	return buf32, nil
+}
+
 func inMenuAppliedModsValue() int32 {
 	inMenuAppliedModsFirstLevel, err := proc.ReadInt32(inMenuAppliedModsBase)
 	if err != nil {
