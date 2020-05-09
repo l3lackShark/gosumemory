@@ -16,14 +16,15 @@ type InMenuValues struct {
 	HitObjectStats       string  `json:"bmStats"`
 	PlayTime             int32   `json:"bmTime"`
 	InnerBGPath          string  `json:"innerBG"`
-	AppliedMods          int32   `json:"appliedMods"`
-	PpMods               string  `json:"appliedModsString"`
-	PpSS                 string  `json:"ppSS"`
-	Pp99                 string  `json:"pp99"`
-	Pp98                 string  `json:"pp98"`
-	Pp97                 string  `json:"pp97"`
-	Pp96                 string  `json:"pp96"`
-	Pp95                 string  `json:"pp95"`
+	BGPath               string
+	AppliedMods          int32  `json:"appliedMods"`
+	PpMods               string `json:"appliedModsString"`
+	PpSS                 string `json:"ppSS"`
+	Pp99                 string `json:"pp99"`
+	Pp98                 string `json:"pp98"`
+	Pp97                 string `json:"pp97"`
+	Pp96                 string `json:"pp96"`
+	Pp95                 string `json:"pp95"`
 }
 
 //GameplayValues inside osu!memory

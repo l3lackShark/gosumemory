@@ -37,6 +37,7 @@ func Init() {
 		if err != nil {
 			log.Println("Could not get osuStatus Value!")
 		}
+		var tempBeatmapID uint32 = 0
 		switch values.MenuData.OsuStatus {
 		case 2:
 			// values.MenuData.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38)
@@ -52,17 +53,61 @@ func Init() {
 			if err != nil {
 				log.Println(err)
 			}
-			values.MenuData.BeatmapSetID, err = proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr + 0xC8))
-			if err != nil {
-				log.Println(err)
-			}
-			beatmapStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x7C)
-			values.MenuData.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
-			if err != nil {
-				log.Println(err)
+			if tempBeatmapID != values.MenuData.BeatmapID { //On map change
+				values.MenuData.BeatmapSetID, err = proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr + 0xC8))
+				if err != nil {
+					log.Println(err)
+				}
+				beatmapStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x7C)
+				values.MenuData.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
+				if err != nil {
+					log.Println(err)
+				}
+				beatmapBGStringOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x68)
+				values.MenuData.BGPath, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
+				if err != nil {
+					log.Println(err)
+				}
+				beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x8C)
+				values.MenuData.BeatmapOsuFileString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
+				if err != nil {
+					log.Println(err)
+				}
+				beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x74)
+				values.MenuData.BeatmapFolderString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
+				if err != nil {
+					log.Println(err)
+				}
+				values.MenuData.BeatmapAR, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x2C))
+				if err != nil {
+					log.Println(err)
+				}
+				values.MenuData.BeatmapCS, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x30))
+				if err != nil {
+					log.Println(err)
+				}
+				values.MenuData.BeatmapHP, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x34))
+				if err != nil {
+					log.Println(err)
+				}
+				values.MenuData.BeatmapOD, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x38))
+				if err != nil {
+					log.Println(err)
+				}
+
+				tempBeatmapID = values.MenuData.BeatmapID
 			}
 
 		}
+
+		// if strings.HasSuffix(values.MenuData.BeatmapOsuFileString, ".osu") == true {
+		// 	var bgString string = values.MenuData.BGPath
+		// 	values.MenuData.InnerBGPath = values.MenuData.BeatmapFolderString + "/" + bgString
+
+		// } else {
+		// 	fmt.Println(values.MenuData.BeatmapOsuFileString)
+		// }
+
 		time.Sleep(100 * time.Millisecond)
 	}
 
