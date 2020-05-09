@@ -1,6 +1,6 @@
 // +build linux
 
-package patterns
+package memory
 
 import (
 	"bufio"

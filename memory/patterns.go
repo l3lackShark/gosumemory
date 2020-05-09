@@ -1,4 +1,4 @@
-package patterns
+package memory
 
 //Patterns is Base osu signatures stuct
 type Patterns struct {

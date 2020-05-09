@@ -25,23 +25,24 @@ type InMenuValues struct {
 	Pp97                 string `json:"pp97"`
 	Pp96                 string `json:"pp96"`
 	Pp95                 string `json:"pp95"`
+	IsReady              bool
 }
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	CurrentHit300c  int16   `json:"300"`
-	CurrentHit100c  int16   `json:"100"`
-	CurrentHit50c   int16   `json:"50"`
-	CurrentHitMiss  int16   `json:"miss"`
-	CurrentAccuracy float64 `json:"accuracy"`
-	CurrentScore    int32   `json:"score"`
-	CurrentCombo    int32   `json:"combo"`
-	CurrentGameMode int32   `json:"gameMode"`
-	CurrentMaxCombo int32   `json:"maxCombo"`
-	// CurrentPlayerHP         int8    `json:"playerHP"`
-	// CurrentPlayerHPSmoothed int8    `json:"playerHPSmoothed"`
-	Pp     string `json:"pp"`
-	PPifFC string `json:"ppIfFC"`
+	PlayContainer38 uint32
+	AppliedMods     int32   `json:"appliedMods"`
+	Hit300c         int16   `json:"300"`
+	Hit100c         int16   `json:"100"`
+	Hit50c          int16   `json:"50"`
+	HitMiss         int16   `json:"miss"`
+	Accuracy        float64 `json:"accuracy"`
+	Score           int32   `json:"score"`
+	Combo           int32   `json:"combo"`
+	GameMode        int32   `json:"gameMode"`
+	MaxCombo        int32   `json:"maxCombo"`
+	Pp              string  `json:"pp"`
+	PPifFC          string  `json:"ppIfFC"`
 }
 
 //MenuData contains raw values taken from osu! memory

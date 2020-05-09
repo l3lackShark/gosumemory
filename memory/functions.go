@@ -1,6 +1,7 @@
-package patterns
+package memory
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -8,9 +9,8 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/l3lackShark/gosumemory/values"
+	"github.com/l3lackShark/gosumemory/web"
 )
-
-var isReady bool = false
 
 //UpdateTime Intervall between value updates
 var UpdateTime int
@@ -26,7 +26,7 @@ func Init() {
 				log.Println("It seems that we lost the process, retrying!")
 				time.Sleep(1 * time.Second)
 			}
-			isReady = false
+			values.MenuData.IsReady = false
 			err := InitBase()
 			for err != nil {
 				err = InitBase()
@@ -34,7 +34,7 @@ func Init() {
 				time.Sleep(1 * time.Second)
 			}
 		}
-		if isReady == false {
+		if values.MenuData.IsReady == false {
 			InitBase()
 		}
 
@@ -45,10 +45,28 @@ func Init() {
 		var tempBeatmapID uint32 = 0
 		switch values.MenuData.OsuStatus {
 		case 2:
-			// values.MenuData.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38)
-			// if err != nil {
-			// 	log.Println(err)
-			// }
+			values.GameplayData.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
+			if err != nil {
+				log.Println(err)
+			}
+			xor1, err := proc.ReadUint32Ptr(uintptr(values.GameplayData.PlayContainer38+0x1C), 0xC)
+			xor2, err := proc.ReadUint32Ptr(uintptr(values.GameplayData.PlayContainer38+0x1C), 0x8)
+			if err != nil {
+				log.Println(err, "xor")
+			}
+			values.GameplayData.AppliedMods = int32(xor1 ^ xor2)
+
+			values.GameplayData.Combo, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x90))
+			values.GameplayData.MaxCombo, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x68))
+			values.GameplayData.GameMode, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x64))
+			values.GameplayData.Score, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x74))
+			values.GameplayData.Hit100c, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x84))
+			values.GameplayData.Hit300c, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x86))
+			values.GameplayData.Hit50c, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x88))
+			values.GameplayData.HitMiss, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x8E))
+			if err != nil {
+				log.Println("GameplayData failure")
+			}
 		default:
 			values.MenuData.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
@@ -109,6 +127,19 @@ func Init() {
 				tempBeatmapID = values.MenuData.BeatmapID
 			}
 
+		}
+
+		type wsStruct struct { //order sets here
+			A values.InMenuValues   `json:"menuContainer"`
+			B values.GameplayValues `json:"gameplayContainer"`
+		}
+		group := wsStruct{
+			A: values.MenuData,
+			B: values.GameplayData,
+		}
+		web.JSONByte, err = json.Marshal(group)
+		if err != nil {
+			fmt.Println("error:", err)
 		}
 
 		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)

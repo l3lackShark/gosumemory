@@ -3,23 +3,26 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
+	"net/http"
 
-	"github.com/l3lackShark/gosumemory/values"
+	"github.com/l3lackShark/gosumemory/web"
 
-	"github.com/l3lackShark/gosumemory/patterns"
+	"github.com/l3lackShark/gosumemory/memory"
 )
 
 func main() {
 	fmt.Println("owo")
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	flag.Parse()
-	patterns.UpdateTime = *updateTimeFlag
-	go patterns.Init()
+	memory.UpdateTime = *updateTimeFlag
+	go memory.Init()
+	go web.HTTPServer()
+	go web.SetupRoutes()
+	go web.SetupStructure()
+	go http.ListenAndServe(":8085", nil)
+
 	for {
-		fmt.Println(values.MenuData.InnerBGPath)
-		time.Sleep(500 * time.Millisecond)
+
 	}
-	//fmt.Println(patterns.OsuStaticAddresses)
 
 }

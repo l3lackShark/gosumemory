@@ -1,6 +1,6 @@
 // +build linux
 
-package patterns
+package memory
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
+	"github.com/l3lackShark/gosumemory/values"
 )
 
 //InitBase initializes base static addresses.
@@ -68,6 +69,6 @@ func InitBase() error {
 	if err != nil {
 		return err
 	}
-	isReady = true
+	values.MenuData.IsReady = true
 	return nil
 }
