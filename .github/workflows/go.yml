@@ -24,7 +24,7 @@ jobs:
             dep ensure
         fi
     - name: Build
-      run: go build -v .
+      run: go build -v -o build/gosumemory
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
@@ -32,5 +32,5 @@ jobs:
       # Artifact name
         name: server
       # Directory containing files to upload
-        path: .
+        path: ./gosumemory
 
