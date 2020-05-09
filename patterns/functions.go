@@ -16,11 +16,16 @@ func Init() {
 		var err error
 		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		if procerr != nil {
+			for procerr != nil {
+				proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+				log.Println("It seems that we lost the process, retrying!")
+				time.Sleep(1 * time.Second)
+			}
 			isReady = false
 			err := InitBase()
 			for err != nil {
 				err = InitBase()
-				log.Println("It seems that we lost the process, retrying!")
+				log.Println("It seems that we lost the process, retrying!(2)")
 				time.Sleep(1 * time.Second)
 			}
 		}
@@ -28,22 +33,31 @@ func Init() {
 			InitBase()
 		}
 
-		values.OsuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
+		values.MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 		if err != nil {
 			log.Println("Could not get osuStatus Value!")
 		}
-		switch values.OsuData.OsuStatus {
+		switch values.MenuData.OsuStatus {
 		case 2:
-			values.OsuData.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38)
-			if err != nil {
-				log.Println(err)
-			}
+			// values.MenuData.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38)
+			// if err != nil {
+			// 	log.Println(err)
+			// }
 		default:
-			values.OsuData.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
+			values.MenuData.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
 				log.Println(err)
 			}
-			values.OsuData.BeatMapID, err = proc.ReadUint32(uintptr(values.OsuData.BeatmapAddr + 0xC4))
+			values.MenuData.BeatmapID, err = proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr + 0xC4))
+			if err != nil {
+				log.Println(err)
+			}
+			values.MenuData.BeatmapSetID, err = proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr + 0xC8))
+			if err != nil {
+				log.Println(err)
+			}
+			beatmapStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x7C)
+			values.MenuData.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
 			if err != nil {
 				log.Println(err)
 			}

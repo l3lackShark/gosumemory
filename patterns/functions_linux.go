@@ -68,10 +68,6 @@ func InitBase() error {
 	if err != nil {
 		return err
 	}
-	osuStaticAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
-	if err != nil {
-		return err
-	}
 	isReady = true
 	return nil
 }
