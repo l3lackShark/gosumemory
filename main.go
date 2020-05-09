@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -11,9 +12,9 @@ import (
 
 func main() {
 	fmt.Println("owo")
-	// for i := 0; i < 500; i++ {
-	// 	fmt.Println(patterns.ResolveOsuStatus())
-	// }
+	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
+	flag.Parse()
+	patterns.UpdateTime = *updateTimeFlag
 	go patterns.Init()
 	for {
 		fmt.Println(values.MenuData.InnerBGPath)

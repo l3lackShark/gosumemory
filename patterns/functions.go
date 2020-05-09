@@ -12,6 +12,9 @@ import (
 
 var isReady bool = false
 
+//UpdateTime Intervall between value updates
+var UpdateTime int
+
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
 	for {
@@ -108,7 +111,7 @@ func Init() {
 
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 	}
 
 }
