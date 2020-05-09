@@ -15,6 +15,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Error has occured! ", err)
 	}
-	fmt.Println(patterns.OsuStaticAddresses.Status)
+	fmt.Println(patterns.OsuStaticAddresses)
 
 }

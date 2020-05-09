@@ -12,7 +12,12 @@ type Patterns struct {
 
 //StaticAddresses (should be updated every client restart)
 type StaticAddresses struct {
-	Status uint32
+	Status        uint32
+	BPM           uint32
+	Base          uint32
+	InMenuMods    uint32
+	PlayTime      uint32
+	PlayContainer uint32
 }
 
 //OsuSignatures are the main sigs used by the program

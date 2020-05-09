@@ -57,7 +57,6 @@ func InitBase() error {
 
 	OsuStaticAddresses.Status, err = scan(mem, maps, osuSignatures.status)
 	if err != nil {
-		log.Println("Could not get signature!")
 		return err
 	}
 	osuStatus, err := proc.ReadUint32Ptr(uintptr(OsuStaticAddresses.Status-0x4), 0x0)
@@ -72,6 +71,26 @@ func InitBase() error {
 			return err
 		}
 
+	}
+	OsuStaticAddresses.BPM, err = scan(mem, maps, osuSignatures.bpm)
+	if err != nil {
+		return err
+	}
+	OsuStaticAddresses.Base, err = scan(mem, maps, osuSignatures.base)
+	if err != nil {
+		return err
+	}
+	OsuStaticAddresses.InMenuMods, err = scan(mem, maps, osuSignatures.inMenuMods)
+	if err != nil {
+		return err
+	}
+	OsuStaticAddresses.PlayTime, err = scan(mem, maps, osuSignatures.playTime)
+	if err != nil {
+		return err
+	}
+	OsuStaticAddresses.PlayContainer, err = scan(mem, maps, osuSignatures.playContainer)
+	if err != nil {
+		return err
 	}
 
 	return nil
