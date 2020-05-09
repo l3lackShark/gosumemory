@@ -18,6 +18,7 @@ type StaticAddresses struct {
 	InMenuMods    uint32
 	PlayTime      uint32
 	PlayContainer uint32
+	BeatmapAddr   uint32
 }
 
 //OsuSignatures are the main sigs used by the program

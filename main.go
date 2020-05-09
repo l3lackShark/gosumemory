@@ -17,6 +17,7 @@ func main() {
 	go patterns.Init()
 	for {
 		fmt.Println(values.OsuData.OsuStatus)
+		fmt.Println(values.OsuData.BeatMapID)
 		time.Sleep(500 * time.Millisecond)
 	}
 	//fmt.Println(patterns.OsuStaticAddresses)
