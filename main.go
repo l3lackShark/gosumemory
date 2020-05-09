@@ -19,10 +19,6 @@ func main() {
 	go web.HTTPServer()
 	go web.SetupRoutes()
 	go web.SetupStructure()
-	go http.ListenAndServe(":8085", nil)
-
-	for {
-
-	}
+	http.ListenAndServe(":8085", nil)
 
 }

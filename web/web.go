@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-//JSONByte si data sent to the client
+//JSONByte contains data that will be sent to the client
 var JSONByte []byte
 
 var upgrader = websocket.Upgrader{
