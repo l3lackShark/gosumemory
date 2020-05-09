@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/l3lackShark/gosumemory/values"
 
 	"github.com/l3lackShark/gosumemory/patterns"
 )
@@ -11,10 +14,11 @@ func main() {
 	// for i := 0; i < 500; i++ {
 	// 	fmt.Println(patterns.ResolveOsuStatus())
 	// }
-	err := patterns.InitBase()
-	if err != nil {
-		fmt.Println("Error has occured! ", err)
+	go patterns.Init()
+	for {
+		fmt.Println(values.OsuData.OsuStatus)
+		time.Sleep(500 * time.Millisecond)
 	}
-	fmt.Println(patterns.OsuStaticAddresses)
+	//fmt.Println(patterns.OsuStaticAddresses)
 
 }

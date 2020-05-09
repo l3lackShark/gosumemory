@@ -29,3 +29,6 @@ var osuSignatures = Patterns{
 	playTime:      "5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04",
 	playContainer: "85 C9 74 1F 8D 55 F0 8B 01",
 }
+
+//osuStaticAddresses (should be updated every client restart)
+var osuStaticAddresses = StaticAddresses{}
