@@ -1,7 +1,9 @@
 package patterns
 
 import (
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
@@ -94,19 +96,17 @@ func Init() {
 				if err != nil {
 					log.Println(err)
 				}
+				if strings.HasSuffix(values.MenuData.BeatmapOsuFileString, ".osu") == true && len(values.MenuData.BGPath) > 0 {
+					values.MenuData.InnerBGPath = values.MenuData.BeatmapFolderString + "/" + values.MenuData.BGPath
+
+				} else {
+					fmt.Println("skipping bg reloading")
+				}
 
 				tempBeatmapID = values.MenuData.BeatmapID
 			}
 
 		}
-
-		// if strings.HasSuffix(values.MenuData.BeatmapOsuFileString, ".osu") == true {
-		// 	var bgString string = values.MenuData.BGPath
-		// 	values.MenuData.InnerBGPath = values.MenuData.BeatmapFolderString + "/" + bgString
-
-		// } else {
-		// 	fmt.Println(values.MenuData.BeatmapOsuFileString)
-		// }
 
 		time.Sleep(100 * time.Millisecond)
 	}

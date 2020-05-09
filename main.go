@@ -16,7 +16,7 @@ func main() {
 	// }
 	go patterns.Init()
 	for {
-		fmt.Println(values.MenuData.BeatmapOD)
+		fmt.Println(values.MenuData.InnerBGPath)
 		time.Sleep(500 * time.Millisecond)
 	}
 	//fmt.Println(patterns.OsuStaticAddresses)
