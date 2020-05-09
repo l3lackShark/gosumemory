@@ -8,6 +8,13 @@ import (
 
 func main() {
 	fmt.Println("owo")
-	fmt.Println(patterns.ResolveOsuStatus())
+	// for i := 0; i < 500; i++ {
+	// 	fmt.Println(patterns.ResolveOsuStatus())
+	// }
+	err := patterns.InitBase()
+	if err != nil {
+		fmt.Println("Error has occured! ", err)
+	}
+	fmt.Println(patterns.OsuStaticAddresses.Status)
 
 }
