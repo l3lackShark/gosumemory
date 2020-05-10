@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/l3lackShark/gosumemory/pp"
 	"github.com/l3lackShark/gosumemory/web"
 
 	"github.com/l3lackShark/gosumemory/memory"
@@ -16,9 +17,10 @@ func main() {
 	flag.Parse()
 	memory.UpdateTime = *updateTimeFlag
 	go memory.Init()
+	go web.SetupStructure()
 	go web.HTTPServer()
 	go web.SetupRoutes()
-	go web.SetupStructure()
+	go pp.GetData()
 	http.ListenAndServe(":8085", nil)
 
 }

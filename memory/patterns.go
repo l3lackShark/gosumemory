@@ -26,7 +26,7 @@ var osuSignatures = Patterns{
 	bpm:           "8B 40 08 89 86 4C 01 00 00 C6", //-0x4
 	base:          "F8 01 74 04 83 65",             //-0xC
 	inMenuMods:    "C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00",
-	playTime:      "5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04",
+	playTime:      "5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04", //+0x5
 	playContainer: "85 C9 74 1F 8D 55 F0 8B 01",
 }
 

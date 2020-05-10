@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/l3lackShark/gosumemory/values"
-	"github.com/l3lackShark/gosumemory/web"
 )
 
 //UpdateTime Intervall between value updates
@@ -32,6 +30,7 @@ func Init() {
 				err = InitBase()
 				log.Println("It seems that we lost the process, retrying!(2)")
 				time.Sleep(1 * time.Second)
+
 			}
 		}
 		if values.MenuData.IsReady == false {
@@ -42,6 +41,7 @@ func Init() {
 		if err != nil {
 			log.Println("Could not get osuStatus Value!")
 		}
+
 		var tempBeatmapID uint32 = 0
 		switch values.MenuData.OsuStatus {
 		case 2:
@@ -55,7 +55,6 @@ func Init() {
 				log.Println(err, "xor")
 			}
 			values.GameplayData.AppliedMods = int32(xor1 ^ xor2)
-
 			values.GameplayData.Combo, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x90))
 			values.GameplayData.MaxCombo, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x68))
 			values.GameplayData.GameMode, err = proc.ReadInt32(uintptr(values.GameplayData.PlayContainer38 + 0x64))
@@ -64,10 +63,13 @@ func Init() {
 			values.GameplayData.Hit300c, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x86))
 			values.GameplayData.Hit50c, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x88))
 			values.GameplayData.HitMiss, err = proc.ReadInt16(uintptr(values.GameplayData.PlayContainer38 + 0x8E))
+			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
+			values.GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
+			values.MenuData.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 			if err != nil {
 				log.Println("GameplayData failure")
 			}
-		default:
+		default: //This data available at all times
 			values.MenuData.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
 				log.Println(err)
@@ -78,45 +80,23 @@ func Init() {
 			}
 			if tempBeatmapID != values.MenuData.BeatmapID { //On map change
 				values.MenuData.BeatmapSetID, err = proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr + 0xC8))
-				if err != nil {
-					log.Println(err)
-				}
 				beatmapStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x7C)
 				values.MenuData.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
-				if err != nil {
-					log.Println(err)
-				}
 				beatmapBGStringOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x68)
 				values.MenuData.BGPath, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
-				if err != nil {
-					log.Println(err)
-				}
 				beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x8C)
 				values.MenuData.BeatmapOsuFileString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
-				if err != nil {
-					log.Println(err)
-				}
 				beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(values.MenuData.BeatmapAddr) + 0x74)
 				values.MenuData.BeatmapFolderString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
-				if err != nil {
-					log.Println(err)
-				}
 				values.MenuData.BeatmapAR, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x2C))
-				if err != nil {
-					log.Println(err)
-				}
 				values.MenuData.BeatmapCS, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x30))
-				if err != nil {
-					log.Println(err)
-				}
 				values.MenuData.BeatmapHP, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x34))
-				if err != nil {
-					log.Println(err)
-				}
 				values.MenuData.BeatmapOD, err = proc.ReadFloat32(uintptr(values.MenuData.BeatmapAddr + 0x38))
+				values.MenuData.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 				if err != nil {
 					log.Println(err)
 				}
+
 				if strings.HasSuffix(values.MenuData.BeatmapOsuFileString, ".osu") == true && len(values.MenuData.BGPath) > 0 {
 					values.MenuData.InnerBGPath = values.MenuData.BeatmapFolderString + "/" + values.MenuData.BGPath
 
@@ -127,19 +107,6 @@ func Init() {
 				tempBeatmapID = values.MenuData.BeatmapID
 			}
 
-		}
-
-		type wsStruct struct { //order sets here
-			A values.InMenuValues   `json:"menuContainer"`
-			B values.GameplayValues `json:"gameplayContainer"`
-		}
-		group := wsStruct{
-			A: values.MenuData,
-			B: values.GameplayData,
-		}
-		web.JSONByte, err = json.Marshal(group)
-		if err != nil {
-			fmt.Println("error:", err)
 		}
 
 		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)

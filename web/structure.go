@@ -2,8 +2,10 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
+	"time"
 
+	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/values"
 )
 
@@ -14,13 +16,17 @@ func SetupStructure() {
 		A values.InMenuValues   `json:"menuContainer"`
 		B values.GameplayValues `json:"gameplayContainer"`
 	}
+	for {
+		group := wsStruct{
+			A: values.MenuData,
+			B: values.GameplayData,
+		}
 
-	group := wsStruct{
-		A: values.MenuData,
-		B: values.GameplayData,
+		JSONByte, err = json.Marshal(group)
+		if err != nil {
+			log.Println("error:", err)
+		}
+		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
-	JSONByte, err = json.Marshal(group)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
+
 }
