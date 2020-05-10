@@ -20,7 +20,7 @@ func GetData() {
 	for {
 		ez := C.ezpp_new()
 		C.ezpp_set_autocalc(ez, 1)
-		path := ("/mnt/ps3drive/osu!/Songs/" + values.MenuData.BeatmapFolderString + "/" + values.MenuData.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
+		path := (memory.SongsFolderPath + "/" + values.MenuData.BeatmapFolderString + "/" + values.MenuData.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
 		var tempPath string
 		if strings.HasSuffix(path, ".osu") && path != tempPath && values.MenuData.IsReady == true {
 			tempPath = path
@@ -55,8 +55,8 @@ func GetData() {
 				C.ezpp_set_accuracy_percent(ez, C.float(95.0))
 				values.MenuData.Pp95 = float64(C.ezpp_pp(ez))
 
-				C.ezpp_free(ez)
 			}
+			C.ezpp_free(ez)
 		}
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}

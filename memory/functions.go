@@ -13,6 +13,9 @@ import (
 //UpdateTime Intervall between value updates
 var UpdateTime int
 
+//SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
+var SongsFolderPath string
+
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
 	for {
