@@ -8,6 +8,7 @@ import (
 
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/values"
+	"github.com/spf13/cast"
 )
 
 //#cgo LDFLAGS:/usr/local/lib/liboppai.so
@@ -36,28 +37,29 @@ func GetData() {
 				C.ezpp_set_nmiss(ez, C.int(values.GameplayData.HitMiss))
 				C.ezpp_set_combo(ez, C.int(values.GameplayData.MaxCombo))
 				C.ezpp_set_mods(ez, C.int(values.GameplayData.AppliedMods))
-				values.GameplayData.Pp = float64(C.ezpp_pp(ez))
+				values.GameplayData.Pp = cast.ToString(float64(C.ezpp_pp(ez)))
 
 			default:
 				C.ezpp_set_base_ar(ez, C.float(values.MenuData.BeatmapAR))
 				C.ezpp_set_base_od(ez, C.float(values.MenuData.BeatmapOD))
 				C.ezpp_set_base_cs(ez, C.float(values.MenuData.BeatmapCS))
 				C.ezpp_set_base_hp(ez, C.float(values.MenuData.BeatmapHP))
-				values.MenuData.PpSS = float64(C.ezpp_pp(ez))
+				values.MenuData.PpSS = cast.ToString(float64(C.ezpp_pp(ez)))
 				C.ezpp_set_accuracy_percent(ez, C.float(99.0))
-				values.MenuData.Pp99 = float64(C.ezpp_pp(ez))
+				values.MenuData.Pp99 = cast.ToString(float64(C.ezpp_pp(ez)))
 				C.ezpp_set_accuracy_percent(ez, C.float(98.0))
-				values.MenuData.Pp98 = float64(C.ezpp_pp(ez))
+				values.MenuData.Pp98 = cast.ToString(float64(C.ezpp_pp(ez)))
 				C.ezpp_set_accuracy_percent(ez, C.float(97.0))
-				values.MenuData.Pp97 = float64(C.ezpp_pp(ez))
+				values.MenuData.Pp97 = cast.ToString(float64(C.ezpp_pp(ez)))
 				C.ezpp_set_accuracy_percent(ez, C.float(96.0))
-				values.MenuData.Pp96 = float64(C.ezpp_pp(ez))
+				values.MenuData.Pp96 = cast.ToString(float64(C.ezpp_pp(ez)))
 				C.ezpp_set_accuracy_percent(ez, C.float(95.0))
-				values.MenuData.Pp95 = float64(C.ezpp_pp(ez))
+				values.MenuData.Pp95 = cast.ToString(float64(C.ezpp_pp(ez)))
 
 			}
-			C.ezpp_free(ez)
+
 		}
+		C.ezpp_free(ez)
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
 

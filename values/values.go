@@ -17,14 +17,14 @@ type InMenuValues struct {
 	PlayTime             uint32  `json:"bmTime"`
 	InnerBGPath          string  `json:"innerBG"`
 	BGPath               string
-	AppliedMods          int32   `json:"appliedMods"`
-	PpMods               string  `json:"appliedModsString"`
-	PpSS                 float64 `json:"ppSS"`
-	Pp99                 float64 `json:"pp99"`
-	Pp98                 float64 `json:"pp98"`
-	Pp97                 float64 `json:"pp97"`
-	Pp96                 float64 `json:"pp96"`
-	Pp95                 float64 `json:"pp95"`
+	AppliedMods          int32  `json:"appliedMods"`
+	PpMods               string `json:"appliedModsString"`
+	PpSS                 string `json:"ppSS"`
+	Pp99                 string `json:"pp99"`
+	Pp98                 string `json:"pp98"`
+	Pp97                 string `json:"pp97"`
+	Pp96                 string `json:"pp96"`
+	Pp95                 string `json:"pp95"`
 	IsReady              bool
 }
 
@@ -41,7 +41,7 @@ type GameplayValues struct {
 	Combo           int32   `json:"combo"`
 	GameMode        int32   `json:"gameMode"`
 	MaxCombo        int32   `json:"maxCombo"`
-	Pp              float64 `json:"pp"`
+	Pp              string  `json:"pp"`
 	PPifFC          float64 `json:"ppIfFC"`
 }
 
