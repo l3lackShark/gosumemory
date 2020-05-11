@@ -8,4 +8,5 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/spf13/cast v1.3.1
+	golang.org/x/tools v0.0.0-20200509030707-2212a7e161a5 // indirect
 )
