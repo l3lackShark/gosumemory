@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cast"
 )
 
-//#cgo LDFLAGS:/usr/local/lib/liboppai.so
-//#include "oppai.c"
+//#cgo LDFLAGS: -lm
 //#include <stdlib.h>
+//#include "oppai.c"
 import "C"
 
 //GetData resolves pp values (using cgo)
