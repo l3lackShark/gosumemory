@@ -16,7 +16,7 @@ import (
 //#include <stdlib.h>
 import "C"
 
-//GetData resolves pp values (uses C oppai binary for now, in hopes to switch to cgo)
+//GetData resolves pp values (using cgo)
 func GetData() {
 	for {
 		ez := C.ezpp_new()

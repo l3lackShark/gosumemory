@@ -30,19 +30,23 @@ type InMenuValues struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
+	AppliedMods   int32   `json:"appliedMods"`
+	Hit300c       int16   `json:"300"`
+	Hit100c       int16   `json:"100"`
+	Hit50c        int16   `json:"50"`
+	HitMiss       int16   `json:"miss"`
+	Accuracy      float64 `json:"accuracy"`
+	Score         int32   `json:"score"`
+	Combo         int32   `json:"combo"`
+	GameMode      int32   `json:"gameMode"`
+	MaxCombo      int32   `json:"maxCombo"`
+	Pp            string  `json:"pp"`
+	PPifFC        float64 `json:"ppIfFC"`
+	HitErrorArray []int32 `json:"hitErrorArray"`
+}
+
+type dynamicAddresses struct {
 	PlayContainer38 uint32
-	AppliedMods     int32   `json:"appliedMods"`
-	Hit300c         int16   `json:"300"`
-	Hit100c         int16   `json:"100"`
-	Hit50c          int16   `json:"50"`
-	HitMiss         int16   `json:"miss"`
-	Accuracy        float64 `json:"accuracy"`
-	Score           int32   `json:"score"`
-	Combo           int32   `json:"combo"`
-	GameMode        int32   `json:"gameMode"`
-	MaxCombo        int32   `json:"maxCombo"`
-	Pp              string  `json:"pp"`
-	PPifFC          float64 `json:"ppIfFC"`
 }
 
 //MenuData contains raw values taken from osu! memory
@@ -50,3 +54,6 @@ var MenuData = InMenuValues{}
 
 //GameplayData contains raw values taken from osu! memory
 var GameplayData = GameplayValues{}
+
+//DynamicAddresses are in-between pointers that lead to values
+var DynamicAddresses = dynamicAddresses{}
