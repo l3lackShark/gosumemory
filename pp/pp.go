@@ -12,6 +12,7 @@ import (
 )
 
 //#cgo LDFLAGS: -lm
+//#cgo CPPFLAGS: -DOPPAI_STATIC_HEADER
 //#include <stdlib.h>
 //#include "oppai.c"
 import "C"
