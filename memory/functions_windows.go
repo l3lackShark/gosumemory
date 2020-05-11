@@ -93,5 +93,6 @@ func InitBase() error {
 	fmt.Printf("OsuPlayContainerAddr: %x\n", osuStaticAddresses.PlayContainer)
 
 	values.MenuData.IsReady = true
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	return nil
 }

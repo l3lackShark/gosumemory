@@ -45,7 +45,7 @@ func readHitErrorArray() ([]int32, error) {
 func Init() {
 	for {
 		var err error
-		var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		if procerr != nil {
 			for procerr != nil {
 				proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -55,10 +55,8 @@ func Init() {
 			values.MenuData.IsReady = false
 			err := InitBase()
 			for err != nil {
-				log.Println("It seems that we lost the process, retrying!(2)")
 				err = InitBase()
 				time.Sleep(1 * time.Second)
-
 			}
 		}
 		if values.MenuData.IsReady == false {

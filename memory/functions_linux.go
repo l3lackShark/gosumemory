@@ -70,5 +70,7 @@ func InitBase() error {
 		return err
 	}
 	values.MenuData.IsReady = true
+	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+	fmt.Println("Got correct offsets, you are good to Go!")
 	return nil
 }
