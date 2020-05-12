@@ -64,12 +64,12 @@ type modsM struct {
 }
 
 type ppM struct {
-	PpSS string `json:"100"`
-	Pp99 string `json:"99"`
-	Pp98 string `json:"98"`
-	Pp97 string `json:"97"`
-	Pp96 string `json:"96"`
-	Pp95 string `json:"95"`
+	PpSS int32 `json:"100"`
+	Pp99 int32 `json:"99"`
+	Pp98 int32 `json:"98"`
+	Pp97 int32 `json:"97"`
+	Pp96 int32 `json:"96"`
+	Pp95 int32 `json:"95"`
 }
 
 type combo struct {
@@ -96,8 +96,8 @@ type modsG struct {
 }
 
 type ppG struct {
-	Pp     string  `json:"current"`
-	PPifFC float64 `json:"fc"`
+	Pp     int32 `json:"current"`
+	PPifFC int32 `json:"fc"`
 }
 
 type dynamicAddresses struct {

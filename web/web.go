@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/l3lackShark/gosumemory/memory"
@@ -14,8 +15,9 @@ import (
 var JSONByte []byte
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func reader(conn *websocket.Conn) {
@@ -41,13 +43,13 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	for {
+		if memory.DynamicAddresses.IsReady == true {
+			ws.WriteMessage(1, []byte(JSONByte)) //sending data to the client
 
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-	if err != nil {
-		fmt.Println("error:", err)
+		}
+		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
-	ws.WriteMessage(1, []byte(JSONByte)) //sending data to the client
 
 }
 
