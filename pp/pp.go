@@ -1,6 +1,7 @@
 package pp
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -18,13 +19,12 @@ import "C"
 
 //GetData resolves pp values (using cgo)
 func GetData() {
-	var tempPath string
 	for {
-		path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
 		ez := C.ezpp_new()
+		C.ezpp_set_autocalc(ez, 1)
+		path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
+		var tempPath string
 		if strings.HasSuffix(path, ".osu") && path != tempPath && memory.DynamicAddresses.IsReady == true {
-			C.ezpp_free(ez)
-			C.ezpp_set_autocalc(ez, 1)
 			tempPath = path
 			cpath := C.CString(path)
 			defer C.free(unsafe.Pointer(cpath))
@@ -32,6 +32,19 @@ func GetData() {
 				log.Println((C.GoString(C.errstr(rc))))
 			}
 			switch memory.MenuData.OsuStatus {
+			case 2:
+				C.ezpp_set_accuracy(ez, C.int(memory.GameplayData.Hits.H100), C.int(memory.GameplayData.Hits.H50))
+				C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
+				C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
+				C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
+				C.ezpp_set_mods(ez, C.int(memory.GameplayData.Mods.AppliedMods))
+				if memory.GameplayData.Combo.Max > 0 {
+					fmt.Println(C.ezpp_pp(ez))
+					memory.GameplayData.PP.Pp = cast.ToInt32(float64(C.ezpp_pp(ez)))
+					C.ezpp_set_nmiss(ez, C.int(0))
+					C.ezpp_set_combo(ez, C.ezpp_max_combo(ez))
+					memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(C.ezpp_pp(ez)))
+				}
 
 			default:
 				C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
@@ -56,20 +69,9 @@ func GetData() {
 
 			}
 
-		} else if memory.MenuData.OsuStatus == 2 {
-			C.ezpp_set_mods(ez, C.int(memory.GameplayData.Mods.AppliedMods))
-			C.ezpp_set_accuracy(ez, C.int(memory.GameplayData.Hits.H100), C.int(memory.GameplayData.Hits.H50))
-
-			if memory.GameplayData.Combo.Max > 0 {
-				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(C.ezpp_pp(ez)))
-				C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
-				C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
-				C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
-				memory.GameplayData.PP.Pp = cast.ToInt32(float64(C.ezpp_pp(ez)))
-
-			}
-
 		}
+		C.ezpp_free(ez)
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
+
 }
