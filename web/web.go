@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/l3lackShark/gosumemory/values"
+	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
 
@@ -65,7 +65,7 @@ func HTTPServer() {
 	http.ListenAndServe(":24050", nil)
 }
 func handler(w http.ResponseWriter, r *http.Request) {
-	if values.MenuData.IsReady == true {
+	if memory.DynamicAddresses.IsReady == true {
 		fmt.Fprintf(w, cast.ToString(JSONByte))
 
 	} else {

@@ -6,20 +6,19 @@ import (
 	"time"
 
 	"github.com/l3lackShark/gosumemory/memory"
-	"github.com/l3lackShark/gosumemory/values"
 )
 
 //SetupStructure sets up ws and json output
 func SetupStructure() {
 	var err error
 	type wsStruct struct { //order sets here
-		A values.InMenuValues   `json:"menuContainer"`
-		B values.GameplayValues `json:"gameplayContainer"`
+		A memory.InMenuValues   `json:"menu"`
+		B memory.GameplayValues `json:"gameplay"`
 	}
 	for {
 		group := wsStruct{
-			A: values.MenuData,
-			B: values.GameplayData,
+			A: memory.MenuData,
+			B: memory.GameplayData,
 		}
 
 		JSONByte, err = json.Marshal(group)

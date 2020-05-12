@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Andoryuuta/kiwi"
-	"github.com/l3lackShark/gosumemory/values"
 	"github.com/spf13/cast"
 )
 
@@ -92,7 +91,7 @@ func InitBase() error {
 	osuStaticAddresses.PlayContainer = cast.ToUint32(outStr)
 	fmt.Printf("OsuPlayContainerAddr: %x\n", osuStaticAddresses.PlayContainer)
 
-	values.MenuData.IsReady = true
+	DynamicAddresses.IsReady = true
 	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	return nil
 }
