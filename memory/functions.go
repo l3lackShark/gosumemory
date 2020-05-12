@@ -112,6 +112,7 @@ func Init() {
 				log.Println(err)
 			}
 			if tempBeatmapID != MenuData.Bm.BeatmapID { //On map change
+				time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 				MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
 				beatmapStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x7C)
 				MenuData.Bm.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)

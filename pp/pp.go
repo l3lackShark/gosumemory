@@ -1,7 +1,6 @@
 package pp
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -33,17 +32,16 @@ func GetData() {
 			}
 			switch memory.MenuData.OsuStatus {
 			case 2:
-				C.ezpp_set_accuracy(ez, C.int(memory.GameplayData.Hits.H100), C.int(memory.GameplayData.Hits.H50))
-				C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
-				C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
-				C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
+				//C.ezpp_set_accuracy_percent(ez, C.float(math.Round(memory.GameplayData.Accuracy*100)/100))
+				C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
+				//C.ezpp_set_accuracy(ez, C.int(int(memory.GameplayData.Hits.H100)), C.int(int(memory.GameplayData.Hits.H50)))
 				C.ezpp_set_mods(ez, C.int(memory.GameplayData.Mods.AppliedMods))
 				if memory.GameplayData.Combo.Max > 0 {
-					fmt.Println(C.ezpp_pp(ez))
-					memory.GameplayData.PP.Pp = cast.ToInt32(float64(C.ezpp_pp(ez)))
-					C.ezpp_set_nmiss(ez, C.int(0))
-					C.ezpp_set_combo(ez, C.ezpp_max_combo(ez))
 					memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(C.ezpp_pp(ez)))
+					C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
+					C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
+					C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
+					memory.GameplayData.PP.Pp = cast.ToInt32(float64(C.ezpp_pp(ez)))
 				}
 
 			default:
