@@ -68,7 +68,7 @@ func InitBase() error {
 	if err != nil {
 		return err
 	}
-	MenuData.IsReady = true
+	DynamicAddresses.IsReady = true
 	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	fmt.Println("Got correct offsets, you are good to Go!")
 	return nil
