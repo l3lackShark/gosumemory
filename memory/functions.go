@@ -62,7 +62,13 @@ func Init() {
 			}
 		}
 		if values.MenuData.IsReady == false {
-			InitBase()
+			err := InitBase()
+			for err != nil {
+				err = InitBase()
+				log.Println("Failure mid getting offsets, retrying!")
+				time.Sleep(1 * time.Second)
+
+			}
 		}
 
 		values.MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)

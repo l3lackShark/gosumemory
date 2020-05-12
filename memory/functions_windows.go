@@ -20,7 +20,7 @@ func InitBase() error {
 		InitBase()
 	}
 
-	cmd, err := exec.Command("../deps/OsuStatusAddr.exe").Output()
+	cmd, err := exec.Command("deps/OsuStatusAddr.exe").Output()
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func InitBase() error {
 		}
 
 	}
-	cmd, err = exec.Command("../deps/OsuBPMAddr.exe").Output()
+	cmd, err = exec.Command("deps/OsuBPMAddr.exe").Output()
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func InitBase() error {
 	osuStaticAddresses.BPM = cast.ToUint32(outStr)
 	fmt.Printf("OsuBPMAddr: %x\n", osuStaticAddresses.BPM)
 
-	cmd, err = exec.Command("../deps/OsuBaseAddr.exe").Output()
+	cmd, err = exec.Command("deps/OsuBaseAddr.exe").Output()
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func InitBase() error {
 	osuStaticAddresses.Base = cast.ToUint32(outStr)
 	fmt.Printf("OsuBaseAddr: %x\n", osuStaticAddresses.Base)
 
-	cmd, err = exec.Command("../deps/InMenuAppliedModsAddr.exe").Output()
+	cmd, err = exec.Command("deps/InMenuAppliedModsAddr.exe").Output()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func InitBase() error {
 	osuStaticAddresses.InMenuMods = cast.ToUint32(outStr)
 	fmt.Printf("OsuInMenuModsAddr: %x\n", osuStaticAddresses.InMenuMods)
 
-	cmd, err = exec.Command("../deps/OsuPlayTimeAddr.exe").Output()
+	cmd, err = exec.Command("deps/OsuPlayTimeAddr.exe").Output()
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func InitBase() error {
 	osuStaticAddresses.PlayTime = cast.ToUint32(outStr)
 	fmt.Printf("OsuPlayTimeAddr: %x\n", osuStaticAddresses.PlayTime)
 
-	cmd, err = exec.Command("../deps/OsuplayContainer.exe").Output()
+	cmd, err = exec.Command("deps/OsuplayContainer.exe").Output()
 	if err != nil {
 		return err
 	}
