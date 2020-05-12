@@ -55,8 +55,8 @@ func Init() {
 			values.MenuData.IsReady = false
 			err := InitBase()
 			for err != nil {
-				err = InitBase()
 				log.Println("It seems that we lost the process, retrying!(2)")
+				err = InitBase()
 				time.Sleep(1 * time.Second)
 
 			}
@@ -88,6 +88,7 @@ func Init() {
 			if err != nil {
 				log.Println(err, "xor")
 			}
+			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
 			values.GameplayData.AppliedMods = int32(xor1 ^ xor2)
 			values.GameplayData.Combo, err = proc.ReadInt32(uintptr(values.DynamicAddresses.PlayContainer38 + 0x90))
 			values.GameplayData.MaxCombo, err = proc.ReadInt32(uintptr(values.DynamicAddresses.PlayContainer38 + 0x68))
@@ -97,12 +98,11 @@ func Init() {
 			values.GameplayData.Hit300c, err = proc.ReadInt16(uintptr(values.DynamicAddresses.PlayContainer38 + 0x86))
 			values.GameplayData.Hit50c, err = proc.ReadInt16(uintptr(values.DynamicAddresses.PlayContainer38 + 0x88))
 			values.GameplayData.HitMiss, err = proc.ReadInt16(uintptr(values.DynamicAddresses.PlayContainer38 + 0x8E))
-			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
 			values.GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
 			values.MenuData.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 			values.GameplayData.HitErrorArray, err = readHitErrorArray()
 			if err != nil {
-				log.Println("GameplayData failure")
+				log.Println("GameplayData failure", err)
 			}
 
 		default: //This data available at all times
