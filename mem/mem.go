@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -116,4 +117,29 @@ func Scan(p Process, pattern string) (uint64, error) {
 		}
 	}
 	return 0, ErrPatternNotFound
+}
+
+func FindOffsets(p Process, offsets interface{}) error {
+	pval := reflect.ValueOf(offsets)
+	val := reflect.Indirect(pval)
+	valt := val.Type()
+	if pval.Kind() != reflect.Ptr || val.Kind() != reflect.Struct {
+		panic("offsets must be a pointer to a struct")
+	}
+	var anyErr error
+	for i := 0; i < val.NumField(); i++ {
+		field := valt.Field(i)
+		sig, ok := field.Tag.Lookup("sig")
+		if !ok {
+			continue
+		}
+		offset, err := Scan(p, sig)
+		if err != nil {
+			anyErr = err
+			continue
+		}
+		val.Field(i).Set(reflect.ValueOf(offset))
+	}
+
+	return anyErr
 }
