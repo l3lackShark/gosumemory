@@ -17,14 +17,14 @@ import (
 func InitBase() error {
 	var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	if procerr != nil {
-		InitBase()
+		return procerr
 	}
 	//Migration to the new win32 wrapper by tdeo:
 	re := regexp.MustCompile(`.*osu!\.exe.*`)
 	newproc, newprocerr := mem.FindProcess(re)
 	if newprocerr != nil {
 		pp.Println("There was an error in the attempt to find a process!.. ", newprocerr)
-		InitBase()
+		return newprocerr
 	}
 	pp.Println(newproc)
 	osuStatusAddr, err := (mem.Scan(newproc, "48 83 F8 04 73 1E"))
