@@ -91,6 +91,9 @@ func Scan(p Process, pattern string) (uint64, error) {
 	for _, reg := range maps {
 		addr := reg.Start()
 		size := reg.Size()
+		if size >= 1073741824 {
+			continue
+		}
 		n, err := p.ReadAt(buf[0:size], int64(addr))
 		if err != nil || n != int(size) {
 			continue
@@ -119,7 +122,7 @@ func Scan(p Process, pattern string) (uint64, error) {
 	return 0, ErrPatternNotFound
 }
 
-func FindOffsets(p Process, offsets interface{}) error {
+func ResolvePatterns(p Process, offsets interface{}) error {
 	pval := reflect.ValueOf(offsets)
 	val := reflect.Indirect(pval)
 	valt := val.Type()

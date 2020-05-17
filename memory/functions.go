@@ -46,6 +46,7 @@ func Init() {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 		if procerr != nil {
+			DynamicAddresses.IsReady = false
 			for procerr != nil {
 				proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 				log.Println("It seems that we lost the process, retrying!")
@@ -70,7 +71,8 @@ func Init() {
 
 		MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 		if err != nil {
-			log.Println("Could not get osuStatus Value!")
+			log.Println("Could not get osuStatus Value, retrying")
+			InitBase()
 		}
 
 		var tempBeatmapID uint32 = 0
