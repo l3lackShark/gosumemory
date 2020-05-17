@@ -27,7 +27,7 @@ func InitBase() error {
 		return newprocerr
 	}
 	pp.Println(newproc)
-	osuStatusAddr, err := (mem.Scan(newproc, "48 83 F8 04 73 1E"))
+	osuStatusAddr, err := mem.Scan(newproc, "48 83 F8 04 73 1E")
 	if err != nil {
 		return err
 	}
