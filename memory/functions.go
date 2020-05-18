@@ -17,6 +17,11 @@ var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
 
+func leaderBoardData() error {
+
+	return nil
+}
+
 func oncePerBeatmapChange() error {
 	pp.Println("We just invoked onbmchange function!")
 	var err error
@@ -129,7 +134,7 @@ func Init() {
 				log.Println("GameplayData failure", err)
 			}
 
-			if MenuData.Bm.Time.PlayTime <= 1000 {
+			if MenuData.Bm.Time.PlayTime <= 15000 {
 				err = oncePerBeatmapChange()
 				if err != nil {
 					pp.Println(err)
