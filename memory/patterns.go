@@ -7,7 +7,7 @@ type NewPatterns struct {
 	InMenuMods    uint64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
 	PlayTime      uint64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"` //+0x5
 	PlayContainer uint64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
-	LeaderBoard   uint64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"` //+0x1
+	LeaderBoard   uint64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D 9C"` //+0x1
 }
 
 //StaticAddresses (should be updated every client restart)
