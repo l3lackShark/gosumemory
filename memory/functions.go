@@ -42,6 +42,59 @@ func oncePerBeatmapChange() error {
 		pp.Println("Could not get current player name! ", err)
 		return err
 	}
+
+	return nil
+}
+
+func leaderPlayerCountResolver() (int32, error) {
+	DynamicAddresses.LeaderSlotAddr = nil
+	for i := 0x8; i < 0xD8; i += 0x4 {
+		slot, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct + uint32(i)))
+		slotaddr, err := proc.ReadUint32(uintptr(slot) + 0x20)
+		if err != nil {
+			return 0, err
+		}
+		if slot == 0x0 { //osu has 64 slots in leaderboard array for some reason, those that are unused point to 0
+			pp.Println(uint32(i))
+			return int32((i - 0x8) / 4), nil
+		}
+		DynamicAddresses.LeaderSlotAddr = append(DynamicAddresses.LeaderSlotAddr, slotaddr)
+	}
+
+	return 0, nil
+}
+
+func leaderSlotsData() error {
+	slotPlayer.Combo = nil
+	slotPlayer.MaxCombo = nil
+	slotPlayer.Score = nil
+	slotPlayer.H300 = nil //is there a better way to do this?
+	slotPlayer.H100 = nil
+	slotPlayer.H50 = nil
+	slotPlayer.H0 = nil
+	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
+		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
+			combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //only works in multiplayer
+			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
+			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
+			hit300, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x86)
+			hit100, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x84)
+			hit50, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x88)
+			hit0, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x8E)
+			if err != nil {
+				return err
+			}
+			slotPlayer.Combo = append(slotPlayer.Combo, combo)
+			slotPlayer.MaxCombo = append(slotPlayer.MaxCombo, maxcombo)
+			slotPlayer.Score = append(slotPlayer.Score, score)
+			slotPlayer.H300 = append(slotPlayer.H300, hit300)
+			slotPlayer.H100 = append(slotPlayer.H100, hit100)
+			slotPlayer.H50 = append(slotPlayer.H50, hit50)
+			slotPlayer.H0 = append(slotPlayer.H0, hit0)
+
+		}
+	}
+
 	return nil
 }
 
@@ -134,14 +187,18 @@ func Init() {
 				log.Println("GameplayData failure", err)
 			}
 
-			if MenuData.Bm.Time.PlayTime <= 15000 {
+			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
 				err = oncePerBeatmapChange()
 				if err != nil {
 					pp.Println(err)
 				}
+				pp.Println(leaderPlayerCountResolver())
+				pp.Println(DynamicAddresses.LeaderSlotAddr)
+				pp.Println(DynamicAddresses.LeaderBoardStruct)
 			}
+			pp.Println(leaderSlotsData())
+			pp.Println(slotPlayer.Score)
 			leaderPlayer.Position, err = proc.ReadInt32(uintptr(leaderPlayer.Addr + 0x2C))
-			pp.Println(leaderPlayer)
 
 		default: //This data available at all times
 			DynamicAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
