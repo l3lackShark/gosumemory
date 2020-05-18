@@ -17,6 +17,29 @@ var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
 
+func oncePerBeatmapChange() error {
+	pp.Println("We just invoked onbmchange function!")
+	var err error
+	DynamicAddresses.LeaderBoardStruct, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.LeaderBoard), 0x4, 0x74, 0x24, 0x4, 0x4)
+	if err != nil {
+		pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
+		return err
+	}
+
+	leaderPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0x8), 0x24, 0x10)
+	if err != nil {
+		pp.Println("Could not get current player! ", err)
+		return err
+	}
+	nameAddr, err := proc.ReadUint32(uintptr(leaderPlayer.Addr + 0x8))
+	leaderPlayer.Name, err = proc.ReadNullTerminatedUTF16String(uintptr(nameAddr + 0x8))
+	if err != nil {
+		pp.Println("Could not get current player name! ", err)
+		return err
+	}
+	return nil
+}
+
 //readHitErrorArray Gets an array of ints representing UnstableRate. (a little innacurate, shows values with 2 hitobjects delay)
 func readHitErrorArray() ([]int32, error) {
 	base, err := proc.ReadUint32(uintptr(DynamicAddresses.PlayContainer38 + 0x38))
@@ -105,10 +128,15 @@ func Init() {
 			if err != nil {
 				log.Println("GameplayData failure", err)
 			}
-			DynamicAddresses.LeaderBoardStruct, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.LeaderBoard), 0x0, 0x4, 0x74, 0x24, 0x4, 0x4)
-			if err != nil {
-				pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
+
+			if MenuData.Bm.Time.PlayTime <= 1000 {
+				err = oncePerBeatmapChange()
+				if err != nil {
+					pp.Println(err)
+				}
 			}
+			leaderPlayer.Position, err = proc.ReadInt32(uintptr(leaderPlayer.Addr + 0x2C))
+			pp.Println(leaderPlayer)
 
 		default: //This data available at all times
 			DynamicAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)

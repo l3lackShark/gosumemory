@@ -107,14 +107,10 @@ type dynamicAddresses struct {
 	IsReady           bool
 }
 
-type leaderPlayer struct {
+type leaderPlayerStruct struct {
+	Addr     uint32
 	Name     string `json:"name"`
 	Position int32  `json:"position"`
-	Score    int32  `json:"score"`
-	H300     int16  `json:"300"`
-	H100     int16  `json:"100"`
-	H50      int16  `json:"50"`
-	H0       int16  `json:"0"`
 }
 
 //MenuData contains raw values taken from osu! memory
@@ -125,3 +121,6 @@ var GameplayData = GameplayValues{}
 
 //DynamicAddresses are in-between pointers that lead to values
 var DynamicAddresses = dynamicAddresses{}
+
+//leaderPlayer is the main (current) player
+var leaderPlayer = leaderPlayerStruct{}

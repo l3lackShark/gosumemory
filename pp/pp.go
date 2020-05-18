@@ -120,13 +120,13 @@ func GetData() {
 	ez := C.ezpp_new()
 	defer C.ezpp_free(ez)
 	C.ezpp_set_autocalc(ez, 1)
-	
+
 	for {
-		if memory.DynamicAddresses.IsReady == true {
+		if memory.DynamicAddresses.IsReady == true && memory.GameplayData.Combo.Max >= 1 {
 			var data PP
 			err := readData(&data, ez)
 			if err != nil {
-				pp.Println(err, "FOPEN PADLA")
+				pp.Println(err)
 			}
 			//	pp.Println(data.Total)
 			if cast.ToInt32(float64(data.Total)) >= 0 && memory.MenuData.OsuStatus == 2 {
@@ -137,11 +137,9 @@ func GetData() {
 				memory.GameplayData.Hits.H50 = 0
 				memory.GameplayData.Hits.H0 = 0
 				memory.GameplayData.PP.Pp = 0
-	
+
 			}
 		}
-
-	
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}

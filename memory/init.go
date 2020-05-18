@@ -37,7 +37,7 @@ func InitBase() error {
 	if err != nil {
 		return err
 	}
-	for osuStatus != 5 {
+	for osuStatus == 0 {
 		fmt.Println("Please go to song select in order to proceed!")
 		time.Sleep(500 * time.Millisecond)
 		osuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
@@ -58,7 +58,7 @@ func InitBase() error {
 	osuStaticAddresses.InMenuMods = cast.ToUint32(patterns.InMenuMods)
 	osuStaticAddresses.PlayTime = cast.ToUint32(patterns.PlayTime)
 	osuStaticAddresses.PlayContainer = cast.ToUint32(patterns.PlayContainer)
-	osuStaticAddresses.LeaderBoard = cast.ToUint32(patterns.LeaderBoard - 0x1)
+	osuStaticAddresses.LeaderBoard = cast.ToUint32(patterns.LeaderBoard + 0x1)
 	DynamicAddresses.IsReady = true
 	return nil
 }
