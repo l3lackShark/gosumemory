@@ -4,9 +4,12 @@ package memory
 
 import (
 	"fmt"
-	"os/exec"
-	"strings"
+	"regexp"
 	"time"
+
+	"github.com/k0kubun/pp"
+
+	"github.com/l3lackShark/gosumemory/mem"
 
 	"github.com/Andoryuuta/kiwi"
 	"github.com/spf13/cast"
@@ -18,16 +21,20 @@ func InitBase() error {
 	if procerr != nil {
 		InitBase()
 	}
-
-	cmd, err := exec.Command("deps/OsuStatusAddr.exe").Output()
+	//Migration to the new win32 wrapper by tdeo:
+	re := regexp.MustCompile(`.*osu!\.exe.*`)
+	newproc, newprocerr := mem.FindProcess(re)
+	if newprocerr != nil {
+		pp.Println("There was an error in the attempt to find a process!.. ", newprocerr)
+		InitBase()
+	}
+	pp.Println(newproc)
+	osuStatusAddr, err := (mem.Scan(newproc, "48 83 F8 04 73 1E"))
 	if err != nil {
 		return err
 	}
-	outStr := string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.Status = cast.ToUint32(outStr)
-	fmt.Printf("OsuStatusAddr: %x\n", osuStaticAddresses.Status)
+	osuStaticAddresses.Status = cast.ToUint32(osuStatusAddr)
+	fmt.Printf("OsuStatusAddr: 0x%x\n", osuStaticAddresses.Status)
 	osuStatus, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 	if err != nil {
 		return err
@@ -41,57 +48,19 @@ func InitBase() error {
 		}
 
 	}
-	cmd, err = exec.Command("deps/OsuBPMAddr.exe").Output()
-	if err != nil {
-		return err
-	}
-	outStr = string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.BPM = cast.ToUint32(outStr)
-	fmt.Printf("OsuBPMAddr: %x\n", osuStaticAddresses.BPM)
 
-	cmd, err = exec.Command("deps/OsuBaseAddr.exe").Output()
+	var patterns NewPatterns
+	err = mem.ResolvePatterns(newproc, &patterns)
 	if err != nil {
 		return err
 	}
-	outStr = string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.Base = cast.ToUint32(outStr)
-	fmt.Printf("OsuBaseAddr: %x\n", osuStaticAddresses.Base)
-
-	cmd, err = exec.Command("deps/InMenuAppliedModsAddr.exe").Output()
-	if err != nil {
-		return err
-	}
-	outStr = string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.InMenuMods = cast.ToUint32(outStr)
-	fmt.Printf("OsuInMenuModsAddr: %x\n", osuStaticAddresses.InMenuMods)
-
-	cmd, err = exec.Command("deps/OsuPlayTimeAddr.exe").Output()
-	if err != nil {
-		return err
-	}
-	outStr = string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.PlayTime = cast.ToUint32(outStr)
-	fmt.Printf("OsuPlayTimeAddr: %x\n", osuStaticAddresses.PlayTime)
-
-	cmd, err = exec.Command("deps/OsuplayContainer.exe").Output()
-	if err != nil {
-		return err
-	}
-	outStr = string(cmd)
-	outStr = strings.Replace(outStr, "\n", "", -1)
-	outStr = strings.Replace(outStr, "\r", "", -1)
-	osuStaticAddresses.PlayContainer = cast.ToUint32(outStr)
-	fmt.Printf("OsuPlayContainerAddr: %x\n", osuStaticAddresses.PlayContainer)
+	pp.Println(patterns)
+	osuStaticAddresses.BPM = cast.ToUint32(patterns.BPM)
+	osuStaticAddresses.Base = cast.ToUint32(patterns.Base)
+	osuStaticAddresses.InMenuMods = cast.ToUint32(patterns.InMenuMods)
+	osuStaticAddresses.PlayTime = cast.ToUint32(patterns.PlayTime)
+	osuStaticAddresses.PlayContainer = cast.ToUint32(patterns.PlayContainer)
 
 	DynamicAddresses.IsReady = true
-	proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	return nil
 }
