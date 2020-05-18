@@ -10,14 +10,15 @@ type InMenuValues struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	GameMode int32   `json:"gameMode"`
-	Score    int32   `json:"score"`
-	Accuracy float64 `json:"accuracy"`
-	Combo    combo   `json:"combo"`
-	Hp       hp      `json:"hp"`
-	Hits     hits    `json:"hits"`
-	Mods     modsG   `json:"mods"`
-	PP       ppG     `json:"pp"`
+	GameMode    int32       `json:"gameMode"`
+	Score       int32       `json:"score"`
+	Accuracy    float64     `json:"accuracy"`
+	Combo       combo       `json:"combo"`
+	Hp          hp          `json:"hp"`
+	Hits        hits        `json:"hits"`
+	Mods        modsG       `json:"mods"`
+	PP          ppG         `json:"pp"`
+	Leaderboard leaderboard `json:"leaderboard"`
 }
 
 type bm struct {
@@ -109,21 +110,27 @@ type dynamicAddresses struct {
 }
 
 type leaderPlayerS struct {
-	Addr     uint32
-	Name     string `json:"name"`
-	Position int32  `json:"position"`
+	Addr          uint32 `json:"-"`
+	Name          string `json:"name"`
+	Position      int32  `json:"position"`
+	AmountOfSlots int32  `json:"amofslots"`
+}
+
+type leaderboard struct {
+	OurPlayer leaderPlayerS `json:"ourplayer"`
+	Slots     slotPlayerS   `json:"slots"`
 }
 
 type slotPlayerS struct {
-	Name     []string
-	Score    []int32
-	Combo    []int32
-	MaxCombo []int32
-	H300     []int16 `json:"300"`
-	H100     []int16 `json:"100"`
-	H50      []int16 `json:"50"`
-	H0       []int16 `json:"0"`
-	Mods     []int32
+	Name     []string `json:"name"`
+	Score    []int32  `json:"score"`
+	Combo    []int32  `json:"combo"`
+	MaxCombo []int32  `json:"maxcombo"`
+	Mods     []int32  `json:"mods"`
+	H300     []int16  `json:"300"`
+	H100     []int16  `json:"100"`
+	H50      []int16  `json:"50"`
+	H0       []int16  `json:"0"`
 }
 
 //MenuData contains raw values taken from osu! memory
@@ -134,7 +141,3 @@ var GameplayData = GameplayValues{}
 
 //DynamicAddresses are in-between pointers that lead to values
 var DynamicAddresses = dynamicAddresses{}
-
-//leaderPlayer is the main (current) player
-var leaderPlayer = leaderPlayerS{}
-var slotPlayer = slotPlayerS{}
