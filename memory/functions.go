@@ -72,8 +72,17 @@ func leaderSlotsData() error {
 	slotPlayer.H100 = nil
 	slotPlayer.H50 = nil
 	slotPlayer.H0 = nil
+	slotPlayer.Name = nil
 	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
 		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
+
+			nameoffset, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x34)
+			pp.Println("offset: ", nameoffset, i)
+			if err != nil || nameoffset == 0x0 {
+				return err
+			}
+
+			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x20)
 			combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //only works in multiplayer
 			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
 			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
@@ -84,6 +93,7 @@ func leaderSlotsData() error {
 			if err != nil {
 				return err
 			}
+			slotPlayer.Name = append(slotPlayer.Name, name)
 			slotPlayer.Combo = append(slotPlayer.Combo, combo)
 			slotPlayer.MaxCombo = append(slotPlayer.MaxCombo, maxcombo)
 			slotPlayer.Score = append(slotPlayer.Score, score)
@@ -193,11 +203,13 @@ func Init() {
 					pp.Println(err)
 				}
 				pp.Println(leaderPlayerCountResolver())
-				pp.Println(DynamicAddresses.LeaderSlotAddr)
 				pp.Println(DynamicAddresses.LeaderBoardStruct)
 			}
-			pp.Println(leaderSlotsData())
-			pp.Println(slotPlayer.Score)
+			err = leaderSlotsData()
+			if err != nil {
+				//pp.Println(err)
+			}
+			//pp.Println(slotPlayer.Name)
 			leaderPlayer.Position, err = proc.ReadInt32(uintptr(leaderPlayer.Addr + 0x2C))
 
 		default: //This data available at all times
