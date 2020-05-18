@@ -17,8 +17,8 @@ var (
 type (
 	Process interface {
 		io.Closer
+		io.ReaderAt
 		Pid() int
-		ReadAt(b []byte, off int64) (n int, err error)
 		Maps() ([]Map, error)
 	}
 
