@@ -25,7 +25,7 @@ func oncePerBeatmapChange() error {
 		return err
 	}
 
-	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0x8), 0x24, 0x10)
+	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0x1C), 0x24, 0x10) //shifted by 4 bytes on linux (should be 0x8)
 	if err != nil {
 		pp.Println("Could not get current player! ", err)
 		return err
@@ -42,7 +42,7 @@ func oncePerBeatmapChange() error {
 
 func leaderPlayerCountResolver() error {
 	DynamicAddresses.LeaderSlotAddr = nil
-	for i := 0x8; i < 0xE4; i += 0x4 {
+	for i := 0x1C; i < 0xE4; i += 0x4 { //shifted by 4 bytes on linux (should be 0x8)
 		slot, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct + uint32(i)))
 		if err != nil {
 			return err
@@ -73,11 +73,11 @@ func leaderSlotsData() error {
 	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
 		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
 
-			nameoffset, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x34)
-			if err != nil || nameoffset == 0x0 {
-				return err
-			}
-			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x20)
+			// nameoffset, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x34)
+			// if err != nil || nameoffset == 0x0 {
+			// 	return err
+			// }
+			//name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x20)
 			combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //only works in multiplayer (will throw "16842752", room for optimization)
 			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
 			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
@@ -88,7 +88,7 @@ func leaderSlotsData() error {
 			if err != nil {
 				return err
 			}
-			GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
+			//GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
 			GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo)
 			GameplayData.Leaderboard.Slots.MaxCombo = append(GameplayData.Leaderboard.Slots.MaxCombo, maxcombo)
 			GameplayData.Leaderboard.Slots.Score = append(GameplayData.Leaderboard.Slots.Score, score)
