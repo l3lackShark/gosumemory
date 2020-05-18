@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/k0kubun/pp"
+
 	"github.com/Andoryuuta/kiwi"
 )
 
@@ -102,6 +104,10 @@ func Init() {
 			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
 			if err != nil {
 				log.Println("GameplayData failure", err)
+			}
+			DynamicAddresses.LeaderBoardStruct, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.LeaderBoard), 0x0, 0x4, 0x74, 0x24, 0x4, 0x4)
+			if err != nil {
+				pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
 			}
 
 		default: //This data available at all times

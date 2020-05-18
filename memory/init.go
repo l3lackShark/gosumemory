@@ -58,7 +58,7 @@ func InitBase() error {
 	osuStaticAddresses.InMenuMods = cast.ToUint32(patterns.InMenuMods)
 	osuStaticAddresses.PlayTime = cast.ToUint32(patterns.PlayTime)
 	osuStaticAddresses.PlayContainer = cast.ToUint32(patterns.PlayContainer)
-
+	osuStaticAddresses.LeaderBoard = cast.ToUint32(patterns.LeaderBoard - 0x1)
 	DynamicAddresses.IsReady = true
 	return nil
 }
