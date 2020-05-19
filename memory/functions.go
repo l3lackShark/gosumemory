@@ -2,18 +2,132 @@ package memory
 
 import (
 	"log"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/Andoryuuta/kiwi"
+	"github.com/k0kubun/pp"
+
+	"github.com/l3lackShark/kiwi"
 )
 
 //UpdateTime Intervall between value updates
 var UpdateTime int
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+var leaderStart int32
+var hasLeaderboard = false
 
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
+
+func oncePerBeatmapChange() error {
+	var err error
+	DynamicAddresses.LeaderBoardStruct, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.LeaderBoard), 0x4, 0x74, 0x24, 0x4, 0x4)
+	if err != nil {
+		//pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
+		return err
+	}
+	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+uint32(leaderStart)), 0x24, 0x10)
+	if err != nil {
+		pp.Println("Could not get current player! ", err)
+		return err
+	}
+
+	nameAddr, err := proc.ReadUint32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x8))
+	GameplayData.Leaderboard.OurPlayer.Name, err = proc.ReadNullTerminatedUTF16String(uintptr(nameAddr + 0x8))
+	if err != nil {
+		pp.Println("Could not get current player name! ", err)
+		return err
+	}
+
+	return nil
+}
+
+func leaderPlayerCountResolver() error {
+	DynamicAddresses.LeaderSlotAddr = nil
+	DynamicAddresses.LeaderBaseSlotAddr = nil
+	for i := leaderStart; i < 0xE4; i += 0x4 {
+		slot, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct + uint32(i)))
+		if err != nil || slot == 0x0 {
+			return err
+		}
+		DynamicAddresses.LeaderBaseSlotAddr = append(DynamicAddresses.LeaderBaseSlotAddr, slot)
+		slotaddr, err := proc.ReadUint32(uintptr(slot) + 0x20)
+		if err != nil {
+			return err
+		}
+		if slotaddr == 0x0 { //osu has 64 slots in leaderboard array for some reason, those that are unused point to 0
+			GameplayData.Leaderboard.OurPlayer.AmountOfSlots = int32((i - leaderStart + 0x4) / 4)
+			return nil
+		}
+		DynamicAddresses.LeaderSlotAddr = append(DynamicAddresses.LeaderSlotAddr, slotaddr)
+	}
+
+	return nil
+}
+
+func leaderSlotsData() error {
+	GameplayData.Leaderboard.Slots.Combo = nil
+	GameplayData.Leaderboard.Slots.MaxCombo = nil
+	GameplayData.Leaderboard.Slots.Score = nil
+	GameplayData.Leaderboard.Slots.H300 = nil //is there a better way to do this?
+	GameplayData.Leaderboard.Slots.H100 = nil
+	GameplayData.Leaderboard.Slots.H50 = nil
+	GameplayData.Leaderboard.Slots.H0 = nil
+	GameplayData.Leaderboard.Slots.Name = nil
+	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
+
+		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
+
+			nameoffset, err := proc.ReadUint32(uintptr(DynamicAddresses.LeaderBaseSlotAddr[i] + 0x8))
+			if err != nil || nameoffset == 0x0 {
+				return err
+			}
+			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x8)
+			if err != nil {
+				return err
+			}
+			combo, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //Appears to not work properly
+			if err != nil {
+				return err
+			}
+			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
+			if err != nil {
+				return err
+			}
+			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
+			if err != nil {
+				return err
+			}
+			hit300, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x86)
+			if err != nil {
+				return err
+			}
+			hit100, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x84)
+			if err != nil {
+				return err
+			}
+			hit50, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x88)
+			if err != nil {
+				return err
+			}
+			hit0, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x8E)
+			if err != nil {
+				return err
+			}
+			GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
+			GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo) //Appears to not work properly
+			GameplayData.Leaderboard.Slots.MaxCombo = append(GameplayData.Leaderboard.Slots.MaxCombo, maxcombo)
+			GameplayData.Leaderboard.Slots.Score = append(GameplayData.Leaderboard.Slots.Score, score)
+			GameplayData.Leaderboard.Slots.H300 = append(GameplayData.Leaderboard.Slots.H300, hit300)
+			GameplayData.Leaderboard.Slots.H100 = append(GameplayData.Leaderboard.Slots.H100, hit100)
+			GameplayData.Leaderboard.Slots.H50 = append(GameplayData.Leaderboard.Slots.H50, hit50)
+			GameplayData.Leaderboard.Slots.H0 = append(GameplayData.Leaderboard.Slots.H0, hit0)
+		}
+	}
+
+	return nil
+}
 
 //readHitErrorArray Gets an array of ints representing UnstableRate. (a little innacurate, shows values with 2 hitobjects delay)
 func readHitErrorArray() ([]int32, error) {
@@ -42,6 +156,11 @@ func readHitErrorArray() ([]int32, error) {
 
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
+	if runtime.GOOS == "windows" {
+		leaderStart = 0x8
+	} else {
+		leaderStart = 0xC
+	}
 	for {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -80,13 +199,11 @@ func Init() {
 		case 2:
 			DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
 			if err != nil {
-				log.Println(err)
+				//log.Println(err)
 			}
 			xor1, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0xC)
 			xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
-			if err != nil {
-				log.Println(err, "xor")
-			}
+
 			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
 			GameplayData.Mods.AppliedMods = int32(xor1 ^ xor2)
 			GameplayData.Combo.Current, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90))
@@ -101,10 +218,28 @@ func Init() {
 			MenuData.Bm.Time.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
 			if err != nil {
-				log.Println("GameplayData failure", err)
+				//log.Println(err)
 			}
 
-		default: //This data available at all times
+			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
+				err := oncePerBeatmapChange()
+				if err != nil {
+					hasLeaderboard = false
+				} else {
+					hasLeaderboard = true
+				}
+			}
+			leaderPlayerCountResolver() //should probably run this on another thread
+			if hasLeaderboard == true {
+				err = leaderSlotsData()
+				if err != nil {
+					log.Println(err)
+				}
+				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
+			}
+
+		default: //This data is available at all times
+			hasLeaderboard = false
 			DynamicAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
 				log.Println(err)
