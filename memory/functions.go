@@ -81,7 +81,7 @@ func leaderSlotsData() error {
 				return err
 			}
 			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x8)
-			combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //only works in multiplayer (will throw "16842752", room for optimization)
+			//combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //Appears to not work properly
 			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
 			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
 			hit300, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x86)
@@ -92,7 +92,7 @@ func leaderSlotsData() error {
 				return err
 			}
 			GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
-			GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo)
+			//GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo) //Appears to not work properly
 			GameplayData.Leaderboard.Slots.MaxCombo = append(GameplayData.Leaderboard.Slots.MaxCombo, maxcombo)
 			GameplayData.Leaderboard.Slots.Score = append(GameplayData.Leaderboard.Slots.Score, score)
 			GameplayData.Leaderboard.Slots.H300 = append(GameplayData.Leaderboard.Slots.H300, hit300)
@@ -195,9 +195,10 @@ func Init() {
 			}
 
 			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
-				oncePerBeatmapChange()
-				leaderPlayerCountResolver()
+
 			}
+			oncePerBeatmapChange()
+			leaderPlayerCountResolver() //should probably run this on another thread
 			err = leaderSlotsData()
 			if err != nil {
 				pp.Println(err)
