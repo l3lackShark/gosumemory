@@ -125,7 +125,7 @@ type leaderboard struct {
 type slotPlayerS struct {
 	Name     []string `json:"name"`
 	Score    []int32  `json:"score"`
-	Combo    []int32  `json:"combo"`
+	Combo    []int16  `json:"combo"`
 	MaxCombo []int32  `json:"maxcombo"`
 	Mods     []int32  `json:"mods"`
 	H300     []int16  `json:"300"`
