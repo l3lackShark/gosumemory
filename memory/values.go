@@ -102,11 +102,12 @@ type ppG struct {
 }
 
 type dynamicAddresses struct {
-	PlayContainer38   uint32
-	BeatmapAddr       uint32
-	LeaderBoardStruct uint32
-	IsReady           bool
-	LeaderSlotAddr    []uint32
+	PlayContainer38    uint32
+	BeatmapAddr        uint32
+	LeaderBoardStruct  uint32
+	IsReady            bool
+	LeaderBaseSlotAddr []uint32
+	LeaderSlotAddr     []uint32
 }
 
 type leaderPlayerS struct {

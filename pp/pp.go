@@ -122,7 +122,7 @@ func GetData() {
 	C.ezpp_set_autocalc(ez, 1)
 
 	for {
-		if memory.DynamicAddresses.IsReady == true && memory.GameplayData.Combo.Max >= 1 {
+		if memory.DynamicAddresses.IsReady == true && memory.GameplayData.Combo.Max >= 1 && memory.MenuData.OsuStatus == 2 {
 			var data PP
 			err := readData(&data, ez)
 			if err != nil {

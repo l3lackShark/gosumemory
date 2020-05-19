@@ -25,7 +25,7 @@ func oncePerBeatmapChange() error {
 		return err
 	}
 
-	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0x1C), 0x24, 0x10) //shifted by 4 bytes on linux (should be 0x8)
+	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0xC), 0x24, 0x10) //shifted by 4 bytes on linux (should be 0x8)
 	if err != nil {
 		pp.Println("Could not get current player! ", err)
 		return err
@@ -42,11 +42,13 @@ func oncePerBeatmapChange() error {
 
 func leaderPlayerCountResolver() error {
 	DynamicAddresses.LeaderSlotAddr = nil
-	for i := 0x1C; i < 0xE4; i += 0x4 { //shifted by 4 bytes on linux (should be 0x8)
+	DynamicAddresses.LeaderBaseSlotAddr = nil
+	for i := 0xC; i < 0xE4; i += 0x4 { //shifted by 4 bytes on linux (should be 0x8)
 		slot, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct + uint32(i)))
-		if err != nil {
+		if err != nil || slot == 0x0 {
 			return err
 		}
+		DynamicAddresses.LeaderBaseSlotAddr = append(DynamicAddresses.LeaderBaseSlotAddr, slot)
 		slotaddr, err := proc.ReadUint32(uintptr(slot) + 0x20)
 		if err != nil {
 			return err
@@ -71,13 +73,14 @@ func leaderSlotsData() error {
 	GameplayData.Leaderboard.Slots.H0 = nil
 	GameplayData.Leaderboard.Slots.Name = nil
 	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
+
 		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
 
-			// nameoffset, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x34)
-			// if err != nil || nameoffset == 0x0 {
-			// 	return err
-			// }
-			//name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x20)
+			nameoffset, err := proc.ReadUint32(uintptr(DynamicAddresses.LeaderBaseSlotAddr[i] + 0x8))
+			if err != nil || nameoffset == 0x0 {
+				return err
+			}
+			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x8)
 			combo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //only works in multiplayer (will throw "16842752", room for optimization)
 			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
 			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
@@ -88,7 +91,7 @@ func leaderSlotsData() error {
 			if err != nil {
 				return err
 			}
-			//GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
+			GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
 			GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo)
 			GameplayData.Leaderboard.Slots.MaxCombo = append(GameplayData.Leaderboard.Slots.MaxCombo, maxcombo)
 			GameplayData.Leaderboard.Slots.Score = append(GameplayData.Leaderboard.Slots.Score, score)
