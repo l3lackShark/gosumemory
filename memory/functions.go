@@ -8,7 +8,7 @@ import (
 
 	"github.com/k0kubun/pp"
 
-	"github.com/Andoryuuta/kiwi"
+	"github.com/l3lackShark/kiwi"
 )
 
 //UpdateTime Intervall between value updates

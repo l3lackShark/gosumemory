@@ -9,7 +9,7 @@ import (
 
 	"github.com/l3lackShark/gosumemory/mem"
 
-	"github.com/Andoryuuta/kiwi"
+	"github.com/l3lackShark/kiwi"
 	"github.com/spf13/cast"
 )
 
