@@ -15,6 +15,7 @@ import (
 var UpdateTime int
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
+var hasLeaderboard = false
 
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
@@ -83,12 +84,33 @@ func leaderSlotsData() error {
 				return err
 			}
 			name, err := proc.ReadNullTerminatedUTF16String(uintptr(nameoffset) + 0x8)
+			if err != nil {
+				return err
+			}
 			combo, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //Appears to not work properly
+			if err != nil {
+				return err
+			}
 			maxcombo, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x68)
+			if err != nil {
+				return err
+			}
 			score, err := proc.ReadInt32(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x74)
+			if err != nil {
+				return err
+			}
 			hit300, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x86)
+			if err != nil {
+				return err
+			}
 			hit100, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x84)
+			if err != nil {
+				return err
+			}
 			hit50, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x88)
+			if err != nil {
+				return err
+			}
 			hit0, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x8E)
 			if err != nil {
 				return err
@@ -200,16 +222,24 @@ func Init() {
 			}
 
 			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
-				oncePerBeatmapChange()
+				err := oncePerBeatmapChange()
+				if err != nil {
+					hasLeaderboard = false
+				} else {
+					hasLeaderboard = true
+				}
 			}
 			leaderPlayerCountResolver() //should probably run this on another thread
-			err = leaderSlotsData()
-			if err != nil {
-				//log.Println(err)
+			if hasLeaderboard == true {
+				err = leaderSlotsData()
+				if err != nil {
+					log.Println(err)
+				}
+				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 			}
-			GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 
 		default: //This data is available at all times
+			hasLeaderboard = false
 			DynamicAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
 				log.Println(err)
