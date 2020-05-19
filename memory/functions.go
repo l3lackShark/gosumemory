@@ -2,6 +2,7 @@ package memory
 
 import (
 	"log"
+	"runtime"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 //UpdateTime Intervall between value updates
 var UpdateTime int
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+var leaderStart int32
 
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
@@ -24,12 +26,12 @@ func oncePerBeatmapChange() error {
 		pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
 		return err
 	}
-
-	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+0xC), 0x24, 0x10) //shifted by 4 bytes on linux (should be 0x8)
+	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+uint32(leaderStart)), 0x24, 0x10)
 	if err != nil {
 		pp.Println("Could not get current player! ", err)
 		return err
 	}
+
 	nameAddr, err := proc.ReadUint32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x8))
 	GameplayData.Leaderboard.OurPlayer.Name, err = proc.ReadNullTerminatedUTF16String(uintptr(nameAddr + 0x8))
 	if err != nil {
@@ -43,7 +45,7 @@ func oncePerBeatmapChange() error {
 func leaderPlayerCountResolver() error {
 	DynamicAddresses.LeaderSlotAddr = nil
 	DynamicAddresses.LeaderBaseSlotAddr = nil
-	for i := 0xC; i < 0xE4; i += 0x4 { //shifted by 4 bytes on linux (should be 0x8)
+	for i := leaderStart; i < 0xE4; i += 0x4 {
 		slot, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct + uint32(i)))
 		if err != nil || slot == 0x0 {
 			return err
@@ -54,7 +56,7 @@ func leaderPlayerCountResolver() error {
 			return err
 		}
 		if slotaddr == 0x0 { //osu has 64 slots in leaderboard array for some reason, those that are unused point to 0
-			GameplayData.Leaderboard.OurPlayer.AmountOfSlots = int32((i - 0x8) / 4)
+			GameplayData.Leaderboard.OurPlayer.AmountOfSlots = int32((i - leaderStart + 0x4) / 4)
 			return nil
 		}
 		DynamicAddresses.LeaderSlotAddr = append(DynamicAddresses.LeaderSlotAddr, slotaddr)
@@ -132,6 +134,11 @@ func readHitErrorArray() ([]int32, error) {
 
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
+	if runtime.GOOS == "windows" {
+		leaderStart = 0x8
+	} else {
+		leaderStart = 0xC
+	}
 	for {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -195,9 +202,9 @@ func Init() {
 			}
 
 			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
-
+				oncePerBeatmapChange()
 			}
-			oncePerBeatmapChange()
+
 			leaderPlayerCountResolver() //should probably run this on another thread
 			err = leaderSlotsData()
 			if err != nil {
