@@ -23,7 +23,7 @@ func oncePerBeatmapChange() error {
 	var err error
 	DynamicAddresses.LeaderBoardStruct, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.LeaderBoard), 0x4, 0x74, 0x24, 0x4, 0x4)
 	if err != nil {
-		pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
+		//pp.Println("Could not get leaderboard stuff! ", err, osuStaticAddresses.LeaderBoard)
 		return err
 	}
 	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+uint32(leaderStart)), 0x24, 0x10)
@@ -177,13 +177,11 @@ func Init() {
 		case 2:
 			DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
 			if err != nil {
-				log.Println(err)
+				//log.Println(err)
 			}
 			xor1, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0xC)
 			xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
-			if err != nil {
-				log.Println(err, "xor")
-			}
+
 			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
 			GameplayData.Mods.AppliedMods = int32(xor1 ^ xor2)
 			GameplayData.Combo.Current, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90))
@@ -198,7 +196,7 @@ func Init() {
 			MenuData.Bm.Time.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
 			if err != nil {
-				log.Println("GameplayData failure", err)
+				//log.Println(err)
 			}
 
 			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
@@ -207,7 +205,7 @@ func Init() {
 			leaderPlayerCountResolver() //should probably run this on another thread
 			err = leaderSlotsData()
 			if err != nil {
-				pp.Println(err)
+				//log.Println(err)
 			}
 			GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 
