@@ -66,15 +66,24 @@ func leaderPlayerCountResolver() error {
 	return nil
 }
 
+var comboResult []int16
+var maxComboResult []int32
+var scoreResult []int32
+var h300Result []int16
+var h100Result []int16
+var h50Result []int16
+var h0Result []int16
+var nameResult []string
+
 func leaderSlotsData() error {
-	GameplayData.Leaderboard.Slots.Combo = nil
-	GameplayData.Leaderboard.Slots.MaxCombo = nil
-	GameplayData.Leaderboard.Slots.Score = nil
-	GameplayData.Leaderboard.Slots.H300 = nil //is there a better way to do this?
-	GameplayData.Leaderboard.Slots.H100 = nil
-	GameplayData.Leaderboard.Slots.H50 = nil
-	GameplayData.Leaderboard.Slots.H0 = nil
-	GameplayData.Leaderboard.Slots.Name = nil
+	nameResult = nil
+	comboResult = nil
+	maxComboResult = nil
+	scoreResult = nil
+	h300Result = nil
+	h100Result = nil
+	h50Result = nil
+	h0Result = nil
 	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
 
 		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
@@ -114,16 +123,26 @@ func leaderSlotsData() error {
 			hit0, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x8E)
 			if err != nil {
 				return err
+
 			}
-			GameplayData.Leaderboard.Slots.Name = append(GameplayData.Leaderboard.Slots.Name, name)
-			GameplayData.Leaderboard.Slots.Combo = append(GameplayData.Leaderboard.Slots.Combo, combo) //Appears to not work properly
-			GameplayData.Leaderboard.Slots.MaxCombo = append(GameplayData.Leaderboard.Slots.MaxCombo, maxcombo)
-			GameplayData.Leaderboard.Slots.Score = append(GameplayData.Leaderboard.Slots.Score, score)
-			GameplayData.Leaderboard.Slots.H300 = append(GameplayData.Leaderboard.Slots.H300, hit300)
-			GameplayData.Leaderboard.Slots.H100 = append(GameplayData.Leaderboard.Slots.H100, hit100)
-			GameplayData.Leaderboard.Slots.H50 = append(GameplayData.Leaderboard.Slots.H50, hit50)
-			GameplayData.Leaderboard.Slots.H0 = append(GameplayData.Leaderboard.Slots.H0, hit0)
+			nameResult = append(nameResult, name)
+			comboResult = append(comboResult, combo)
+			maxComboResult = append(maxComboResult, maxcombo)
+			scoreResult = append(scoreResult, score)
+			h300Result = append(h300Result, hit300)
+			h100Result = append(h100Result, hit100)
+			h50Result = append(h50Result, hit50)
+			h0Result = append(h0Result, hit0)
+
 		}
+		GameplayData.Leaderboard.Slots.Combo = comboResult
+		GameplayData.Leaderboard.Slots.MaxCombo = maxComboResult
+		GameplayData.Leaderboard.Slots.Score = scoreResult
+		GameplayData.Leaderboard.Slots.H300 = h300Result
+		GameplayData.Leaderboard.Slots.H100 = h100Result
+		GameplayData.Leaderboard.Slots.H50 = h50Result
+		GameplayData.Leaderboard.Slots.H0 = h0Result
+		GameplayData.Leaderboard.Slots.Name = nameResult
 	}
 
 	return nil
