@@ -11,5 +11,6 @@ require (
 	github.com/l3lackShark/kiwi v0.0.0-20200519164951-a82048cdc09f
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/spf13/cast v1.3.1
+	github.com/veandco/go-sdl2 v0.4.4
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
 )
