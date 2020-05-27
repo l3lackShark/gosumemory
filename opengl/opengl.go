@@ -1,6 +1,8 @@
 package opengl
 
 import (
+	"time"
+
 	"github.com/k0kubun/pp"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -35,6 +37,12 @@ func Init() {
 	}
 	defer renderer.Destroy()
 	for {
+		renderer.SetDrawColor(255, 15, 15, 255)
+		//Fill the frame with the set color above
+		renderer.Clear()
 
+		//Push the frame
+		renderer.Present()
+		time.Sleep(1 * time.Second)
 	}
 }
