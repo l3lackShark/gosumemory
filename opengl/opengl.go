@@ -5,15 +5,19 @@ import (
 
 	"github.com/k0kubun/pp"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 const (
 	screenWidth  = 800
 	screenHeight = 600
+	fontPath     = "test.ttf"
+	fontSize     = 32
 )
 
 //Init opengl renderer
 func Init() {
+	var font *ttf.Font
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		pp.Println("SDL INIT ERROR: ", err)
 		return
@@ -37,6 +41,12 @@ func Init() {
 	}
 	defer renderer.Destroy()
 	for {
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				return
+			}
+		}
 		renderer.SetDrawColor(255, 15, 15, 255)
 		//Fill the frame with the set color above
 		renderer.Clear()

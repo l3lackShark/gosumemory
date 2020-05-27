@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+
+	"github.com/k0kubun/pp"
+
 	"github.com/l3lackShark/gosumemory/opengl"
 )
 
@@ -23,6 +27,9 @@ import (
 
 // }
 func main() {
-	opengl.Init()
+	if err := opengl.Init(); err != nil {
+		pp.Println(err)
+		os.Exit(1)
+	}
 
 }
