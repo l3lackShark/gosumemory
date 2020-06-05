@@ -96,7 +96,7 @@ func leaderSlotsData() error {
 			if err != nil {
 				return err
 			}
-			combo, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90) //Appears to not work properly
+			combo, err := proc.ReadInt16(uintptr(DynamicAddresses.LeaderSlotAddr[i]) + 0x90)
 			if err != nil {
 				return err
 			}

@@ -28,6 +28,7 @@ func main() {
 	go web.HTTPServer()
 	go web.SetupRoutes()
 	go pp.GetData()
+	go pp.GetFCData()
 	http.ListenAndServe(":8085", nil)
 
 }

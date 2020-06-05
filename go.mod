@@ -3,6 +3,7 @@ module github.com/l3lackShark/gosumemory
 go 1.14
 
 require (
+	fyne.io/fyne v1.2.4 // indirect
 	github.com/Andoryuuta/kiwi v0.0.0-20200221200126-95015391dcc0 // indirect
 	github.com/elastic/go-windows v1.0.1
 	github.com/gorilla/websocket v1.4.2
