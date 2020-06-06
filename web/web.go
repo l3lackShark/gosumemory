@@ -61,6 +61,9 @@ func SetupRoutes() {
 //HTTPServer handles json and static files output
 func HTTPServer() {
 
+	for memory.DynamicAddresses.IsReady != true {
+		time.Sleep(100 * time.Millisecond)
+	}
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
 	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath))))
