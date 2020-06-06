@@ -8,6 +8,7 @@ type NewPatterns struct {
 	PlayTime      uint64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"` //+0x5
 	PlayContainer uint64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
 	LeaderBoard   uint64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"` //+0x1
+	SongsFolder   uint64 `sig:"?? ?? 67 ?? 2F 00 28 00"`
 }
 
 //StaticAddresses (should be updated every client restart)
@@ -19,6 +20,7 @@ type StaticAddresses struct {
 	PlayTime      uint32
 	PlayContainer uint32
 	LeaderBoard   uint32
+	SongsFolder   uint32
 }
 
 //osuStaticAddresses (should be updated every client restart)

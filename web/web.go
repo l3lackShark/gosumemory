@@ -63,8 +63,9 @@ func HTTPServer() {
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
+	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath))))
 	http.HandleFunc("/json", handler)
-	http.ListenAndServe(":24050", nil)
+	http.ListenAndServe("127.0.0.1:24050", nil)
 }
 func handler(w http.ResponseWriter, r *http.Request) {
 	if memory.DynamicAddresses.IsReady == true {

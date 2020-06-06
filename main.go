@@ -16,7 +16,7 @@ import (
 func main() {
 	fmt.Println("gosumemory v0.x-alpha")
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
-	songsFolderFlag := flag.String("path", "D:\\osu!\\Songs", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
+	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	flag.Parse()
 	memory.UpdateTime = *updateTimeFlag
 	memory.SongsFolderPath = *songsFolderFlag
@@ -29,6 +29,6 @@ func main() {
 	go web.SetupRoutes()
 	go pp.GetData()
 	go pp.GetFCData()
-	http.ListenAndServe(":8085", nil)
+	http.ListenAndServe("127.0.0.1:8085", nil) //This duplicate fileserver is for backwards compatibility only and will be removed in the future.
 
 }

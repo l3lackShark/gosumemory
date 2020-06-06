@@ -191,16 +191,16 @@ func Init() {
 				time.Sleep(1 * time.Second)
 			}
 			DynamicAddresses.IsReady = false
-			err := InitBase()
+			err := initBase()
 			for err != nil {
-				err = InitBase()
+				err = initBase()
 				time.Sleep(1 * time.Second)
 			}
 		}
 		if DynamicAddresses.IsReady == false {
-			err := InitBase()
+			err := initBase()
 			for err != nil {
-				err = InitBase()
+				err = initBase()
 				log.Println("Failure mid getting offsets, retrying!")
 				time.Sleep(1 * time.Second)
 
@@ -210,7 +210,7 @@ func Init() {
 		MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 		if err != nil {
 			log.Println("Could not get osuStatus Value, retrying")
-			InitBase()
+			initBase()
 		}
 
 		var tempBeatmapID uint32 = 0

@@ -2,7 +2,10 @@ package memory
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/k0kubun/pp"
@@ -13,8 +16,19 @@ import (
 	"github.com/spf13/cast"
 )
 
-//InitBase initializes base static addresses. (In hopes to deprecate C#)
-func InitBase() error {
+func resolveSongsFolderWIN32(addr uint32) (string, error) {
+	a, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.SongsFolder-0x4), 0x34, 0x10)
+	if err != nil {
+		return "", err
+	}
+	result, err := proc.ReadNullTerminatedUTF16String(uintptr(a + 0x20))
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
+func initBase() error {
 	var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	if procerr != nil {
 		return procerr
@@ -59,6 +73,17 @@ func InitBase() error {
 	osuStaticAddresses.PlayTime = cast.ToUint32(patterns.PlayTime)
 	osuStaticAddresses.PlayContainer = cast.ToUint32(patterns.PlayContainer)
 	osuStaticAddresses.LeaderBoard = cast.ToUint32(patterns.LeaderBoard + 0x1)
+	osuStaticAddresses.SongsFolder = cast.ToUint32(patterns.SongsFolder)
+	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
+		SongsFolderPath, err = resolveSongsFolderWIN32(osuStaticAddresses.SongsFolder)
+		if err != nil || strings.Contains(SongsFolderPath, `:\`) == false {
+			log.Println("Automatic Songs folder finder has failed. Please manually specify it. (see --help) GOT: ", SongsFolderPath)
+			time.Sleep(5 * time.Second)
+			log.Fatalln(err)
+		}
+	}
+	pp.Printf("Songs Folder Path: %s\n", SongsFolderPath)
+
 	DynamicAddresses.IsReady = true
 	return nil
 }
