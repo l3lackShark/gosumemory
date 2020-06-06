@@ -6,7 +6,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -61,7 +60,6 @@ type PP struct {
 
 func readData(data *PP, ez C.ezpp_t) error {
 	path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
-
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
 		cpath := C.CString(path)
 
@@ -126,11 +124,11 @@ func GetData() {
 			var data PP
 			err := readData(&data, ez)
 			if err != nil {
-				pp.Println(err)
 			}
 			//	pp.Println(data.Total)
 			if cast.ToInt32(float64(data.Total)) >= 0 && memory.MenuData.OsuStatus == 2 {
 				memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+
 			}
 			if memory.MenuData.OsuStatus == 5 {
 				memory.GameplayData.Hits.H100 = 0

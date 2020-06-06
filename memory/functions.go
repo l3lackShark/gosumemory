@@ -11,6 +11,10 @@ import (
 	"github.com/l3lackShark/kiwi"
 )
 
+func modsResolver(xor uint32) string {
+	return Mods(xor).String()
+}
+
 //UpdateTime Intervall between value updates
 var UpdateTime int
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -256,6 +260,7 @@ func Init() {
 				}
 				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 			}
+			MenuData.Mods.PpMods = Mods(GameplayData.Mods.AppliedMods).String()
 
 		default: //This data is available at all times
 			hasLeaderboard = false
