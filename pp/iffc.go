@@ -118,7 +118,7 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 
 func GetFCData() {
 	ezfc := C.ezpp_new()
-	defer C.ezpp_free(ezfc)
+	//defer C.ezpp_free(ezfc)
 	C.ezpp_set_autocalc(ezfc, 1)
 
 	for {
@@ -128,7 +128,9 @@ func GetFCData() {
 			if err != nil {
 				pp.Println(err)
 			}
-			memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+			if memory.GameplayData.Combo.Max > 0 {
+				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+			}
 		}
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)

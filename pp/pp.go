@@ -71,11 +71,8 @@ func readData(data *PP, ez C.ezpp_t) error {
 		C.ezpp_set_base_od(ez, C.float(memory.MenuData.Bm.Stats.BeatmapOD))
 		C.ezpp_set_base_cs(ez, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
-
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
-
-		//C.ezpp_set_score_version(ez)
 		C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
 		C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
 		C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
@@ -116,11 +113,12 @@ func readData(data *PP, ez C.ezpp_t) error {
 }
 
 func GetData() {
-	ez := C.ezpp_new()
-	defer C.ezpp_free(ez)
-	C.ezpp_set_autocalc(ez, 1)
 
+	ez := C.ezpp_new()
+	C.ezpp_set_autocalc(ez, 1)
+	//defer C.ezpp_free(ez)
 	for {
+
 		if memory.DynamicAddresses.IsReady == true {
 			var data PP
 			err := readData(&data, ez)
@@ -128,7 +126,9 @@ func GetData() {
 			}
 			switch memory.MenuData.OsuStatus {
 			case 2, 7:
-				memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+				if memory.GameplayData.Combo.Max > 0 {
+					memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+				}
 			default:
 				memory.GameplayData = memory.GameplayValues{}
 				if data.StarRating != 0 {
