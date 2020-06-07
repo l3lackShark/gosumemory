@@ -2060,7 +2060,7 @@ int pp_std(ezpp_t ez) {
   ez->nspinners = ez->nobjects - ez->nsliders - ez->ncircles;
 
   if (ez->max_combo <= 0) {
-    info("W: max_combo <= 0, changing to 1\n");
+    //info("W: max_combo <= 0, changing to 1\n");
     ez->max_combo = 1;
   }
 
