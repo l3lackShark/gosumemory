@@ -114,9 +114,11 @@ func readData(data *PP, ez C.ezpp_t) error {
 
 func GetData() {
 
+	ez := C.ezpp_new()
+	C.ezpp_set_autocalc(ez, 1)
+	//defer C.ezpp_free(ez)
 	for {
-		ez := C.ezpp_new()
-		C.ezpp_set_autocalc(ez, 1)
+
 		if memory.DynamicAddresses.IsReady == true {
 			var data PP
 			err := readData(&data, ez)
@@ -142,7 +144,6 @@ func GetData() {
 
 			}
 		}
-		C.ezpp_free(ez)
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}

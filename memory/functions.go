@@ -219,7 +219,7 @@ func Init() {
 		}
 
 		switch MenuData.OsuStatus {
-		case 2:
+		case 2, 7:
 			DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
 			if err != nil {
 				//log.Println(err)
