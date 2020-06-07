@@ -256,7 +256,7 @@ func Init() {
 			if hasLeaderboard == true {
 				err = leaderSlotsData()
 				if err != nil {
-					log.Println(err)
+					log.Println("Leaderboard data error: ", err)
 				}
 				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 			}
@@ -266,11 +266,11 @@ func Init() {
 			hasLeaderboard = false
 			DynamicAddresses.BeatmapAddr, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 			if err != nil {
-				log.Println(err)
+				log.Println("Dynamic beatmap addr error: ", err)
 			}
 			MenuData.Bm.BeatmapID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC4))
 			if err != nil {
-				log.Println(err)
+				//log.Println("Dynamic beatmap id error: ", err) //Gets triggered on F2
 			}
 
 			if tempBeatmapID != MenuData.Bm.BeatmapID { //On map change
