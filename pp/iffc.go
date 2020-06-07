@@ -112,16 +112,17 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 			Mods:          C.ezpp_mods(ezfc),
 			ScoreVersion:  C.ezpp_score_version(ezfc),
 		}
+
 	}
+
 	return nil
 }
 
 func GetFCData() {
-	ezfc := C.ezpp_new()
-	//defer C.ezpp_free(ezfc)
-	C.ezpp_set_autocalc(ezfc, 1)
 
 	for {
+		ezfc := C.ezpp_new()
+		C.ezpp_set_autocalc(ezfc, 1)
 		if memory.DynamicAddresses.IsReady == true && memory.MenuData.OsuStatus == 2 {
 			var data PPfc
 			err := readFCData(&data, ezfc)
@@ -132,6 +133,7 @@ func GetFCData() {
 				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
 			}
 		}
+		C.ezpp_free(ezfc)
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
