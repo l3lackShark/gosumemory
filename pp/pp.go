@@ -130,11 +130,7 @@ func GetData() {
 			case 2, 7:
 				memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 			default:
-				memory.GameplayData.Hits.H100 = 0
-				memory.GameplayData.Hits.H50 = 0
-				memory.GameplayData.Hits.H0 = 0
-				memory.GameplayData.PP.Pp = 0
-				memory.GameplayData.PP.PPifFC = 0
+				memory.GameplayData = memory.GameplayValues{}
 				if data.StarRating != 0 {
 					memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
 					memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
