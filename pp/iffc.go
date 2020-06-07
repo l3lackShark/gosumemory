@@ -77,7 +77,7 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 	}
 	C.ezpp_set_accuracy_percent(ezfc, C.float(memory.GameplayData.Accuracy))
-	C.ezpp_set_mods(ezfc, C.int(memory.GameplayData.Mods.AppliedMods))
+	C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
 
 	//C.ezpp_set_score_version(ezfc)
 	*data = PPfc{

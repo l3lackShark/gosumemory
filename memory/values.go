@@ -16,7 +16,6 @@ type GameplayValues struct {
 	Combo       combo       `json:"combo"`
 	Hp          hp          `json:"hp"`
 	Hits        hits        `json:"hits"`
-	Mods        modsG       `json:"mods"`
 	PP          ppG         `json:"pp"`
 	Leaderboard leaderboard `json:"leaderboard"`
 }
@@ -89,11 +88,6 @@ type hits struct {
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
-}
-
-type modsG struct {
-	AppliedMods int32 `json:"num"`
-	StrMods     int32 `json:"str"`
 }
 
 type ppG struct {

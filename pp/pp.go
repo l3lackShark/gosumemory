@@ -73,7 +73,7 @@ func readData(data *PP, ez C.ezpp_t) error {
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 	}
 	C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
-	C.ezpp_set_mods(ez, C.int(memory.GameplayData.Mods.AppliedMods))
+	C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
 
 	//C.ezpp_set_score_version(ez)
 	C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))

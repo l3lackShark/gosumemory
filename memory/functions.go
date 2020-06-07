@@ -184,6 +184,7 @@ func Init() {
 	} else {
 		leaderStart = 0xC
 	}
+	var tempBeatmapID uint32 = 0
 	for {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -217,7 +218,6 @@ func Init() {
 			initBase()
 		}
 
-		var tempBeatmapID uint32 = 0
 		switch MenuData.OsuStatus {
 		case 2:
 			DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
@@ -228,7 +228,7 @@ func Init() {
 			xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
 
 			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
-			GameplayData.Mods.AppliedMods = int32(xor1 ^ xor2)
+			MenuData.Mods.AppliedMods = int32(xor1 ^ xor2)
 			GameplayData.Combo.Current, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90))
 			GameplayData.Combo.Max, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x68))
 			GameplayData.GameMode, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x64))
@@ -260,7 +260,7 @@ func Init() {
 				}
 				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 			}
-			MenuData.Mods.PpMods = Mods(GameplayData.Mods.AppliedMods).String()
+			MenuData.Mods.PpMods = Mods(MenuData.Mods.AppliedMods).String()
 
 		default: //This data is available at all times
 			hasLeaderboard = false
@@ -272,6 +272,7 @@ func Init() {
 			if err != nil {
 				log.Println(err)
 			}
+
 			if tempBeatmapID != MenuData.Bm.BeatmapID { //On map change
 				time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 				MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
@@ -300,6 +301,20 @@ func Init() {
 				}
 
 				tempBeatmapID = MenuData.Bm.BeatmapID
+
+			}
+			menuMods, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.InMenuMods+0x9), 0x0)
+			if err != nil {
+				pp.Println(err)
+			} else {
+				if menuMods == 0 {
+					MenuData.Mods.PpMods = "NM"
+					MenuData.Mods.AppliedMods = int32(menuMods)
+				} else {
+					MenuData.Mods.AppliedMods = int32(menuMods)
+					MenuData.Mods.PpMods = Mods(menuMods).String()
+				}
+
 			}
 
 		}
