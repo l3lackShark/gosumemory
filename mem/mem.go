@@ -66,20 +66,45 @@ func parsePattern(s string) (pattern, error) {
 	return p, nil
 }
 
+func search(buf []byte, needle uint32, mask uint32) (int, bool) {
+	for i := 0; i+4 < len(buf); i++ {
+		haystack := binary.LittleEndian.Uint32(buf[i : i+4])
+		if needle^haystack&mask == 0 {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
+func find(p Process, pat pattern, reg Map) (uint64, bool) {
+	const bufsize = 32768
+outer:
+	for i := uint64(0); i < reg.Size(); i += bufsize - 3 {
+		var buf [bufsize]byte
+		n, err := p.ReadAt(buf[:], int64(reg.Start()+i))
+		if err != nil {
+			continue
+		}
+		at, ok := search(buf[:n], pat.Bytes[0], pat.Mask[0])
+		if ok && at+(4*len(pat.Bytes)) < len(buf) {
+			for j := range pat.Bytes {
+				needle := pat.Bytes[j]
+				mask := pat.Mask[j]
+				haystack := binary.LittleEndian.Uint32(buf[at+(4*j) : at+4+(4*j)])
+				if needle^haystack&mask != 0 {
+					continue outer
+				}
+			}
+			return uint64(reg.Start() + i + uint64(at)), true
+		}
+	}
+	return 0, false
+}
+
 func Scan(p Process, pattern string) (uint64, error) {
 	maps, err := p.Maps()
 	if err != nil {
 		return 0, err
-	}
-
-	var largestMap uint64
-	for _, reg := range maps {
-		if size := reg.Size(); size > largestMap && size < 1073741824 {
-			largestMap = size
-		}
-	}
-	if largestMap == 0 {
-		return 0, ErrPatternNotFound
 	}
 
 	pat, err := parsePattern(pattern)
@@ -87,38 +112,13 @@ func Scan(p Process, pattern string) (uint64, error) {
 		return 0, err
 	}
 
-	buf := make([]byte, int(largestMap))
 	for _, reg := range maps {
-		addr := reg.Start()
-		size := reg.Size()
-		if size >= 1073741824 {
-			continue
-		}
-		n, err := p.ReadAt(buf[0:size], int64(addr))
-		if err != nil || n != int(size) {
-			continue
-		}
-		needle := pat.Bytes[0]
-		mask := pat.Mask[0]
-
-		var i uint64
-	outer:
-		for i = 0; i+4 < size; i++ {
-			haystack := binary.LittleEndian.Uint32(buf[i : i+4])
-			if needle^haystack&mask == 0 {
-				for j := range pat.Bytes {
-					needle := pat.Bytes[j]
-					mask := pat.Mask[j]
-					haystack := binary.LittleEndian.Uint32(
-						buf[i+uint64(4*j) : i+4+uint64(4*j)])
-					if needle^haystack&mask != 0 {
-						continue outer
-					}
-				}
-				return reg.Start() + i, nil
-			}
+		i, ok := find(p, pat, reg)
+		if ok {
+			return i, nil
 		}
 	}
+
 	return 0, ErrPatternNotFound
 }
 
