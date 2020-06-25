@@ -33,7 +33,7 @@ type bm struct {
 
 type tim struct {
 	PlayTime uint32 `json:"current"`
-	//FullTime uint32 `json:"full"`
+	FullTime int32 `json:"full"`
 }
 
 // Metadata Map data
@@ -49,6 +49,7 @@ type stats struct {
 	BeatmapCS float32 `json:"CS"`
 	BeatmapOD float32 `json:"OD"`
 	BeatmapHP float32 `json:"HP"`
+	BeatmapSR float32 `json:"SR"`
 }
 
 type path struct {
@@ -70,6 +71,7 @@ type ppM struct {
 	Pp97 int32 `json:"97"`
 	Pp96 int32 `json:"96"`
 	Pp95 int32 `json:"95"`
+	PpStrains []float64 `json:"strains"`
 }
 
 type combo struct {

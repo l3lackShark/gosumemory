@@ -300,6 +300,8 @@ func Init() {
 					log.Println("skipping bg reloading")
 				}
 
+				
+
 				tempBeatmapID = MenuData.Bm.BeatmapID
 
 			}

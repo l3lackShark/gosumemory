@@ -2,10 +2,13 @@ package pp
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"strings"
 	"time"
 	"unsafe"
 
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -27,6 +30,7 @@ var ez C.ezpp_t
 type PP struct {
 	Total         C.float
 	FC            C.float
+	Strain        []float64
 	StarRating    C.float
 	AimStars      C.float
 	SpeedStars    C.float
@@ -58,7 +62,9 @@ type PP struct {
 	ScoreVersion  C.int
 }
 
-func readData(data *PP, ez C.ezpp_t) error {
+var strainArray []float64
+
+func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 	path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
 		cpath := C.CString(path)
@@ -73,11 +79,39 @@ func readData(data *PP, ez C.ezpp_t) error {
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
-		C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
-		C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
-		C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
+		if needStrain == true {
+			C.ezpp_set_end_time(ez, 0)
+			C.ezpp_set_combo(ez, 0)
+			C.ezpp_set_nmiss(ez, 0)
+			strainArray = nil
+			seek := 0
+			var window []float64
+			var total []float64
+			for seek < int(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1)) { //len-1
+				for obj := 0; obj <= int(C.ezpp_nobjects(ez)-1); obj++ {
+					if int(C.ezpp_time_at(ez, C.int(obj))) >= seek && int(C.ezpp_time_at(ez, C.int(obj))) <= seek+3000 {
+						window = append(window, float64(C.ezpp_strain_at(ez, C.int(obj), 0))+float64(C.ezpp_strain_at(ez, C.int(obj), 1)))
+					}
+				}
+				sum := 0.0
+				for _, num := range window {
+					sum += num
+				}
+				total = append(total, sum/math.Max(float64(len(window)), 1))
+				window = nil
+				seek += 500
+			}
+			strainArray = total
+			memory.MenuData.Bm.Time.FullTime = int32(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)))
+		} else {
+			C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
+			C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
+			C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
+		}
+
 		*data = PP{
 			Total:         C.ezpp_pp(ez),
+			Strain:        strainArray,
 			StarRating:    C.ezpp_stars(ez),
 			AimStars:      C.ezpp_aim_stars(ez),
 			SpeedStars:    C.ezpp_speed_stars(ez),
@@ -117,12 +151,29 @@ func GetData() {
 	ez := C.ezpp_new()
 	C.ezpp_set_autocalc(ez, 1)
 	//defer C.ezpp_free(ez)
+	var tempBeatmapFile string
 	for {
 
 		if memory.DynamicAddresses.IsReady == true {
 			var data PP
-			err := readData(&data, ez)
+			if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
+				//Get Strains only
+				err := readData(&data, ez, true)
+				if err != nil {
+					pp.Println("pp ERR: ", err)
+					continue
+				}
+				memory.MenuData.PP.PpStrains = data.Strain
+				memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
+				tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+				continue
+
+			}
+
+			err := readData(&data, ez, false)
 			if err != nil {
+				pp.Println("pp ERR: ", err)
+				continue
 			}
 			switch memory.MenuData.OsuStatus {
 			case 2, 7:

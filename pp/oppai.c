@@ -2474,6 +2474,8 @@ OPPAIAPI float ezpp_strain_at(ezpp_t ez, int i, int difficulty_type) {
   return ez->objects.len ? ez->objects.data[i].strains[difficulty_type] : 0;
 }
 
+
+
 #define setter(t, x) \
 OPPAIAPI void ezpp_set_##x(ezpp_t ez, t x) { \
   ez->x = x; \

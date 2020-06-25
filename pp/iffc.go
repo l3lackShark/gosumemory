@@ -135,6 +135,6 @@ func GetFCData() {
 		}
 		C.ezpp_free(ezfc)
 
-		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 	}
 }
