@@ -185,6 +185,7 @@ func Init() {
 		leaderStart = 0xC
 	}
 	var tempBeatmapID uint32 = 0
+	var tempBeatmapString string = ""
 	for {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -273,15 +274,17 @@ func Init() {
 			if err != nil {
 				//log.Println("Dynamic beatmap id error: ", err) //Gets triggered on F2
 			}
-
-			if tempBeatmapID != bmid && bmid != 0 { //On map change
+			beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x8C)
+			bmstring, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
+			if tempBeatmapID != bmid && bmid != 0 || strings.HasSuffix(bmstring, ".osu") && bmid == 0 && tempBeatmapString != bmstring { //On map change (has to be complicated in order to work with unsubmitted maps)
+				tempBeatmapString = bmstring
 				MenuData.Bm.BeatmapID = bmid
 				time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 				MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
 				beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 				MenuData.Bm.Path.BGPath, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
-				beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x8C)
-				MenuData.Bm.Path.BeatmapOsuFileString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
+
+				MenuData.Bm.Path.BeatmapOsuFileString = bmstring
 				beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
 				MenuData.Bm.Path.BeatmapFolderString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
 
