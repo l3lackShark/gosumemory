@@ -238,7 +238,8 @@ func Init() {
 			GameplayData.Hits.H50, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x88))
 			GameplayData.Hits.H0, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x8E))
 			GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
-			MenuData.Bm.Time.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
+			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
+			MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
 			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
 			if err != nil {
 				//log.Println(err)
@@ -288,7 +289,6 @@ func Init() {
 				// MenuData.Bm.Stats.BeatmapCS, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x30))
 				// MenuData.Bm.Stats.BeatmapHP, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x34))
 				// MenuData.Bm.Stats.BeatmapOD, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x38))
-				MenuData.Bm.Time.PlayTime, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime+0x5), 0x0)
 				if err != nil {
 					log.Println("MenuData failure")
 				}
@@ -300,11 +300,11 @@ func Init() {
 					log.Println("skipping bg reloading")
 				}
 
-				
-
 				tempBeatmapID = MenuData.Bm.BeatmapID
 
 			}
+			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
+			MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
 			menuMods, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.InMenuMods+0x9), 0x0)
 			if err != nil {
 				pp.Println(err)

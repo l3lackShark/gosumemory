@@ -63,6 +63,7 @@ type PP struct {
 }
 
 var strainArray []float64
+var tempBeatmapFile string
 
 func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 	path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
@@ -89,6 +90,9 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 			var total []float64
 			for seek < int(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1)) { //len-1
 				for obj := 0; obj <= int(C.ezpp_nobjects(ez)-1); obj++ {
+					if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString {
+						return nil //Interrupt calcualtion if user has changed the map.
+					}
 					if int(C.ezpp_time_at(ez, C.int(obj))) >= seek && int(C.ezpp_time_at(ez, C.int(obj))) <= seek+3000 {
 						window = append(window, float64(C.ezpp_strain_at(ez, C.int(obj), 0))+float64(C.ezpp_strain_at(ez, C.int(obj), 1)))
 					}
@@ -102,7 +106,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 				seek += 500
 			}
 			strainArray = total
-			memory.MenuData.Bm.Time.FullTime = int32(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)))
+			memory.MenuData.Bm.Time.FullTime = int32(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1))
 		} else {
 			C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
 			C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
@@ -151,12 +155,13 @@ func GetData() {
 	ez := C.ezpp_new()
 	C.ezpp_set_autocalc(ez, 1)
 	//defer C.ezpp_free(ez)
-	var tempBeatmapFile string
+
 	for {
 
 		if memory.DynamicAddresses.IsReady == true {
 			var data PP
 			if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
+				tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 				//Get Strains only
 				err := readData(&data, ez, true)
 				if err != nil {
@@ -165,7 +170,7 @@ func GetData() {
 				}
 				memory.MenuData.PP.PpStrains = data.Strain
 				memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
-				tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+
 				continue
 
 			}

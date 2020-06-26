@@ -32,7 +32,7 @@ type bm struct {
 }
 
 type tim struct {
-	PlayTime uint32 `json:"current"`
+	PlayTime int32 `json:"current"`
 	FullTime int32 `json:"full"`
 }
 
@@ -65,12 +65,12 @@ type modsM struct {
 }
 
 type ppM struct {
-	PpSS int32 `json:"100"`
-	Pp99 int32 `json:"99"`
-	Pp98 int32 `json:"98"`
-	Pp97 int32 `json:"97"`
-	Pp96 int32 `json:"96"`
-	Pp95 int32 `json:"95"`
+	PpSS      int32     `json:"100"`
+	Pp99      int32     `json:"99"`
+	Pp98      int32     `json:"98"`
+	Pp97      int32     `json:"97"`
+	Pp96      int32     `json:"96"`
+	Pp95      int32     `json:"95"`
 	PpStrains []float64 `json:"strains"`
 }
 
