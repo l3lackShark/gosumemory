@@ -269,22 +269,24 @@ func Init() {
 			if err != nil {
 				log.Println("Dynamic beatmap addr error: ", err)
 			}
-			MenuData.Bm.BeatmapID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC4))
+			bmid, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC4))
 			if err != nil {
 				//log.Println("Dynamic beatmap id error: ", err) //Gets triggered on F2
 			}
 
-			if tempBeatmapID != MenuData.Bm.BeatmapID { //On map change
+			if tempBeatmapID != bmid && bmid != 0 { //On map change
+				MenuData.Bm.BeatmapID = bmid
 				time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 				MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
-				beatmapStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x7C)
-				MenuData.Bm.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
 				beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 				MenuData.Bm.Path.BGPath, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
 				beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x8C)
 				MenuData.Bm.Path.BeatmapOsuFileString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
 				beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
 				MenuData.Bm.Path.BeatmapFolderString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
+
+				//beatmapStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x7C)
+				//MenuData.Bm.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
 				// MenuData.Bm.Stats.BeatmapAR, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x2C))
 				// MenuData.Bm.Stats.BeatmapCS, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x30))
 				// MenuData.Bm.Stats.BeatmapHP, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x34))
