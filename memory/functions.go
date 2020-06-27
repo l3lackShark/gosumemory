@@ -184,7 +184,6 @@ func Init() {
 	} else {
 		leaderStart = 0xC
 	}
-	var tempBeatmapID uint32 = 0
 	var tempBeatmapString string = ""
 	for {
 		var err error
@@ -276,18 +275,17 @@ func Init() {
 			}
 			beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x8C)
 			bmstring, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
-			if tempBeatmapID != bmid && bmid != 0 || strings.HasSuffix(bmstring, ".osu") && bmid == 0 && tempBeatmapString != bmstring { //On map change (has to be complicated in order to work with unsubmitted maps)
+			if strings.HasSuffix(bmstring, ".osu") && tempBeatmapString != bmstring { //On map change
 				tempBeatmapString = bmstring
 				MenuData.Bm.BeatmapID = bmid
 				time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 				MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
 				beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 				MenuData.Bm.Path.BGPath, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
-
 				MenuData.Bm.Path.BeatmapOsuFileString = bmstring
 				beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
 				MenuData.Bm.Path.BeatmapFolderString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
-
+				MenuData.Bm.Path.InnerBGPath = MenuData.Bm.Path.BeatmapFolderString + "/" + MenuData.Bm.Path.BGPath
 				//beatmapStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x7C)
 				//MenuData.Bm.BeatmapString, err = proc.ReadNullTerminatedUTF16String(uintptr(beatmapStrOffset) + 0x8)
 				// MenuData.Bm.Stats.BeatmapAR, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x2C))
@@ -297,15 +295,6 @@ func Init() {
 				if err != nil {
 					log.Println("MenuData failure")
 				}
-
-				if strings.HasSuffix(MenuData.Bm.Path.BeatmapOsuFileString, ".osu") == true && len(MenuData.Bm.Path.BGPath) > 0 {
-					MenuData.Bm.Path.InnerBGPath = MenuData.Bm.Path.BeatmapFolderString + "/" + MenuData.Bm.Path.BGPath
-
-				} else {
-					log.Println("skipping bg reloading")
-				}
-
-				tempBeatmapID = MenuData.Bm.BeatmapID
 
 			}
 			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
