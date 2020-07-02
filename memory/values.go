@@ -50,6 +50,10 @@ type stats struct {
 	BeatmapOD float32 `json:"OD"`
 	BeatmapHP float32 `json:"HP"`
 	BeatmapSR float32 `json:"SR"`
+	MemoryAR  float32 `json:"memoryAR"`
+	MemoryCS  float32 `json:"memoryCS"`
+	MemoryOD  float32 `json:"memoryOD"`
+	MemoryHP  float32 `json:"memoryHP"`
 }
 
 type path struct {

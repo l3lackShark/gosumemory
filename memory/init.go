@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ func resolveSongsFolderWIN32(addr uint32) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	result, err := proc.ReadNullTerminatedUTF16String(uintptr(a + 0x20))
 	if err != nil {
 		return "", err
@@ -85,5 +87,6 @@ func initBase() error {
 	pp.Printf("Songs Folder Path: %s\n", SongsFolderPath)
 
 	DynamicAddresses.IsReady = true
+	debug.FreeOSMemory() //To not scare people with insane amount of memory usage.
 	return nil
 }

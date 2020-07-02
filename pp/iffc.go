@@ -8,7 +8,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -123,12 +122,9 @@ func GetFCData() {
 	for {
 		ezfc := C.ezpp_new()
 		C.ezpp_set_autocalc(ezfc, 1)
-		if memory.DynamicAddresses.IsReady == true && memory.MenuData.OsuStatus == 2 {
+		if memory.DynamicAddresses.IsReady == true && memory.MenuData.OsuStatus == 2 && memory.GameplayData.GameMode == 0 {
 			var data PPfc
-			err := readFCData(&data, ezfc)
-			if err != nil {
-				pp.Println(err)
-			}
+			readFCData(&data, ezfc)
 			if memory.GameplayData.Combo.Max > 0 {
 				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
 			}

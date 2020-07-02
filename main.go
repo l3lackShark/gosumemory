@@ -5,15 +5,23 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime"
+	"time"
 
+	"github.com/l3lackShark/gosumemory/db"
+	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/pp"
 	"github.com/l3lackShark/gosumemory/web"
-
-	"github.com/l3lackShark/gosumemory/memory"
 )
 
 func main() {
+	err := db.InitDB()
+	if err != nil {
+		log.Println("osu database parse error!, your osu!.db file is either too old or corrupt!", err)
+		time.Sleep(5 * time.Second)
+		os.Exit(1)
+	}
 	fmt.Println("gosumemory v0.x-alpha")
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)

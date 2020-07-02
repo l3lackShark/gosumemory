@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/k0kubun/pp"
+	"github.com/l3lackShark/gosumemory/db"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -150,6 +151,11 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 	return nil
 }
 
+var needManiaSR bool = true
+var maniaSR float64
+var maniaMods int32
+var maniaHitObjects float64
+
 func GetData() {
 
 	ez := C.ezpp_new()
@@ -159,46 +165,91 @@ func GetData() {
 	for {
 
 		if memory.DynamicAddresses.IsReady == true {
-			var data PP
-			if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
-				tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
-				//Get Strains only
-				err := readData(&data, ez, true)
-				if err != nil {
-					pp.Println("pp ERR: ", err)
+			switch memory.GameplayData.GameMode {
+			case 0:
+				needManiaSR = true
+				maniaSR = 0.0
+				maniaMods = 0
+				maniaHitObjects = 0.0
+				var data PP
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
+					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+					//Get Strains only
+					readData(&data, ez, true)
+
+					memory.MenuData.PP.PpStrains = data.Strain
+					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
+
 					continue
-				}
-				memory.MenuData.PP.PpStrains = data.Strain
-				memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
 
-				continue
+				}
+
+				readData(&data, ez, false)
+
+				switch memory.MenuData.OsuStatus {
+				case 2, 7:
+					if memory.GameplayData.Combo.Max > 0 {
+						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+					}
+				default:
+					if data.StarRating != 0 {
+						memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
+						memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
+						memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
+						memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
+						memory.MenuData.Bm.Metadata.Artist = data.Artist
+						memory.MenuData.Bm.Metadata.Title = data.Title
+						memory.MenuData.Bm.Metadata.Mapper = data.Creator
+						memory.MenuData.Bm.Metadata.Version = data.Version
+					}
+
+				}
+			case 3:
+
+				if needManiaSR == true {
+
+					for i := 0; i < len(db.OsuDB.BmInfo); i++ {
+						if tempBeatmapFile == db.OsuDB.BmInfo[i].Filename {
+							if strings.Contains(memory.MenuData.Mods.PpMods, "DT") {
+								maniaMods = 64
+							} else if strings.Contains(memory.MenuData.Mods.PpMods, "HT") {
+								maniaMods = 256
+							} else {
+								maniaMods = 0 //assuming NM
+							}
+							for j := 0; j < len(db.OsuDB.BmInfo[i].StarRatingMania); j++ {
+								if maniaMods == db.OsuDB.BmInfo[i].StarRatingMania[j].BitMods {
+									maniaSR = db.OsuDB.BmInfo[i].StarRatingMania[j].StarRating
+									maniaHitObjects = float64(db.OsuDB.BmInfo[i].NumHitCircles) + float64(db.OsuDB.BmInfo[i].NumSliders) + float64(db.OsuDB.BmInfo[i].NumSpinners)
+									memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(maniaSR)))
+									memory.MenuData.Bm.Metadata.Artist = db.OsuDB.BmInfo[i].Artist
+									memory.MenuData.Bm.Metadata.Title = db.OsuDB.BmInfo[i].Title
+									memory.MenuData.Bm.Metadata.Mapper = db.OsuDB.BmInfo[i].Creator
+									memory.MenuData.Bm.Metadata.Version = db.OsuDB.BmInfo[i].Difficulty
+									memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
+									needManiaSR = false
+									break
+								}
+							}
+							if maniaSR == 0.0 {
+								pp.Println("Could not find mania star rating in the database. PP output will be unavailable for this beatmap!")
+								needManiaSR = false
+							}
+							break
+						}
+					}
+				}
+				if maniaSR >= 0.01 {
+					if memory.GameplayData.Score >= 500000 {
+						memory.GameplayData.PP.Pp = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, float64(memory.GameplayData.Score)))
+					} else {
+						memory.GameplayData.PP.Pp = 0
+					}
+
+				}
 
 			}
 
-			err := readData(&data, ez, false)
-			if err != nil {
-				pp.Println("pp ERR: ", err)
-				continue
-			}
-			switch memory.MenuData.OsuStatus {
-			case 2, 7:
-				if memory.GameplayData.Combo.Max > 0 {
-					memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
-				}
-			default:
-				memory.GameplayData = memory.GameplayValues{}
-				if data.StarRating != 0 {
-					memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
-					memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
-					memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
-					memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-					memory.MenuData.Bm.Metadata.Artist = data.Artist
-					memory.MenuData.Bm.Metadata.Title = data.Title
-					memory.MenuData.Bm.Metadata.Mapper = data.Creator
-					memory.MenuData.Bm.Metadata.Version = data.Version
-				}
-
-			}
 		}
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
