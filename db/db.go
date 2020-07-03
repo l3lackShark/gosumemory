@@ -34,7 +34,7 @@ type beatmapInfo struct {
 	NumHitCircles             int16
 	NumSliders                int16
 	NumSpinners               int16
-	dateTime                  uint64
+	dateTime                  int64
 	approachRate              float32
 	circleSize                float32
 	hpDrain                   float32
@@ -63,10 +63,10 @@ type beatmapInfo struct {
 	onlineOffset              int16
 	fontTitle                 string //?
 	isUnplayed                bool
-	lastPlayed                uint64
+	lastPlayed                int64
 	isOsz2                    bool
 	folderFromSongs           string
-	lastCheckedAgainstOsuRepo uint64
+	lastCheckedAgainstOsuRepo int64
 	isBmSoundIgnored          bool
 	isBmSkinIgnored           bool
 	isBmStoryBoardDisabled    bool
@@ -77,9 +77,7 @@ type beatmapInfo struct {
 }
 
 type starRating struct {
-	zeroXeight uint8
 	BitMods    int32
-	zeroXzerod uint8
 	StarRating float64 //double
 }
 
@@ -92,6 +90,8 @@ type timingPoint struct {
 //OsuDB is a structure representation of osu!.db file
 var OsuDB osudb
 
+var internalDB osudb
+
 //InitDB initializes osu database and gets data within it
 func InitDB() error {
 	pp.Println("Parsing osu!db...")
@@ -102,21 +102,42 @@ func InitDB() error {
 	file, err := os.Open(filepath.Join(folder, "osu!.db"))
 	osuDB := bufio.NewReader(file)
 	defer file.Close()
-	binary.Read(osuDB, binary.LittleEndian, &OsuDB.buildVer)
-	binary.Read(osuDB, binary.LittleEndian, &OsuDB.songsFolderSize)
-	binary.Read(osuDB, binary.LittleEndian, &OsuDB.isAccountUnlocked)
+	binary.Read(osuDB, binary.LittleEndian, &internalDB.buildVer)
+	binary.Read(osuDB, binary.LittleEndian, &internalDB.songsFolderSize)
+	binary.Read(osuDB, binary.LittleEndian, &internalDB.isAccountUnlocked)
 	var dateTime int64
 	binary.Read(osuDB, binary.LittleEndian, &dateTime)
-	OsuDB.Nickname, err = readDBString(osuDB)
+	internalDB.Nickname, err = readDBString(osuDB)
 	if err != nil {
 		log.Println("Database  parse error: ", err)
 	}
-	OsuDB.BmInfo, err = readDBArray(osuDB)
+	internalDB.BmInfo, err = readDBArray(osuDB)
 	if err != nil {
 		panic(err)
 	}
+	OsuDB.BmInfo = make([]beatmapInfo, len(internalDB.BmInfo))
 
-	pp.Println("Done parsing osu!db")
+	OsuDB.Nickname = internalDB.Nickname
+	for i := 0; i < len(internalDB.BmInfo); i++ {
+		OsuDB.BmInfo[i].StarRatingMania = make([]starRating, 3)
+		OsuDB.BmInfo[i].Filename = internalDB.BmInfo[i].Filename
+		OsuDB.BmInfo[i].Artist = internalDB.BmInfo[i].Artist
+		OsuDB.BmInfo[i].Title = internalDB.BmInfo[i].Title
+		OsuDB.BmInfo[i].NumHitCircles = internalDB.BmInfo[i].NumHitCircles
+		OsuDB.BmInfo[i].NumSliders = internalDB.BmInfo[i].NumSliders
+		OsuDB.BmInfo[i].NumSpinners = internalDB.BmInfo[i].NumSpinners
+		OsuDB.BmInfo[i].Creator = internalDB.BmInfo[i].Creator
+		OsuDB.BmInfo[i].Difficulty = internalDB.BmInfo[i].Difficulty
+		for j := 0; j < len(internalDB.BmInfo[i].StarRatingMania); j++ {
+			if internalDB.BmInfo[i].StarRatingMania[j].BitMods == 0 || internalDB.BmInfo[i].StarRatingMania[j].BitMods == 64 || internalDB.BmInfo[i].StarRatingMania[j].BitMods == 256 {
+				OsuDB.BmInfo[i].StarRatingMania[j].BitMods = internalDB.BmInfo[i].StarRatingMania[j].BitMods
+				OsuDB.BmInfo[i].StarRatingMania[j].StarRating = internalDB.BmInfo[i].StarRatingMania[j].StarRating
+			}
+		}
+	}
+	pp.Println(OsuDB.BmInfo[0].StarRatingMania)
+	internalDB = osudb{}
+	pp.Println("Done parsing osu!db", OsuDB)
 
 	return nil
 }
@@ -218,12 +239,14 @@ func readBeatmapInfo(osuDB io.Reader) (beatmapInfo, error) {
 	var lengthList int32 // should move this into a separate functuion and use reflections to set values
 	err = binary.Read(osuDB, binary.LittleEndian, &lengthList)
 	if lengthList >= 1 {
+		var zeroXeight uint8
+		var zeroXzerod uint8
 		data.starRatingOsu = make([]starRating, int(lengthList))
 		for i := 0; i < int(lengthList); i++ {
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingOsu[i].zeroXeight)
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXeight)
 			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingOsu[i].BitMods)
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingOsu[i].zeroXzerod)
-			if data.starRatingOsu[i].zeroXzerod != 0x0d || data.starRatingOsu[i].zeroXeight != 0x08 {
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXzerod)
+			if zeroXzerod != 0x0d || zeroXeight != 0x08 {
 				pp.Println("Star rating parse err.")
 				data := beatmapInfo{}
 				return data, errors.New("Star rating parse err")
@@ -239,12 +262,14 @@ func readBeatmapInfo(osuDB io.Reader) (beatmapInfo, error) {
 	var lengthListTaiko int32 // should move this into a separate functuion and use reflections to set values
 	err = binary.Read(osuDB, binary.LittleEndian, &lengthListTaiko)
 	if lengthListTaiko >= 1 {
+		var zeroXeight uint8
+		var zeroXzerod uint8
 		data.starRatingTaiko = make([]starRating, int(lengthListTaiko))
 		for i := 0; i < int(lengthListTaiko); i++ {
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingTaiko[i].zeroXeight)
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXeight)
 			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingTaiko[i].BitMods)
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingTaiko[i].zeroXzerod)
-			if data.starRatingTaiko[i].zeroXzerod != 0x0d || data.starRatingTaiko[i].zeroXeight != 0x08 {
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXzerod)
+			if zeroXzerod != 0x0d || zeroXeight != 0x08 {
 				pp.Println("Star rating parse err. (taiko)")
 				data := beatmapInfo{}
 				return data, errors.New("Star rating parse err (taiko)")
@@ -260,12 +285,14 @@ func readBeatmapInfo(osuDB io.Reader) (beatmapInfo, error) {
 	var lengthListCtb int32 // should move this into a separate functuion and use reflections to set values
 	err = binary.Read(osuDB, binary.LittleEndian, &lengthListCtb)
 	if lengthListCtb >= 1 {
+		var zeroXeight uint8
+		var zeroXzerod uint8
 		data.starRatingCtb = make([]starRating, int(lengthListCtb))
 		for i := 0; i < int(lengthListCtb); i++ {
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingCtb[i].zeroXeight)
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXeight)
 			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingCtb[i].BitMods)
-			err = binary.Read(osuDB, binary.LittleEndian, &data.starRatingCtb[i].zeroXzerod)
-			if data.starRatingCtb[i].zeroXzerod != 0x0d || data.starRatingCtb[i].zeroXeight != 0x08 {
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXzerod)
+			if zeroXzerod != 0x0d || zeroXeight != 0x08 {
 				pp.Println("Star rating parse err. (ctb)")
 				data := beatmapInfo{}
 				return data, errors.New("Star rating parse err (ctb)")
@@ -280,12 +307,14 @@ func readBeatmapInfo(osuDB io.Reader) (beatmapInfo, error) {
 	var lengthListMania int32 // should move this into a separate functuion and use reflections to set values
 	err = binary.Read(osuDB, binary.LittleEndian, &lengthListMania)
 	if lengthListMania >= 1 {
+		var zeroXeight uint8
+		var zeroXzerod uint8
 		data.StarRatingMania = make([]starRating, int(lengthListMania))
 		for i := 0; i < int(lengthListMania); i++ {
-			err = binary.Read(osuDB, binary.LittleEndian, &data.StarRatingMania[i].zeroXeight)
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXeight)
 			err = binary.Read(osuDB, binary.LittleEndian, &data.StarRatingMania[i].BitMods)
-			err = binary.Read(osuDB, binary.LittleEndian, &data.StarRatingMania[i].zeroXzerod)
-			if data.StarRatingMania[i].zeroXzerod != 0x0d || data.StarRatingMania[i].zeroXeight != 0x08 {
+			err = binary.Read(osuDB, binary.LittleEndian, &zeroXzerod)
+			if zeroXzerod != 0x0d || zeroXeight != 0x08 {
 				pp.Println("Star rating parse err. (Mania)")
 				data := beatmapInfo{}
 				return data, errors.New("Star rating parse err (Mania)")
