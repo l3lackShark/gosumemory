@@ -167,7 +167,7 @@ func readHitErrorArray() ([]int32, error) {
 		return nil, err
 	}
 	var buf32 []int32
-	for i := 0x8; i < int(leng*0x4); i += 0x4 {
+	for i := 0x4; i <= int(leng*0x4); i += 0x4 {
 		value, err := proc.ReadInt32(uintptr(hitErrorStruct + uint32(i)))
 		if err != nil {
 			return nil, err
@@ -182,7 +182,7 @@ func Init() {
 	if runtime.GOOS == "windows" {
 		leaderStart = 0x8
 	} else {
-		leaderStart = 0xC 
+		leaderStart = 0xC
 	}
 	var tempBeatmapString string = ""
 	for {
