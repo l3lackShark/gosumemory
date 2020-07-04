@@ -8,6 +8,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/l3lackShark/gosumemory/memory"
 
 	"github.com/k0kubun/pp"
 )
@@ -94,12 +98,17 @@ var internalDB osudb
 
 //InitDB initializes osu database and gets data within it
 func InitDB() error {
-	pp.Println("Parsing osu!db...")
-	folder, err := os.Getwd()
-	if err != nil {
-
+	pp.Println("[DB]: Awaiting memory data...")
+	for memory.DynamicAddresses.IsReady != true {
+		time.Sleep(500 * time.Millisecond)
 	}
-	file, err := os.Open(filepath.Join(folder, "osu!.db"))
+	pp.Println("[DB]: Parsing osu!db...")
+	dbpath := strings.TrimSuffix(memory.SongsFolderPath, "\\Songs")
+	file, err := os.Open(filepath.Join(dbpath, "osu!.db"))
+	if err != nil {
+		pp.Println("Could not find osu!.db, mania related functionality will be unavailable")
+		return nil
+	}
 	osuDB := bufio.NewReader(file)
 	defer file.Close()
 	binary.Read(osuDB, binary.LittleEndian, &internalDB.buildVer)
@@ -137,7 +146,7 @@ func InitDB() error {
 	}
 	pp.Println(OsuDB.BmInfo[0].StarRatingMania)
 	internalDB = osudb{}
-	pp.Println("Done parsing osu!db", OsuDB)
+	pp.Println("[DB]: Done parsing osu!db", OsuDB)
 
 	return nil
 }

@@ -16,12 +16,6 @@ import (
 )
 
 func main() {
-	err := db.InitDB()
-	if err != nil {
-		log.Println("osu database parse error!, your osu!.db file is either too old or corrupt!", err)
-		time.Sleep(5 * time.Second)
-		os.Exit(1)
-	}
 	fmt.Println("gosumemory v0.x-alpha")
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
@@ -32,6 +26,12 @@ func main() {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
 	}
 	go memory.Init()
+	err := db.InitDB()
+	if err != nil {
+		log.Println("osu database parse error!, your osu!.db file is either too old or corrupt!", err)
+		time.Sleep(5 * time.Second)
+		os.Exit(1)
+	}
 	go web.SetupStructure()
 	go web.HTTPServer()
 	go web.SetupRoutes()

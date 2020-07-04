@@ -182,7 +182,7 @@ func Init() {
 	if runtime.GOOS == "windows" {
 		leaderStart = 0x8
 	} else {
-		leaderStart = 0xC
+		leaderStart = 0xC 
 	}
 	var tempBeatmapString string = ""
 	for {
@@ -293,10 +293,10 @@ func Init() {
 				MenuData.Bm.Stats.MemoryCS, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x30))
 				MenuData.Bm.Stats.MemoryHP, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x34))
 				MenuData.Bm.Stats.MemoryOD, err = proc.ReadFloat32(uintptr(DynamicAddresses.BeatmapAddr + 0x38))
+				MenuData.GameMode, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0x33), 0)
 				if err != nil {
 					log.Println("MenuData failure")
 				}
-
 			}
 			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
 			MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))

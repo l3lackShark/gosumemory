@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path/filepath"
 	"strings"
 	"time"
 	"unsafe"
@@ -67,7 +68,7 @@ var strainArray []float64
 var tempBeatmapFile string
 
 func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
-	path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
+	path := filepath.Join(memory.SongsFolderPath, memory.MenuData.Bm.Path.BeatmapFolderString, memory.MenuData.Bm.Path.BeatmapOsuFileString)
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
 		cpath := C.CString(path)
 
@@ -115,43 +116,42 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 		}
 
 		*data = PP{
-			Total:         C.ezpp_pp(ez),
-			Strain:        strainArray,
-			StarRating:    C.ezpp_stars(ez),
-			AimStars:      C.ezpp_aim_stars(ez),
-			SpeedStars:    C.ezpp_speed_stars(ez),
-			AimPP:         C.ezpp_aim_pp(ez),
-			SpeedPP:       C.ezpp_speed_pp(ez),
-			Accuracy:      C.ezpp_accuracy_percent(ez),
-			N300:          C.ezpp_n300(ez),
-			N100:          C.ezpp_n100(ez),
-			N50:           C.ezpp_n50(ez),
-			NMiss:         C.ezpp_nmiss(ez),
-			AR:            C.ezpp_ar(ez),
-			CS:            C.ezpp_cs(ez),
-			OD:            C.ezpp_od(ez),
-			HP:            C.ezpp_hp(ez),
-			Artist:        C.GoString(C.ezpp_artist(ez)),
-			ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ez)),
-			Title:         C.GoString(C.ezpp_title(ez)),
-			TitleUnicode:  C.GoString(C.ezpp_title_unicode(ez)),
-			Version:       C.GoString(C.ezpp_version(ez)),
-			Creator:       C.GoString(C.ezpp_creator(ez)),
-			NCircles:      C.ezpp_ncircles(ez),
-			NSliders:      C.ezpp_nsliders(ez),
-			NSpinners:     C.ezpp_nspinners(ez),
-			ODMS:          C.ezpp_odms(ez),
-			Mode:          C.ezpp_mode(ez),
-			Combo:         C.ezpp_combo(ez),
-			MaxCombo:      C.ezpp_max_combo(ez),
-			Mods:          C.ezpp_mods(ez),
-			ScoreVersion:  C.ezpp_score_version(ez),
+			Total:      C.ezpp_pp(ez),
+			Strain:     strainArray,
+			StarRating: C.ezpp_stars(ez),
+			AimStars:   C.ezpp_aim_stars(ez),
+			SpeedStars: C.ezpp_speed_stars(ez),
+			AimPP:      C.ezpp_aim_pp(ez),
+			SpeedPP:    C.ezpp_speed_pp(ez),
+			Accuracy:   C.ezpp_accuracy_percent(ez),
+			N300:       C.ezpp_n300(ez),
+			N100:       C.ezpp_n100(ez),
+			N50:        C.ezpp_n50(ez),
+			NMiss:      C.ezpp_nmiss(ez),
+			AR:         C.ezpp_ar(ez),
+			CS:         C.ezpp_cs(ez),
+			OD:         C.ezpp_od(ez),
+			HP:         C.ezpp_hp(ez),
+			Artist:     C.GoString(C.ezpp_artist(ez)),
+			//ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ez)),
+			Title: C.GoString(C.ezpp_title(ez)),
+			//	TitleUnicode:  C.GoString(C.ezpp_title_unicode(ez)),
+			Version:      C.GoString(C.ezpp_version(ez)),
+			Creator:      C.GoString(C.ezpp_creator(ez)),
+			NCircles:     C.ezpp_ncircles(ez),
+			NSliders:     C.ezpp_nsliders(ez),
+			NSpinners:    C.ezpp_nspinners(ez),
+			ODMS:         C.ezpp_odms(ez),
+			Mode:         C.ezpp_mode(ez),
+			Combo:        C.ezpp_combo(ez),
+			MaxCombo:     C.ezpp_max_combo(ez),
+			Mods:         C.ezpp_mods(ez),
+			ScoreVersion: C.ezpp_score_version(ez),
 		}
 	}
 	return nil
 }
 
-var needManiaSR bool = true
 var maniaSR float64
 var maniaMods int32
 var maniaHitObjects float64
@@ -165,12 +165,8 @@ func GetData() {
 	for {
 
 		if memory.DynamicAddresses.IsReady == true {
-			switch memory.GameplayData.GameMode {
+			switch memory.MenuData.GameMode {
 			case 0:
-				needManiaSR = true
-				maniaSR = 0.0
-				maniaMods = 0
-				maniaHitObjects = 0.0
 				var data PP
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
@@ -206,8 +202,17 @@ func GetData() {
 				}
 			case 3:
 
-				if needManiaSR == true {
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
+					memory.MenuData.Bm.Time.FullTime = 0   //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapAR = 0 //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapCS = 0 //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapOD = 0 //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapHP = 0 //Not implemented for mania yet
 
+					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+					maniaSR = 0.0
+					maniaMods = 0
+					maniaHitObjects = 0.0
 					for i := 0; i < len(db.OsuDB.BmInfo); i++ {
 						if tempBeatmapFile == db.OsuDB.BmInfo[i].Filename {
 							if strings.Contains(memory.MenuData.Mods.PpMods, "DT") {
@@ -227,13 +232,11 @@ func GetData() {
 									memory.MenuData.Bm.Metadata.Mapper = db.OsuDB.BmInfo[i].Creator
 									memory.MenuData.Bm.Metadata.Version = db.OsuDB.BmInfo[i].Difficulty
 									memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
-									needManiaSR = false
 									break
 								}
 							}
 							if maniaSR == 0.0 {
 								pp.Println("Could not find mania star rating in the database. PP output will be unavailable for this beatmap!")
-								needManiaSR = false
 							}
 							break
 						}

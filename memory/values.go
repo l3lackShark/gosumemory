@@ -3,6 +3,7 @@ package memory
 //InMenuValues inside osu!memory
 type InMenuValues struct {
 	OsuStatus uint32 `json:"state"`
+	GameMode  uint32 `json:"gameMode"`
 	Bm        bm     `json:"bm"`
 	Mods      modsM  `json:"mods"`
 	PP        ppM    `json:"pp"`
