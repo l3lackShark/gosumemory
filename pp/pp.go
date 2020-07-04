@@ -171,6 +171,7 @@ func GetData() {
 				var data PP
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+					tempMods = memory.MenuData.Mods.PpMods
 					//Get Strains only
 					readData(&data, ez, true)
 
@@ -180,10 +181,10 @@ func GetData() {
 					continue
 
 				}
-
+				readData(&data, ez, false)
 				switch memory.MenuData.OsuStatus {
 				case 2, 7:
-					readData(&data, ez, false)
+
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
