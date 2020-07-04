@@ -155,6 +155,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 var maniaSR float64
 var maniaMods int32
 var maniaHitObjects float64
+var tempMods string
 
 func GetData() {
 
@@ -168,7 +169,7 @@ func GetData() {
 			switch memory.MenuData.GameMode {
 			case 0:
 				var data PP
-				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					//Get Strains only
 					readData(&data, ez, true)
@@ -180,10 +181,9 @@ func GetData() {
 
 				}
 
-				readData(&data, ez, false)
-
 				switch memory.MenuData.OsuStatus {
 				case 2, 7:
+					readData(&data, ez, false)
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
@@ -202,14 +202,16 @@ func GetData() {
 				}
 			case 3:
 
-				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString { //On map change
-					memory.MenuData.Bm.Time.FullTime = 0   //Not implemented for mania yet
-					memory.MenuData.Bm.Stats.BeatmapAR = 0 //Not implemented for mania yet
-					memory.MenuData.Bm.Stats.BeatmapCS = 0 //Not implemented for mania yet
-					memory.MenuData.Bm.Stats.BeatmapOD = 0 //Not implemented for mania yet
-					memory.MenuData.Bm.Stats.BeatmapHP = 0 //Not implemented for mania yet
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
+					memory.MenuData.Bm.Time.FullTime = 0        //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapAR = 0      //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapCS = 0      //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapOD = 0      //Not implemented for mania yet
+					memory.MenuData.Bm.Stats.BeatmapHP = 0      //Not implemented for mania yet
+					memory.MenuData.PP.PpStrains = []float64{0} //Not implemented for mania yet
 
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+					tempMods = memory.MenuData.Mods.PpMods
 					maniaSR = 0.0
 					maniaMods = 0
 					maniaHitObjects = 0.0

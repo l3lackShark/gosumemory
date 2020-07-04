@@ -28,10 +28,12 @@ func main() {
 	go memory.Init()
 	err := db.InitDB()
 	if err != nil {
-		log.Println("osu database parse error!, your osu!.db file is either too old or corrupt!", err)
+		log.Println(err)
 		time.Sleep(5 * time.Second)
 		os.Exit(1)
 	}
+	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
+
 	go web.SetupStructure()
 	go web.HTTPServer()
 	go web.SetupRoutes()

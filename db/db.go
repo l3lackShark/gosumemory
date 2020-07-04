@@ -125,8 +125,10 @@ func InitDB() error {
 		panic(err)
 	}
 	OsuDB.BmInfo = make([]beatmapInfo, len(internalDB.BmInfo))
-
+	OsuDB.isAccountUnlocked = internalDB.isAccountUnlocked
+	OsuDB.buildVer = internalDB.buildVer
 	OsuDB.Nickname = internalDB.Nickname
+	OsuDB.songsFolderSize = internalDB.songsFolderSize
 	for i := 0; i < len(internalDB.BmInfo); i++ {
 		OsuDB.BmInfo[i].StarRatingMania = make([]starRating, 3)
 		OsuDB.BmInfo[i].Filename = internalDB.BmInfo[i].Filename
@@ -144,7 +146,6 @@ func InitDB() error {
 			}
 		}
 	}
-	pp.Println(OsuDB.BmInfo[0].StarRatingMania)
 	internalDB = osudb{}
 	pp.Println("[DB]: Done parsing osu!db", OsuDB)
 
