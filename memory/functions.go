@@ -152,7 +152,6 @@ func leaderSlotsData() error {
 	return nil
 }
 
-//readHitErrorArray Gets an array of ints representing UnstableRate. (a little innacurate, shows values with 2 hitobjects delay)
 func readHitErrorArray() ([]int32, error) {
 	base, err := proc.ReadUint32(uintptr(DynamicAddresses.PlayContainer38 + 0x38))
 	if err != nil {
