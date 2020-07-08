@@ -166,7 +166,7 @@ func readHitErrorArray() ([]int32, error) {
 		return nil, err
 	}
 	var buf32 []int32
-	for i := 0x4; i <= int(leng*0x4); i += 0x4 {
+	for i := 0x8; i <= int(leng*0x4)+0x4; i += 0x4 {
 		value, err := proc.ReadInt32(uintptr(hitErrorStruct + uint32(i)))
 		if err != nil {
 			return nil, err
@@ -226,7 +226,8 @@ func Init() {
 			xor1, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0xC)
 			xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
 
-			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48)
+			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48) //TODO: Should only read this once
+			hpOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x40)  //TODO: Should only read this once
 			MenuData.Mods.AppliedMods = int32(xor1 ^ xor2)
 			GameplayData.Combo.Current, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90))
 			GameplayData.Combo.Max, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x68))
@@ -237,6 +238,8 @@ func Init() {
 			GameplayData.Hits.H50, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x88))
 			GameplayData.Hits.H0, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x8E))
 			GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
+			GameplayData.Hp.Normal, err = proc.ReadFloat64(uintptr(hpOffset) + 0x1C)
+			GameplayData.Hp.Smooth, err = proc.ReadFloat64(uintptr(hpOffset) + 0x14)
 			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
 			MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
 			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()

@@ -5,6 +5,7 @@ go 1.14
 require (
 	ekyu.moe/leb128 v0.0.0-20190626180622-d3722dc409a8
 	github.com/Andoryuuta/kiwi v0.0.0-20200221200126-95015391dcc0 // indirect
+	github.com/akavel/rsrc v0.9.0 // indirect
 	github.com/bnch/osubinary v0.0.0-20171210205717-61f1752b036f // indirect
 	github.com/bnch/uleb128 v0.0.0-20160221084957-fac1fe18ad59 // indirect
 	github.com/elastic/go-windows v1.0.1

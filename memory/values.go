@@ -94,6 +94,7 @@ type hits struct {
 	H100          int16   `json:"100"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
+	ODMS          float32 `json:"odms"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }
 

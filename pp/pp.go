@@ -174,7 +174,7 @@ func GetData() {
 					tempMods = memory.MenuData.Mods.PpMods
 					//Get Strains only
 					readData(&data, ez, true)
-
+					memory.GameplayData.Hits.ODMS = float32(data.ODMS)
 					memory.MenuData.PP.PpStrains = data.Strain
 					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
 

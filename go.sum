@@ -2,6 +2,8 @@ ekyu.moe/leb128 v0.0.0-20190626180622-d3722dc409a8 h1:zWcNapXDoFEobgJquW8jOgnVCl
 ekyu.moe/leb128 v0.0.0-20190626180622-d3722dc409a8/go.mod h1:hphPjsG3qJdFKRttMyBWptntD0vAUE3NUenOGL0914A=
 github.com/Andoryuuta/kiwi v0.0.0-20200221200126-95015391dcc0 h1:Hec4l2lV/+UmZPN8SPfeCKgJKC7zB5JRZTANgGhpqpk=
 github.com/Andoryuuta/kiwi v0.0.0-20200221200126-95015391dcc0/go.mod h1:mnEJPG4BErdGQtRMLZnRJK4ts2ZDgtZ0lstYBpP55+M=
+github.com/akavel/rsrc v0.9.0 h1:HwUDC0+tMFWqN4D5G+o5siGD4oVsC3jn6zM8ocjc3nY=
+github.com/akavel/rsrc v0.9.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/bnch/osubinary v0.0.0-20171210205717-61f1752b036f h1:mSWAAGxop3/NH6B3/cSZIjSBr+WM+o2KXh6s6xxZHMk=
 github.com/bnch/osubinary v0.0.0-20171210205717-61f1752b036f/go.mod h1:S1Q6Fv1bJceENbIhna50o5U0FGI4yEd+wPvtkV8rwM0=
 github.com/bnch/uleb128 v0.0.0-20160221084957-fac1fe18ad59 h1:WmIm5PO5EyIEWq8ia2isZi+M8n4jb+jK8n62RUAQskA=
