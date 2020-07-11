@@ -25,6 +25,7 @@ func main() {
 	if runtime.GOOS != "windows" && memory.SongsFolderPath == "auto" {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
 	}
+	//updater.DoSelfUpdate()
 	go memory.Init()
 	err := db.InitDB()
 	if err != nil {

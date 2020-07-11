@@ -277,9 +277,9 @@ func Init() {
 			//GameplayData = GameplayValues{} //TODO: Refactor
 			hasLeaderboard = false
 			bmUpdateData()
-			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
-		}
 
+		}
+		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 	}
 
 }
@@ -298,20 +298,28 @@ func bmUpdateData() {
 		}
 
 		beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(bmAddr) + 0x8C)
+		if err != nil {
+			pp.Println(" dotOsuPath err, recovering..")
+			bmUpdateData()
+		}
 		bmString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
 		if strings.HasSuffix(bmString, ".osu") != true {
 			bmUpdateData()
 		}
 		DynamicAddresses.BeatmapAddr = bmAddr
-		time.Sleep(100 * time.Millisecond)
 		beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
 		bmFolderString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
 		MenuData.Bm.BeatmapID = bmid
 		MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
-		beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 		audioNameOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x64)
 		audioPath, err := proc.ReadNullTerminatedUTF16String(uintptr(audioNameOffset) + 0x8)
+		beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
+
 		bgPath, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
+		if err != nil {
+			pp.Println("BGPath err, recovering..")
+			bmUpdateData()
+		}
 		MenuData.Bm.Path = path{
 			AudioPath:            audioPath,
 			BGPath:               bgPath,

@@ -60,8 +60,7 @@ type PP struct {
 var strainArray []float64
 var tempBeatmapFile string
 
-func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
-	path := memory.MenuData.Bm.Path.FullDotOsu
+func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 
 	if strings.HasSuffix(path, ".osu") {
 		cpath := C.CString(path)
@@ -76,6 +75,26 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
+		*data = PP{
+			AR:         C.ezpp_ar(ez),
+			CS:         C.ezpp_cs(ez),
+			OD:         C.ezpp_od(ez),
+			HP:         C.ezpp_hp(ez),
+			Artist:     C.GoString(C.ezpp_artist(ez)),
+			Title:      C.GoString(C.ezpp_title(ez)),
+			Version:    C.GoString(C.ezpp_version(ez)),
+			Creator:    C.GoString(C.ezpp_creator(ez)),
+			StarRating: C.ezpp_stars(ez),
+		}
+		memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
+		memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
+		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
+		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
+		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
+		memory.MenuData.Bm.Metadata.Artist = data.Artist
+		memory.MenuData.Bm.Metadata.Title = data.Title
+		memory.MenuData.Bm.Metadata.Mapper = data.Creator
+		memory.MenuData.Bm.Metadata.Version = data.Version
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
@@ -112,9 +131,9 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 		}
 
 		*data = PP{
-			Total:      C.ezpp_pp(ez),
-			Strain:     strainArray,
-			StarRating: C.ezpp_stars(ez),
+			Total:  C.ezpp_pp(ez),
+			Strain: strainArray,
+
 			AimStars:   C.ezpp_aim_stars(ez),
 			SpeedStars: C.ezpp_speed_stars(ez),
 			AimPP:      C.ezpp_aim_pp(ez),
@@ -124,16 +143,11 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 			N100:       C.ezpp_n100(ez),
 			N50:        C.ezpp_n50(ez),
 			NMiss:      C.ezpp_nmiss(ez),
-			AR:         C.ezpp_ar(ez),
-			CS:         C.ezpp_cs(ez),
-			OD:         C.ezpp_od(ez),
-			HP:         C.ezpp_hp(ez),
-			Artist:     C.GoString(C.ezpp_artist(ez)),
+
 			//ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ez)),
-			Title: C.GoString(C.ezpp_title(ez)),
+
 			//	TitleUnicode:  C.GoString(C.ezpp_title_unicode(ez)),
-			Version:      C.GoString(C.ezpp_version(ez)),
-			Creator:      C.GoString(C.ezpp_creator(ez)),
+
 			NCircles:     C.ezpp_ncircles(ez),
 			NSliders:     C.ezpp_nsliders(ez),
 			NSpinners:    C.ezpp_nspinners(ez),
@@ -144,6 +158,8 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 			Mods:         C.ezpp_mods(ez),
 			ScoreVersion: C.ezpp_score_version(ez),
 		}
+		memory.MenuData.PP.PpStrains = data.Strain
+
 	}
 	return nil
 }
@@ -166,6 +182,7 @@ func GetData() {
 			case 0, 1:
 				var data PP
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
+					path := memory.MenuData.Bm.Path.FullDotOsu
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					tempMods = memory.MenuData.Mods.PpMods
 					mp3Time, err := calculateMP3Time()
@@ -173,23 +190,18 @@ func GetData() {
 						memory.MenuData.Bm.Time.Mp3Time = mp3Time
 					}
 					//Get Strains
-					readData(&data, ez, true)
-					memory.MenuData.PP.PpStrains = data.Strain
-					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
-					memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
-					memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
-					memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
-					memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-					memory.MenuData.Bm.Metadata.Artist = data.Artist
-					memory.MenuData.Bm.Metadata.Title = data.Title
-					memory.MenuData.Bm.Metadata.Mapper = data.Creator
-					memory.MenuData.Bm.Metadata.Version = data.Version
+					readData(&data, ez, true, path)
+					if data.Artist == "" {
+						readData(&data, ez, true, path)
+					}
+
 					//pp.Println(memory.MenuData.Bm.Metadata)
 				}
 
 				switch memory.MenuData.OsuStatus {
 				case 2, 7:
-					readData(&data, ez, false)
+					path := memory.MenuData.Bm.Path.FullDotOsu
+					readData(&data, ez, false, path)
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
