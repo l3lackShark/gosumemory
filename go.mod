@@ -11,10 +11,13 @@ require (
 	github.com/elastic/go-windows v1.0.1
 	github.com/flesnuk/osu-tools v0.0.0-20180416205641-8d470804115c
 	github.com/gorilla/websocket v1.4.2
+	github.com/hajimehoshi/go-mp3 v0.3.0 // indirect
+	github.com/hajimehoshi/oto v0.6.1
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/l3lackShark/kiwi v0.0.0-20200519164951-a82048cdc09f
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/spf13/cast v1.3.1
+	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4
 )

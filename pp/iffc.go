@@ -4,7 +4,6 @@ package pp
 
 import (
 	"errors"
-	"path/filepath"
 	"strings"
 	"time"
 	"unsafe"
@@ -61,8 +60,8 @@ type PPfc struct {
 	ScoreVersion C.int
 }
 
-func readFCData(data *PPfc, ezfc C.ezpp_t) error {
-	path := filepath.Join(memory.SongsFolderPath, memory.MenuData.Bm.Path.BeatmapFolderString, memory.MenuData.Bm.Path.BeatmapOsuFileString)
+func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
+	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
 		cpath := C.CString(path)
@@ -76,7 +75,8 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 		C.ezpp_set_base_cs(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 
-		C.ezpp_set_accuracy_percent(ezfc, C.float(memory.GameplayData.Accuracy))
+		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
+
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
 
 		//C.ezpp_set_score_version(ezfc)
@@ -121,17 +121,38 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 func GetFCData() {
 
 	for {
-		ezfc := C.ezpp_new()
-		C.ezpp_set_autocalc(ezfc, 1)
-		if memory.DynamicAddresses.IsReady == true && memory.MenuData.OsuStatus == 2 && memory.GameplayData.GameMode == 0 {
-			var data PPfc
-			readFCData(&data, ezfc)
-			if memory.GameplayData.Combo.Max > 0 {
-				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+		if memory.DynamicAddresses.IsReady == true {
+			ezfc := C.ezpp_new()
+			C.ezpp_set_autocalc(ezfc, 1)
+			switch memory.GameplayData.GameMode {
+			case 0, 1:
+				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
+					var data PPfc
+					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
+					if memory.GameplayData.Combo.Max > 0 {
+						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+					}
+				}
 			}
-		}
-		C.ezpp_free(ezfc)
 
+			if memory.MenuData.OsuStatus == 1 || memory.MenuData.OsuStatus == 4 || memory.MenuData.OsuStatus == 5 || memory.MenuData.OsuStatus == 13 {
+				var data PPfc
+				readFCData(&data, ezfc, 100.0)
+				memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 99.0)
+				memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 98.0)
+				memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 97.0)
+				memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 96.0)
+				memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 95.0)
+				memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Total))
+			}
+			C.ezpp_free(ezfc)
+
+		}
 		time.Sleep(250 * time.Millisecond)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -99,11 +100,11 @@ var internalDB osudb
 
 //InitDB initializes osu database and gets data within it
 func InitDB() error {
-	pp.Println("[DB]: Awaiting memory data...")
+	fmt.Println("[DB] Awaiting memory data...")
 	for memory.DynamicAddresses.IsReady != true {
 		time.Sleep(500 * time.Millisecond)
 	}
-	pp.Println("[DB]: Parsing osu!db...")
+	fmt.Println("[DB] Parsing osu!db...")
 	dbpath := strings.TrimSuffix(memory.SongsFolderPath, "\\Songs")
 	file, err := os.Open(filepath.Join(dbpath, "osu!.db"))
 	if err != nil {
@@ -149,7 +150,8 @@ func InitDB() error {
 	}
 	internalDB = osudb{}
 	debug.FreeOSMemory()
-	pp.Println("[DB]: Done parsing osu!db", OsuDB)
+	fmt.Println("[DB] Done parsing osu!db")
+	fmt.Println("Initialization complete, you can now visit http://localhost:24050 or add it as a browser source in OBS")
 
 	return nil
 }
@@ -238,16 +240,16 @@ func readBeatmapInfo(osuDB io.Reader) (beatmapInfo, error) {
 	data.audioName, err = readDBString(osuDB)
 	data.md5, err = readDBString(osuDB)
 	data.Filename, err = readDBString(osuDB)
-	err = binary.Read(osuDB, binary.LittleEndian, &data.rankedStatus)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.NumHitCircles)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.NumSliders)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.NumSpinners)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.dateTime)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.approachRate)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.circleSize)     
-	err = binary.Read(osuDB, binary.LittleEndian, &data.hpDrain)     
+	err = binary.Read(osuDB, binary.LittleEndian, &data.rankedStatus)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.NumHitCircles)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.NumSliders)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.NumSpinners)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.dateTime)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.approachRate)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.circleSize)
+	err = binary.Read(osuDB, binary.LittleEndian, &data.hpDrain)
 	err = binary.Read(osuDB, binary.LittleEndian, &data.overallDifficulty)
-	err = binary.Read(osuDB, binary.LittleEndian, &data.sliderVelocity)     
+	err = binary.Read(osuDB, binary.LittleEndian, &data.sliderVelocity)
 	var lengthList int32 // should move this into a separate functuion and use reflections to set values
 	err = binary.Read(osuDB, binary.LittleEndian, &lengthList)
 	if lengthList >= 1 {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"path/filepath"
 	"strings"
 	"time"
 	"unsafe"
@@ -14,12 +13,6 @@ import (
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
-
-//#cgo LDFLAGS: -lm
-//#cgo CPPFLAGS: -DOPPAI_STATIC_HEADER
-//#include <stdlib.h>
-//#include "oppai.c"
-// import "C"
 
 //#cgo LDFLAGS: -lm
 //#cgo CPPFLAGS: -DOPPAI_STATIC_HEADER
@@ -68,8 +61,9 @@ var strainArray []float64
 var tempBeatmapFile string
 
 func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
-	path := filepath.Join(memory.SongsFolderPath, memory.MenuData.Bm.Path.BeatmapFolderString, memory.MenuData.Bm.Path.BeatmapOsuFileString)
-	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
+	path := memory.MenuData.Bm.Path.FullDotOsu
+
+	if strings.HasSuffix(path, ".osu") {
 		cpath := C.CString(path)
 
 		defer C.free(unsafe.Pointer(cpath))
@@ -90,7 +84,8 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 			seek := 0
 			var window []float64
 			var total []float64
-			for seek < int(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1)) { //len-1
+			// for seek < int(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1)) { //len-1
+			for int32(seek) < memory.MenuData.Bm.Time.Mp3Time {
 				for obj := 0; obj <= int(C.ezpp_nobjects(ez)-1); obj++ {
 					if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString {
 						return nil //Interrupt calcualtion if user has changed the map.
@@ -108,6 +103,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool) error {
 				seek += 500
 			}
 			strainArray = total
+			memory.MenuData.Bm.Time.FirstObj = int32(C.ezpp_time_at(ez, 0))
 			memory.MenuData.Bm.Time.FullTime = int32(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1))
 		} else {
 			C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
@@ -167,44 +163,38 @@ func GetData() {
 
 		if memory.DynamicAddresses.IsReady == true {
 			switch memory.MenuData.GameMode {
-			case 0:
+			case 0, 1:
 				var data PP
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					tempMods = memory.MenuData.Mods.PpMods
-					//Get Strains only
+					mp3Time, err := calculateMP3Time()
+					if err == nil {
+						memory.MenuData.Bm.Time.Mp3Time = mp3Time
+					}
+					//Get Strains
 					readData(&data, ez, true)
-					memory.GameplayData.Hits.ODMS = float32(data.ODMS)
 					memory.MenuData.PP.PpStrains = data.Strain
 					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
-
-					continue
-
+					memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
+					memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
+					memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
+					memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
+					memory.MenuData.Bm.Metadata.Artist = data.Artist
+					memory.MenuData.Bm.Metadata.Title = data.Title
+					memory.MenuData.Bm.Metadata.Mapper = data.Creator
+					memory.MenuData.Bm.Metadata.Version = data.Version
+					//pp.Println(memory.MenuData.Bm.Metadata)
 				}
-				readData(&data, ez, false)
+
 				switch memory.MenuData.OsuStatus {
 				case 2, 7:
-
+					readData(&data, ez, false)
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
-				case 1:
-					readData(&data, ez, true)
-
-					memory.MenuData.PP.PpStrains = data.Strain
-				default:
-					if data.StarRating != 0 {
-						memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
-						memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
-						memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
-						memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-						memory.MenuData.Bm.Metadata.Artist = data.Artist
-						memory.MenuData.Bm.Metadata.Title = data.Title
-						memory.MenuData.Bm.Metadata.Mapper = data.Creator
-						memory.MenuData.Bm.Metadata.Version = data.Version
-					}
-
 				}
+
 			case 3:
 
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change

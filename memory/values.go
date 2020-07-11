@@ -2,11 +2,12 @@ package memory
 
 //InMenuValues inside osu!memory
 type InMenuValues struct {
-	OsuStatus uint32 `json:"state"`
-	GameMode  uint32 `json:"gameMode"`
-	Bm        bm     `json:"bm"`
-	Mods      modsM  `json:"mods"`
-	PP        ppM    `json:"pp"`
+	OsuStatus   uint32 `json:"state"`
+	GameMode    uint32 `json:"gameMode"`
+	ChatChecker int8   `json:"isChatEnabled"` //bool (1 byte)
+	Bm          bm     `json:"bm"`
+	Mods        modsM  `json:"mods"`
+	PP          ppM    `json:"pp"`
 }
 
 //GameplayValues inside osu!memory
@@ -33,8 +34,10 @@ type bm struct {
 }
 
 type tim struct {
+	FirstObj int32 `json:"firstObj"`
 	PlayTime int32 `json:"current"`
 	FullTime int32 `json:"full"`
+	Mp3Time  int32 `json:"mp3"`
 }
 
 // Metadata Map data
@@ -62,6 +65,9 @@ type path struct {
 	BeatmapFolderString  string `json:"folder"`
 	BeatmapOsuFileString string `json:"file"`
 	BGPath               string `json:"bg"`
+	AudioPath            string `json:"audio"`
+	FullMP3Path          string `json:"-"`
+	FullDotOsu           string `json:"-"`
 }
 
 type modsM struct {
@@ -94,7 +100,6 @@ type hits struct {
 	H100          int16   `json:"100"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
-	ODMS          float32 `json:"odms"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }
 

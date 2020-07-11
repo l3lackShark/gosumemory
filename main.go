@@ -39,6 +39,7 @@ func main() {
 	go web.SetupRoutes()
 	go pp.GetData()
 	go pp.GetFCData()
+	go pp.GetEditorData()
 	http.ListenAndServe("127.0.0.1:8085", nil) //This duplicate fileserver is for backwards compatibility only and will be removed in the future.
 
 }
