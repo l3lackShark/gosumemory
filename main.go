@@ -12,6 +12,7 @@ import (
 	"github.com/l3lackShark/gosumemory/db"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/pp"
+	"github.com/l3lackShark/gosumemory/updater"
 	"github.com/l3lackShark/gosumemory/web"
 )
 
@@ -25,7 +26,7 @@ func main() {
 	if runtime.GOOS != "windows" && memory.SongsFolderPath == "auto" {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
 	}
-	//updater.DoSelfUpdate()
+	updater.DoSelfUpdate()
 	go memory.Init()
 	err := db.InitDB()
 	if err != nil {
