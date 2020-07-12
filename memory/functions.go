@@ -314,12 +314,15 @@ func bmUpdateData() {
 		audioNameOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x64)
 		audioPath, err := proc.ReadNullTerminatedUTF16String(uintptr(audioNameOffset) + 0x8)
 		beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
-
-		bgPath, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
-		if err != nil {
-			pp.Println("BGPath err, recovering..")
-			bmUpdateData()
+		for i := 0; i < 10; i++ { //takes some time to get bg on slow HDDs
+			beatmapBGStringOffset, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
+			if beatmapBGStringOffset != 0 {
+				break
+			}
+			time.Sleep(50 * time.Millisecond)
 		}
+		bgPath, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapBGStringOffset) + 0x8)
+
 		MenuData.Bm.Path = path{
 			AudioPath:            audioPath,
 			BGPath:               bgPath,
