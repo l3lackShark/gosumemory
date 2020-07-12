@@ -19,10 +19,12 @@ import (
 func main() {
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
+	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	flag.Parse()
 	memory.UpdateTime = *updateTimeFlag
 	memory.SongsFolderPath = *songsFolderFlag
+	memory.UnderWine = *isRunningInWINE
 	if runtime.GOOS != "windows" && memory.SongsFolderPath == "auto" {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
 	}

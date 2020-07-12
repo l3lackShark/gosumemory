@@ -19,6 +19,9 @@ func modsResolver(xor uint32) string {
 
 //UpdateTime Intervall between value updates
 var UpdateTime int
+
+//UnderWine?
+var UnderWine bool
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
 var hasLeaderboard = false
@@ -35,14 +38,12 @@ func oncePerBeatmapChange() error {
 	}
 	GameplayData.Leaderboard.OurPlayer.Addr, err = proc.ReadUint32Ptr(uintptr(DynamicAddresses.LeaderBoardStruct+uint32(leaderStart)), 0x24, 0x10)
 	if err != nil {
-		pp.Println("Could not get current player! ", err)
 		return err
 	}
 
 	nameAddr, err := proc.ReadUint32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x8))
 	GameplayData.Leaderboard.OurPlayer.Name, err = proc.ReadNullTerminatedUTF16String(uintptr(nameAddr + 0x8))
 	if err != nil {
-		pp.Println("Could not get current player name! ", err)
 		return err
 	}
 
@@ -180,10 +181,10 @@ func readHitErrorArray() ([]int32, error) {
 
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
-	if runtime.GOOS == "windows" {
-		leaderStart = 0x8
-	} else {
+	if UnderWine == true || runtime.GOOS != "windows" {
 		leaderStart = 0xC
+	} else {
+		leaderStart = 0x8
 	}
 	//var tempBeatmapString string = ""
 	for {

@@ -115,12 +115,13 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 func GetFCData() {
 
 	for {
-		if memory.DynamicAddresses.IsReady == true {
 
+		if memory.DynamicAddresses.IsReady == true {
+			ezfc := C.ezpp_new()
+			C.ezpp_set_autocalc(ezfc, 1)
 			switch memory.GameplayData.GameMode {
 			case 0, 1:
-				ezfc := C.ezpp_new()
-				C.ezpp_set_autocalc(ezfc, 1)
+
 				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
 					var data PPfc
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
@@ -131,6 +132,8 @@ func GetFCData() {
 				switch memory.MenuData.OsuStatus {
 				case 1, 4, 5, 13, 2:
 					if memory.MenuData.OsuStatus == 2 && memory.MenuData.Bm.Time.PlayTime > 150 { //To catch up with the F2-->Enter
+						C.ezpp_free(ezfc)
+						time.Sleep(250 * time.Millisecond)
 						continue
 					}
 
@@ -152,6 +155,7 @@ func GetFCData() {
 			}
 
 		}
+
 		time.Sleep(250 * time.Millisecond)
 	}
 }
