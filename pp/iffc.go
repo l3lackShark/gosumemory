@@ -129,7 +129,11 @@ func GetFCData() {
 					}
 				}
 				switch memory.MenuData.OsuStatus {
-				case 1, 4, 5, 13:
+				case 1, 4, 5, 13, 2:
+					if memory.MenuData.OsuStatus == 2 && memory.MenuData.Bm.Time.PlayTime > 150 { //To catch up with the F2-->Enter
+						continue
+					}
+
 					var data PPfc
 					readFCData(&data, ezfc, 100.0)
 					memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
