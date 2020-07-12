@@ -22,6 +22,9 @@ gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can us
 # How do I submit a pp counter?
 Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and will be included in the next release.
 
+# Linux
+You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter, then plesae start the program with the `-wine=true` flag.
+
 # This project depends on:
 * [cast](https://github.com/spf13/cast)
 * [gorilla-websocket](https://github.com/gorilla/websocket)
