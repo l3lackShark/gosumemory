@@ -8,7 +8,7 @@ type NewPatterns struct {
 	PlayContainer uint64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
 	LeaderBoard   uint64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"` //+0x1
 	SongsFolder   uint64 `sig:"?? ?? 67 ?? 2F 00 28 00"`
-	ChatChecker   uint64 `sig:"0A D7 23 3C 00 00 01 01"` //-0x20 (value)
+	ChatChecker   uint64 `sig:"0A D7 23 3C 00 00 ?? 01"` //-0x20 (value)
 }
 
 //StaticAddresses (should be updated every client restart)
