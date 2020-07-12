@@ -31,6 +31,7 @@ func resolveSongsFolderWIN32(addr uint32) (string, error) {
 }
 
 func initBase() error {
+	debug.FreeOSMemory()
 	var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 	if procerr != nil {
 		return procerr
