@@ -264,7 +264,7 @@ func Init() {
 					hasLeaderboard = true
 				}
 			}
-			leaderPlayerCountResolver() //should probably run this on another thread
+			leaderPlayerCountResolver()
 			if hasLeaderboard == true {
 				err = leaderSlotsData()
 				if err != nil {
