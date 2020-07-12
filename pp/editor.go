@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"path/filepath"
 	"strings"
 	"time"
 	"unsafe"
@@ -109,7 +108,7 @@ func GetEditorData() {
 				memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
 				memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
 
-				md5, err := hashFileMD5(filepath.Join(memory.SongsFolderPath, memory.MenuData.Bm.Path.BeatmapFolderString, memory.MenuData.Bm.Path.BeatmapOsuFileString))
+				md5, err := hashFileMD5(memory.MenuData.Bm.Path.FullDotOsu)
 				if err != nil {
 					continue
 				}

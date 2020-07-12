@@ -16,12 +16,6 @@ import (
 //#cgo CPPFLAGS: -DOPPAI_STATIC_HEADER
 //#include <stdlib.h>
 //#include "oppai.c"
-// import "C"
-
-//#cgo LDFLAGS: -lm
-//#cgo CPPFLAGS: -DOPPAI_STATIC_HEADER
-//#include <stdlib.h>
-//#include "oppai.c"
 import "C"
 
 var ezfc C.ezpp_t
@@ -122,10 +116,11 @@ func GetFCData() {
 
 	for {
 		if memory.DynamicAddresses.IsReady == true {
-			ezfc := C.ezpp_new()
-			C.ezpp_set_autocalc(ezfc, 1)
+
 			switch memory.GameplayData.GameMode {
 			case 0, 1:
+				ezfc := C.ezpp_new()
+				C.ezpp_set_autocalc(ezfc, 1)
 				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
 					var data PPfc
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
@@ -133,24 +128,24 @@ func GetFCData() {
 						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
 					}
 				}
+				switch memory.MenuData.OsuStatus {
+				case 1, 4, 5, 13:
+					var data PPfc
+					readFCData(&data, ezfc, 100.0)
+					memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
+					readFCData(&data, ezfc, 99.0)
+					memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.Total))
+					readFCData(&data, ezfc, 98.0)
+					memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.Total))
+					readFCData(&data, ezfc, 97.0)
+					memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.Total))
+					readFCData(&data, ezfc, 96.0)
+					memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.Total))
+					readFCData(&data, ezfc, 95.0)
+					memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Total))
+				}
+				C.ezpp_free(ezfc)
 			}
-			switch memory.MenuData.OsuStatus {
-			case 1, 4, 5, 13:
-				var data PPfc
-				readFCData(&data, ezfc, 100.0)
-				memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
-				readFCData(&data, ezfc, 99.0)
-				memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.Total))
-				readFCData(&data, ezfc, 98.0)
-				memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.Total))
-				readFCData(&data, ezfc, 97.0)
-				memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.Total))
-				readFCData(&data, ezfc, 96.0)
-				memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.Total))
-				readFCData(&data, ezfc, 95.0)
-				memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Total))
-			}
-			C.ezpp_free(ezfc)
 
 		}
 		time.Sleep(250 * time.Millisecond)
