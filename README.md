@@ -24,7 +24,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 
 # Linux 
 You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter, then plesae start the program with the `-wine=true` flag.
-Please note that leaderboard data is currently unavailable on 32-Bit builds.
+Please note that we currently don't support 32-Bit builds. You would need a 64-Bit WINEPREFIX in order for it to work.
 
 # This project depends on:
 * [cast](https://github.com/spf13/cast)

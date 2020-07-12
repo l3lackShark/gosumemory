@@ -54,6 +54,7 @@ type stats struct {
 	BeatmapOD float32 `json:"OD"`
 	BeatmapHP float32 `json:"HP"`
 	BeatmapSR float32 `json:"SR"`
+	FullSR    float32 `json:"fullSR"`
 	MemoryAR  float32 `json:"memoryAR"`
 	MemoryCS  float32 `json:"memoryCS"`
 	MemoryOD  float32 `json:"memoryOD"`

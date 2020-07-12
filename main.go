@@ -16,6 +16,9 @@ import (
 )
 
 func main() {
+	if runtime.GOARCH != "amd64" {
+		log.Fatalln("32bit is not currently supported")
+	}
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
