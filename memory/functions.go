@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"errors"
 	"log"
 	"path/filepath"
 	"runtime"
@@ -276,14 +277,17 @@ func Init() {
 		default: //This data is available at all times
 			//GameplayData = GameplayValues{} //TODO: Refactor
 			hasLeaderboard = false
-			bmUpdateData()
+			err = bmUpdateData()
+			if err != nil {
+				pp.Println(err)
+			}
 
 		}
 		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 	}
 
 }
-func bmUpdateData() {
+func bmUpdateData() error {
 	bmAddr, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 	if err != nil {
 		log.Println("Dynamic beatmap addr error: ", err)
@@ -298,13 +302,13 @@ func bmUpdateData() {
 		}
 
 		beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(bmAddr) + 0x8C)
-		if err != nil {
-			pp.Println(" dotOsuPath err, recovering..")
-			bmUpdateData()
+		if err != nil || beatmapOsuFileStrOffset == 0 {
+			return errors.New("dotOsuPath err")
 		}
 		bmString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
 		if strings.HasSuffix(bmString, ".osu") != true {
-			bmUpdateData()
+			pp.Println("dotOsuFile err")
+			return err
 		}
 		DynamicAddresses.BeatmapAddr = bmAddr
 		beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
@@ -358,5 +362,5 @@ func bmUpdateData() {
 		}
 
 	}
-
+	return nil
 }
