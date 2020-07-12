@@ -134,8 +134,8 @@ func GetFCData() {
 					}
 				}
 			}
-
-			if memory.MenuData.OsuStatus == 1 || memory.MenuData.OsuStatus == 4 || memory.MenuData.OsuStatus == 5 || memory.MenuData.OsuStatus == 13 {
+			switch memory.MenuData.OsuStatus {
+			case 1, 4, 5, 13:
 				var data PPfc
 				readFCData(&data, ezfc, 100.0)
 				memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
