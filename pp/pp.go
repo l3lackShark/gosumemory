@@ -75,6 +75,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.MemoryHP))
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
+
 		*data = PP{
 			Artist:     C.GoString(C.ezpp_artist(ez)),
 			Title:      C.GoString(C.ezpp_title(ez)),
@@ -99,6 +100,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
 			C.ezpp_set_nmiss(ez, 0)
+			memory.MenuData.Bm.Stats.FullSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(C.ezpp_stars(ez))))
 			strainArray = nil
 			seek := 0
 			var window []float64
