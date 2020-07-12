@@ -12,9 +12,9 @@ Build custom pp counters with ease!
 
 # Real-World examples:
 
-[FlyingTuna](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
-[Alumetri](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)
-[Sotarks](https://youtu.be/cRlSIOYkZbM?t=26)
+[FlyingTuna](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)\
+[Alumetri](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)\
+[Sotarks](https://youtu.be/cRlSIOYkZbM?t=26)\
 [Mathi](https://www.youtube.com/watch?v=rtmKxbnCQtA)
 
 # Included counters:
