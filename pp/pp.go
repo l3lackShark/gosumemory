@@ -69,21 +69,21 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		if rc := C.ezpp(ez, cpath); rc < 0 {
 			return errors.New(C.GoString(C.errstr(rc)))
 		}
-		C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
-		C.ezpp_set_base_od(ez, C.float(memory.MenuData.Bm.Stats.BeatmapOD))
-		C.ezpp_set_base_cs(ez, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
-		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
+		C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.MemoryAR))
+		C.ezpp_set_base_od(ez, C.float(memory.MenuData.Bm.Stats.MemoryOD))
+		C.ezpp_set_base_cs(ez, C.float(memory.MenuData.Bm.Stats.MemoryCS))
+		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.MemoryHP))
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
 		*data = PP{
-			AR:         C.ezpp_ar(ez),
-			CS:         C.ezpp_cs(ez),
-			OD:         C.ezpp_od(ez),
-			HP:         C.ezpp_hp(ez),
 			Artist:     C.GoString(C.ezpp_artist(ez)),
 			Title:      C.GoString(C.ezpp_title(ez)),
 			Version:    C.GoString(C.ezpp_version(ez)),
 			Creator:    C.GoString(C.ezpp_creator(ez)),
+			AR:         C.ezpp_ar(ez),
+			CS:         C.ezpp_cs(ez),
+			OD:         C.ezpp_od(ez),
+			HP:         C.ezpp_hp(ez),
 			StarRating: C.ezpp_stars(ez),
 		}
 		memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
@@ -143,11 +143,8 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			N100:       C.ezpp_n100(ez),
 			N50:        C.ezpp_n50(ez),
 			NMiss:      C.ezpp_nmiss(ez),
-
 			//ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ez)),
-
 			//	TitleUnicode:  C.GoString(C.ezpp_title_unicode(ez)),
-
 			NCircles:     C.ezpp_ncircles(ez),
 			NSliders:     C.ezpp_nsliders(ez),
 			NSpinners:    C.ezpp_nspinners(ez),
