@@ -217,7 +217,7 @@ func Init() {
 
 		switch MenuData.OsuStatus {
 
-		case 2, 7:
+		case 2:
 			if MenuData.Bm.Time.PlayTime < 150 { //To catch up with the F2-->Enter
 				bmUpdateData()
 			}
@@ -274,6 +274,7 @@ func Init() {
 			if err != nil {
 				pp.Println(err)
 			}
+		case 7:
 		default: //This data is available at all times
 			//GameplayData = GameplayValues{} //TODO: Refactor
 			hasLeaderboard = false
