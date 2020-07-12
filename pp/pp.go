@@ -75,7 +75,6 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		C.ezpp_set_base_hp(ez, C.float(memory.MenuData.Bm.Stats.MemoryHP))
 		C.ezpp_set_accuracy_percent(ez, C.float(memory.GameplayData.Accuracy))
 		C.ezpp_set_mods(ez, C.int(memory.MenuData.Mods.AppliedMods))
-
 		*data = PP{
 			Artist:     C.GoString(C.ezpp_artist(ez)),
 			Title:      C.GoString(C.ezpp_title(ez)),

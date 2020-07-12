@@ -269,6 +269,11 @@ func Init() {
 			}
 
 			MenuData.Mods.PpMods = Mods(MenuData.Mods.AppliedMods).String()
+		case 1:
+			err = bmUpdateData()
+			if err != nil {
+				pp.Println(err)
+			}
 		default: //This data is available at all times
 			//GameplayData = GameplayValues{} //TODO: Refactor
 			hasLeaderboard = false
@@ -276,6 +281,7 @@ func Init() {
 			if err != nil {
 				pp.Println(err)
 			}
+			GameplayData = GameplayValues{}
 
 		}
 		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
