@@ -2,10 +2,12 @@ package memory
 
 //InMenuValues inside osu!memory
 type InMenuValues struct {
-	OsuStatus uint32 `json:"state"`
-	Bm        bm     `json:"bm"`
-	Mods      modsM  `json:"mods"`
-	PP        ppM    `json:"pp"`
+	OsuStatus   uint32 `json:"state"`
+	GameMode    uint32 `json:"gameMode"`
+	ChatChecker int8   `json:"isChatEnabled"` //bool (1 byte)
+	Bm          bm     `json:"bm"`
+	Mods        modsM  `json:"mods"`
+	PP          ppM    `json:"pp"`
 }
 
 //GameplayValues inside osu!memory
@@ -32,8 +34,10 @@ type bm struct {
 }
 
 type tim struct {
-	PlayTime uint32 `json:"current"`
-	//FullTime uint32 `json:"full"`
+	FirstObj int32 `json:"firstObj"`
+	PlayTime int32 `json:"current"`
+	FullTime int32 `json:"full"`
+	Mp3Time  int32 `json:"mp3"`
 }
 
 // Metadata Map data
@@ -49,6 +53,11 @@ type stats struct {
 	BeatmapCS float32 `json:"CS"`
 	BeatmapOD float32 `json:"OD"`
 	BeatmapHP float32 `json:"HP"`
+	BeatmapSR float32 `json:"SR"`
+	MemoryAR  float32 `json:"memoryAR"`
+	MemoryCS  float32 `json:"memoryCS"`
+	MemoryOD  float32 `json:"memoryOD"`
+	MemoryHP  float32 `json:"memoryHP"`
 }
 
 type path struct {
@@ -56,6 +65,9 @@ type path struct {
 	BeatmapFolderString  string `json:"folder"`
 	BeatmapOsuFileString string `json:"file"`
 	BGPath               string `json:"bg"`
+	AudioPath            string `json:"audio"`
+	FullMP3Path          string `json:"-"`
+	FullDotOsu           string `json:"-"`
 }
 
 type modsM struct {
@@ -64,12 +76,13 @@ type modsM struct {
 }
 
 type ppM struct {
-	PpSS int32 `json:"100"`
-	Pp99 int32 `json:"99"`
-	Pp98 int32 `json:"98"`
-	Pp97 int32 `json:"97"`
-	Pp96 int32 `json:"96"`
-	Pp95 int32 `json:"95"`
+	PpSS      int32     `json:"100"`
+	Pp99      int32     `json:"99"`
+	Pp98      int32     `json:"98"`
+	Pp97      int32     `json:"97"`
+	Pp96      int32     `json:"96"`
+	Pp95      int32     `json:"95"`
+	PpStrains []float64 `json:"strains"`
 }
 
 type combo struct {

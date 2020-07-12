@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ func resolveSongsFolderWIN32(addr uint32) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	result, err := proc.ReadNullTerminatedUTF16String(uintptr(a + 0x20))
 	if err != nil {
 		return "", err
@@ -40,13 +42,13 @@ func initBase() error {
 		pp.Println("There was an error in the attempt to find a process!.. ", newprocerr)
 		return newprocerr
 	}
-	pp.Println(newproc)
+	fmt.Println("[MEMORY] Got the process...")
 	osuStatusAddr, err := mem.Scan(newproc, "48 83 F8 04 73 1E")
 	if err != nil {
 		return err
 	}
 	osuStaticAddresses.Status = cast.ToUint32(osuStatusAddr)
-	fmt.Printf("OsuStatusAddr: 0x%x\n", osuStaticAddresses.Status)
+	fmt.Println("[MEMORY] Got osu!status addr...")
 	osuStatus, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 	if err != nil {
 		return err
@@ -62,18 +64,19 @@ func initBase() error {
 	}
 
 	var patterns NewPatterns
+	fmt.Println("[MEMORY] Resolving patterns...")
 	err = mem.ResolvePatterns(newproc, &patterns)
 	if err != nil {
 		return err
 	}
-	pp.Println(patterns)
-	osuStaticAddresses.BPM = cast.ToUint32(patterns.BPM)
+	fmt.Println("[MEMORY] Got all patterns...")
 	osuStaticAddresses.Base = cast.ToUint32(patterns.Base)
 	osuStaticAddresses.InMenuMods = cast.ToUint32(patterns.InMenuMods)
 	osuStaticAddresses.PlayTime = cast.ToUint32(patterns.PlayTime)
 	osuStaticAddresses.PlayContainer = cast.ToUint32(patterns.PlayContainer)
 	osuStaticAddresses.LeaderBoard = cast.ToUint32(patterns.LeaderBoard + 0x1)
 	osuStaticAddresses.SongsFolder = cast.ToUint32(patterns.SongsFolder)
+	osuStaticAddresses.ChatChecker = cast.ToUint32(patterns.ChatChecker - 0x20)
 	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
 		SongsFolderPath, err = resolveSongsFolderWIN32(osuStaticAddresses.SongsFolder)
 		if err != nil || strings.Contains(SongsFolderPath, `:\`) == false {
@@ -82,8 +85,10 @@ func initBase() error {
 			log.Fatalln(err)
 		}
 	}
-	pp.Printf("Songs Folder Path: %s\n", SongsFolderPath)
+	fmt.Printf("[MEMORY] Songs Folder Path: %s\n", SongsFolderPath)
 
 	DynamicAddresses.IsReady = true
+	debug.FreeOSMemory() //To not scare people with insane amount of memory usage.
+
 	return nil
 }

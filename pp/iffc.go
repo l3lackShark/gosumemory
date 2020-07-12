@@ -8,7 +8,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -28,41 +27,41 @@ import "C"
 var ezfc C.ezpp_t
 
 type PPfc struct {
-	Total         C.float
-	FC            C.float
-	StarRating    C.float
-	AimStars      C.float
-	SpeedStars    C.float
-	AimPP         C.float
-	SpeedPP       C.float
-	Accuracy      C.float
-	N300          C.int
-	N100          C.int
-	N50           C.int
-	NMiss         C.int
-	AR            C.float
-	CS            C.float
-	OD            C.float
-	HP            C.float
-	Artist        string
-	ArtistUnicode string
-	Title         string
-	TitleUnicode  string
-	Version       string
-	Creator       string
-	NCircles      C.int
-	NSliders      C.int
-	NSpinners     C.int
-	ODMS          C.float
-	Mode          C.int
-	Combo         C.int
-	MaxCombo      C.int
-	Mods          C.int
-	ScoreVersion  C.int
+	Total      C.float
+	FC         C.float
+	StarRating C.float
+	AimStars   C.float
+	SpeedStars C.float
+	AimPP      C.float
+	SpeedPP    C.float
+	Accuracy   C.float
+	N300       C.int
+	N100       C.int
+	N50        C.int
+	NMiss      C.int
+	AR         C.float
+	CS         C.float
+	OD         C.float
+	HP         C.float
+	Artist     string
+	//	ArtistUnicode string
+	Title string
+	//	TitleUnicode  string
+	Version      string
+	Creator      string
+	NCircles     C.int
+	NSliders     C.int
+	NSpinners    C.int
+	ODMS         C.float
+	Mode         C.int
+	Combo        C.int
+	MaxCombo     C.int
+	Mods         C.int
+	ScoreVersion C.int
 }
 
-func readFCData(data *PPfc, ezfc C.ezpp_t) error {
-	path := (memory.SongsFolderPath + "/" + memory.MenuData.Bm.Path.BeatmapFolderString + "/" + memory.MenuData.Bm.Path.BeatmapOsuFileString) //TODO: Automatic Songs folder finder
+func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
+	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
 		cpath := C.CString(path)
@@ -76,41 +75,42 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 		C.ezpp_set_base_cs(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 
-		C.ezpp_set_accuracy_percent(ezfc, C.float(memory.GameplayData.Accuracy))
+		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
+
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
 
 		//C.ezpp_set_score_version(ezfc)
 		*data = PPfc{
-			Total:         C.ezpp_pp(ezfc),
-			StarRating:    C.ezpp_stars(ezfc),
-			AimStars:      C.ezpp_aim_stars(ezfc),
-			SpeedStars:    C.ezpp_speed_stars(ezfc),
-			AimPP:         C.ezpp_aim_pp(ezfc),
-			SpeedPP:       C.ezpp_speed_pp(ezfc),
-			Accuracy:      C.ezpp_accuracy_percent(ezfc),
-			N300:          C.ezpp_n300(ezfc),
-			N100:          C.ezpp_n100(ezfc),
-			N50:           C.ezpp_n50(ezfc),
-			NMiss:         C.ezpp_nmiss(ezfc),
-			AR:            C.ezpp_ar(ezfc),
-			CS:            C.ezpp_cs(ezfc),
-			OD:            C.ezpp_od(ezfc),
-			HP:            C.ezpp_hp(ezfc),
-			Artist:        C.GoString(C.ezpp_artist(ezfc)),
-			ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ezfc)),
-			Title:         C.GoString(C.ezpp_title(ezfc)),
-			TitleUnicode:  C.GoString(C.ezpp_title_unicode(ezfc)),
-			Version:       C.GoString(C.ezpp_version(ezfc)),
-			Creator:       C.GoString(C.ezpp_creator(ezfc)),
-			NCircles:      C.ezpp_ncircles(ezfc),
-			NSliders:      C.ezpp_nsliders(ezfc),
-			NSpinners:     C.ezpp_nspinners(ezfc),
-			ODMS:          C.ezpp_odms(ezfc),
-			Mode:          C.ezpp_mode(ezfc),
-			Combo:         C.ezpp_combo(ezfc),
-			MaxCombo:      C.ezpp_max_combo(ezfc),
-			Mods:          C.ezpp_mods(ezfc),
-			ScoreVersion:  C.ezpp_score_version(ezfc),
+			Total:      C.ezpp_pp(ezfc),
+			StarRating: C.ezpp_stars(ezfc),
+			AimStars:   C.ezpp_aim_stars(ezfc),
+			SpeedStars: C.ezpp_speed_stars(ezfc),
+			AimPP:      C.ezpp_aim_pp(ezfc),
+			SpeedPP:    C.ezpp_speed_pp(ezfc),
+			Accuracy:   C.ezpp_accuracy_percent(ezfc),
+			N300:       C.ezpp_n300(ezfc),
+			N100:       C.ezpp_n100(ezfc),
+			N50:        C.ezpp_n50(ezfc),
+			NMiss:      C.ezpp_nmiss(ezfc),
+			AR:         C.ezpp_ar(ezfc),
+			CS:         C.ezpp_cs(ezfc),
+			OD:         C.ezpp_od(ezfc),
+			HP:         C.ezpp_hp(ezfc),
+			Artist:     C.GoString(C.ezpp_artist(ezfc)),
+			//	ArtistUnicode: C.GoString(C.ezpp_artist_unicode(ezfc)),
+			Title: C.GoString(C.ezpp_title(ezfc)),
+			//	TitleUnicode:  C.GoString(C.ezpp_title_unicode(ezfc)),
+			Version:      C.GoString(C.ezpp_version(ezfc)),
+			Creator:      C.GoString(C.ezpp_creator(ezfc)),
+			NCircles:     C.ezpp_ncircles(ezfc),
+			NSliders:     C.ezpp_nsliders(ezfc),
+			NSpinners:    C.ezpp_nspinners(ezfc),
+			ODMS:         C.ezpp_odms(ezfc),
+			Mode:         C.ezpp_mode(ezfc),
+			Combo:        C.ezpp_combo(ezfc),
+			MaxCombo:     C.ezpp_max_combo(ezfc),
+			Mods:         C.ezpp_mods(ezfc),
+			ScoreVersion: C.ezpp_score_version(ezfc),
 		}
 
 	}
@@ -121,20 +121,38 @@ func readFCData(data *PPfc, ezfc C.ezpp_t) error {
 func GetFCData() {
 
 	for {
-		ezfc := C.ezpp_new()
-		C.ezpp_set_autocalc(ezfc, 1)
-		if memory.DynamicAddresses.IsReady == true && memory.MenuData.OsuStatus == 2 {
-			var data PPfc
-			err := readFCData(&data, ezfc)
-			if err != nil {
-				pp.Println(err)
+		if memory.DynamicAddresses.IsReady == true {
+			ezfc := C.ezpp_new()
+			C.ezpp_set_autocalc(ezfc, 1)
+			switch memory.GameplayData.GameMode {
+			case 0, 1:
+				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
+					var data PPfc
+					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
+					if memory.GameplayData.Combo.Max > 0 {
+						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+					}
+				}
 			}
-			if memory.GameplayData.Combo.Max > 0 {
-				memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
-			}
-		}
-		C.ezpp_free(ezfc)
 
-		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
+			if memory.MenuData.OsuStatus == 1 || memory.MenuData.OsuStatus == 4 || memory.MenuData.OsuStatus == 5 || memory.MenuData.OsuStatus == 13 {
+				var data PPfc
+				readFCData(&data, ezfc, 100.0)
+				memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 99.0)
+				memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 98.0)
+				memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 97.0)
+				memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 96.0)
+				memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.Total))
+				readFCData(&data, ezfc, 95.0)
+				memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Total))
+			}
+			C.ezpp_free(ezfc)
+
+		}
+		time.Sleep(250 * time.Millisecond)
 	}
 }
