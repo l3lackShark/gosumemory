@@ -23,6 +23,14 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-
     - name: Build
-      run: go build -v .
+      run: go build -v -o build/gosumemory
+
+    # - name: Upload artifact
+    #   uses: actions/upload-artifact@v1.0.0
+    #   with:
+    #   # Artifact name
+    #     name: gosumemory
+    #   # Directory containing files to upload
+    #     path: ./build
+
