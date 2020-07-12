@@ -16,11 +16,14 @@ TBA
 
 
 # How does it work?
-gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address, please **use WebSocket** instead.
+gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address, please **use WebSocket instead**.
 
 
 # How do I submit a pp counter?
-Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and will be included in the next release.
+Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and included in the next release.
+
+# Linux
+You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter, then plesae start the program with the `-wine=true` flag.
 
 # This project depends on:
 * [cast](https://github.com/spf13/cast)
@@ -35,7 +38,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 
 # Special Thanks to:
 * [Piotrekol](https://github.com/Piotrekol/) and his [ProcessMemoryDataFinder](https://github.com/Piotrekol/ProcessMemoryDataFinder) for most of the memory signatures
-* [Francesco149](https://github.com/Francesco149) and his [oppai-ng](https://github.com/Francesco149/oppai-ng) for the pp counter that we use
+* [Francesco149](https://github.com/Francesco149) and his [oppai-ng](https://github.com/Francesco149/oppai-ng) for the pp calculator that we use
 * [tdeo](https://github.com/tadeokondrak) for the [Memory Signature Scanner](https://github.com/l3lackShark/gosumemory/tree/master/mem) package  
 * [omkelderman](https://github.com/omkelderman) for helping out with the [db](https://github.com/l3lackShark/gosumemory/tree/master/db) package
 * [jamuwu](https://github.com/jamuwu/osu-strain) and his [osu-strain](https://github.com/jamuwu/osu-strain) for difficulty strain logic
