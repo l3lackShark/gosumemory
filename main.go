@@ -18,6 +18,7 @@ import (
 
 func main() {
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
+	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	flag.Parse()
 	memory.UpdateTime = *updateTimeFlag
@@ -25,7 +26,10 @@ func main() {
 	if runtime.GOOS != "windows" && memory.SongsFolderPath == "auto" {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
 	}
-	updater.DoSelfUpdate()
+	if *shouldWeUpdate == true {
+		updater.DoSelfUpdate()
+	}
+
 	go memory.Init()
 	err := db.InitDB()
 	if err != nil {
