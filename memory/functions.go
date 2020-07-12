@@ -73,24 +73,15 @@ func leaderPlayerCountResolver() error {
 	return nil
 }
 
-var comboResult []int16
-var maxComboResult []int32
-var scoreResult []int32
-var h300Result []int16
-var h100Result []int16
-var h50Result []int16
-var h0Result []int16
-var nameResult []string
-
 func leaderSlotsData() error {
-	nameResult = nil
-	comboResult = nil
-	maxComboResult = nil
-	scoreResult = nil
-	h300Result = nil
-	h100Result = nil
-	h50Result = nil
-	h0Result = nil
+	var comboResult []int16
+	var maxComboResult []int32
+	var scoreResult []int32
+	var h300Result []int16
+	var h100Result []int16
+	var h50Result []int16
+	var h0Result []int16
+	var nameResult []string
 	if len(DynamicAddresses.LeaderSlotAddr) >= 1 {
 
 		for i := 0; i < len(DynamicAddresses.LeaderSlotAddr); i++ {
@@ -257,23 +248,26 @@ func Init() {
 			if err != nil {
 				//log.Println(err)
 			}
+			if runtime.GOARCH == "amd64" { //leaderboard data crashes on 32bit builds, need to figure this out
+				if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
 
-			if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
-				err := oncePerBeatmapChange()
-				if err != nil {
-					hasLeaderboard = false
-				} else {
-					hasLeaderboard = true
+					err := oncePerBeatmapChange()
+					if err != nil {
+						hasLeaderboard = false
+					} else {
+						hasLeaderboard = true
+					}
+				}
+				leaderPlayerCountResolver()
+				if hasLeaderboard == true {
+					err = leaderSlotsData()
+					if err != nil {
+						log.Println("Leaderboard data error: ", err)
+					}
+					GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
 				}
 			}
-			leaderPlayerCountResolver()
-			if hasLeaderboard == true {
-				err = leaderSlotsData()
-				if err != nil {
-					log.Println("Leaderboard data error: ", err)
-				}
-				GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
-			}
+
 			MenuData.Mods.PpMods = Mods(MenuData.Mods.AppliedMods).String()
 		default: //This data is available at all times
 			//GameplayData = GameplayValues{} //TODO: Refactor
