@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-	fmt.Println("gosumemory v0.x-alpha")
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	flag.Parse()
