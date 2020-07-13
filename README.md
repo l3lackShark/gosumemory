@@ -25,35 +25,68 @@ First, download the latest [Release](https://github.com/l3lackShark/gosumemory/r
 <details>
   <summary>Click ME</summary>
   
-* [**Classic**](https://github.com/l3lackShark/static/tree/master/Classic)
+### Classic
 
-![](https://cdn.discordapp.com/attachments/641255341245333514/731838930340544573/unknown.png)\
-Designer: [Dartandr](https://github.com/Dartandr)
+> Size: 550x300\
+<img  src="https://i.imgur.com/GTHccbl.jpg"  width="500">\
+By: [Dartandr][1]<br>
+  
 
-* [**MinimalLime**](https://github.com/l3lackShark/static/tree/master/MinimalLime) 
+### DarkAndWhite
 
-![](https://cdn.discordapp.com/attachments/641255341245333514/731840161612300358/unknown.png)\
-Designer: [cyperdark](https://github.com/cyperdark)
+> Size: 840x140\
+<img  src="https://i.imgur.com/mBN375B.jpg"  width="500">\
+By: [cyperdark][2]<br>
 
-* [**MaximalLime**](https://github.com/l3lackShark/static/tree/master/MaximalLime)
+  
 
-![](https://cdn.discordapp.com/attachments/641255341245333514/731841741715669002/unknown.png)\
-Designer: [cyperdark](https://github.com/cyperdark)
+### Kerli1 & Kerli2
 
-* [**TrafficLight**](https://github.com/l3lackShark/static/tree/master/TrafficLight)
+> Size (1)(2): 794x124 | 353x190\
+<img  src="https://i.imgur.com/n2w260o.jpg"  width="500">\
+By: [Dartandr][1]<br>
 
-![](https://cdn.discordapp.com/attachments/641255341245333514/731842011514011698/unknown.png)\
-Designer: [cyperdark](https://github.com/cyperdark)
+  
 
-* [**Luscent**](https://github.com/l3lackShark/static/tree/master/Luscent) - Open-Source Implementation of [Luscent's](https://gumroad.com/l/Luscent) overlay. No elements were stolen. This is a remake. Please consider buying his version!
+### Luscent
 
-![](https://media.discordapp.net/attachments/641255341245333514/731843129833160704/unknown.png)
-Initial Design by [Luscent](https://github.com/inix1257), Remake by [Dartandr](https://github.com/Dartandr)
+> Size: 1920x1080\
+Open-Source Implementation of [Luscent's][3] overlay. No elements were stolen. This is a remake. Please [consider buying](https://gumroad.com/l/Luscent) his version!
+<img  src="https://i.imgur.com/oxTPp21.jpg"  width="500">\
+Remake by: [Dartandr][1]
 
-* **Kerli package** [**Kerli1**](https://github.com/l3lackShark/static/tree/master/Kerli1) [**Kerli2**](https://github.com/l3lackShark/static/tree/master/Kerli2)
 
-![](https://cdn.discordapp.com/attachments/530940222771560452/732038445266108486/Kerli_hud.png)
-Designer: [Dartandr](https://github.com/Dartandr)
+  
+
+### MaximalLime
+
+> Size: 800x306\
+<img  src="https://i.imgur.com/aNE00h3.jpg"  width="500">\
+By: [cyperdark][2]<br>
+
+  
+
+### MinimalLime
+
+> Size: 640x130\
+<img  src="https://i.imgur.com/FkYX8E7.jpg"  width="500">\
+
+By: [cyperdark][2]<br>
+  
+
+### TrafficLight
+
+> Size: 458x380\
+<img  src="https://i.imgur.com/MGy5igb.jpg">\
+By: [cyperdark][2]<br>
+  
+
+[1]: https://github.com/Dartandr
+
+[2]: https://github.com/cyperdark
+
+[3]: https://github.com/inix1257
+
 </details>
 
 # How does it work?
