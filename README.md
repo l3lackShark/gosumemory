@@ -5,7 +5,7 @@ Yet another memory reader for osu! Supports both Linux and Windows. (**requires 
 
   
 
-Build custom pp counters with ease!
+Build custom pp counters with ease!\
 You can contact us here: https://discord.gg/8enr4qD
   
  
