@@ -20,6 +20,9 @@ func modsResolver(xor uint32) string {
 //UpdateTime Intervall between value updates
 var UpdateTime int
 
+//as of 7/13/2020 CuttingEdge has 0x4 offset of gameplay data in some areas
+var gameplayOffset uint32
+
 //UnderWine?
 var UnderWine bool
 var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -188,7 +191,6 @@ func Init() {
 				log.Println("It seems that we lost the process, retrying!")
 				time.Sleep(1 * time.Second)
 			}
-			DynamicAddresses.IsReady = false
 			err := initBase()
 			for err != nil {
 				err = initBase()
@@ -203,89 +205,85 @@ func Init() {
 				time.Sleep(1 * time.Second)
 
 			}
-		}
-
-		MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
-		if err != nil {
-			log.Println("Could not get osuStatus Value, retrying")
-			initBase()
-		}
-		MenuData.ChatChecker, err = proc.ReadInt8(uintptr(osuStaticAddresses.ChatChecker))
-		if err != nil {
-			pp.Println("Could not get chat status! T_T")
-		}
-
-		switch MenuData.OsuStatus {
-
-		case 2:
-			if MenuData.Bm.Time.PlayTime < 150 { //To catch up with the F2-->Enter
-				bmUpdateData()
-			}
-			DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
+		} else {
+			MenuData.OsuStatus, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
 			if err != nil {
-				//log.Println(err)
+				log.Println("Could not get osuStatus Value, retrying")
+				initBase()
 			}
-			xor1, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0xC)
-			xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
-
-			accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48) //TODO: Should only read this once
-			hpOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x40)  //TODO: Should only read this once
-			MenuData.Mods.AppliedMods = int32(xor1 ^ xor2)
-			GameplayData.Combo.Current, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90))
-			GameplayData.Combo.Max, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x68))
-			GameplayData.GameMode, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x64))
-			GameplayData.Score, err = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x74))
-			GameplayData.Hits.H100, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x84))
-			GameplayData.Hits.H300, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x86))
-			GameplayData.Hits.H50, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x88))
-			GameplayData.Hits.H0, err = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x8E))
-			GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
-			GameplayData.Hp.Normal, err = proc.ReadFloat64(uintptr(hpOffset) + 0x1C)
-			GameplayData.Hp.Smooth, err = proc.ReadFloat64(uintptr(hpOffset) + 0x14)
-			timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
-			MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
-			GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
+			MenuData.ChatChecker, err = proc.ReadInt8(uintptr(osuStaticAddresses.ChatChecker))
 			if err != nil {
-				//log.Println(err)
+				pp.Println("Could not get chat status! T_T")
 			}
-			if runtime.GOARCH == "amd64" { //leaderboard data crashes on 32bit builds, need to figure this out
-				if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
 
-					err := oncePerBeatmapChange()
+			switch MenuData.OsuStatus {
+
+			case 2:
+				if MenuData.Bm.Time.PlayTime < 150 { //To catch up with the F2-->Enter
+					err := bmUpdateData()
 					if err != nil {
-						hasLeaderboard = false
-					} else {
-						hasLeaderboard = true
+						pp.Println(err)
 					}
 				}
-				leaderPlayerCountResolver()
-				if hasLeaderboard == true {
-					err = leaderSlotsData()
-					if err != nil {
-						log.Println("Leaderboard data error: ", err)
-					}
-					GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
+				DynamicAddresses.PlayContainer38, err = proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x38) //TODO: Should only be read once per map change
+				if err != nil {
+					//log.Println(err)
 				}
-			}
+				xor1, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0xC)
+				xor2, err := proc.ReadUint32Ptr(uintptr(DynamicAddresses.PlayContainer38+0x1C), 0x8)
+				getGamplayData(gameplayOffset)
+				accOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x48) //TODO: Should only read this once
+				hpOffset, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayContainer-0x4), 0x0, 0x40)  //TODO: Should only read this once
+				MenuData.Mods.AppliedMods = int32(xor1 ^ xor2)
 
-			MenuData.Mods.PpMods = Mods(MenuData.Mods.AppliedMods).String()
-		case 1:
-			err = bmUpdateData()
-			if err != nil {
-				pp.Println(err)
-			}
-		case 7:
-		default: //This data is available at all times
-			//GameplayData = GameplayValues{} //TODO: Refactor
-			hasLeaderboard = false
-			err = bmUpdateData()
-			if err != nil {
-				pp.Println(err)
-			}
-			GameplayData = GameplayValues{}
+				GameplayData.Accuracy, err = proc.ReadFloat64(uintptr(accOffset + 0x14))
+				GameplayData.Hp.Normal, err = proc.ReadFloat64(uintptr(hpOffset) + 0x1C)
+				GameplayData.Hp.Smooth, err = proc.ReadFloat64(uintptr(hpOffset) + 0x14)
+				timeChain, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.PlayTime + 0x5))
+				MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
+				GameplayData.Hits.HitErrorArray, err = readHitErrorArray()
+				if err != nil {
+					//log.Println(err)
+				}
+				if runtime.GOARCH == "amd64" { //leaderboard data crashes on 32bit builds, need to figure this out
+					if MenuData.Bm.Time.PlayTime <= 15000 { //hardcoded for now as current pointer chain is unstable and tends to change within first 15 seconds
 
+						err := oncePerBeatmapChange()
+						if err != nil {
+							hasLeaderboard = false
+						} else {
+							hasLeaderboard = true
+						}
+					}
+					leaderPlayerCountResolver()
+					if hasLeaderboard == true {
+						err = leaderSlotsData()
+						if err != nil {
+							log.Println("Leaderboard data error: ", err)
+						}
+						GameplayData.Leaderboard.OurPlayer.Position, err = proc.ReadInt32(uintptr(GameplayData.Leaderboard.OurPlayer.Addr + 0x2C))
+					}
+				}
+
+				MenuData.Mods.PpMods = Mods(MenuData.Mods.AppliedMods).String()
+			case 1:
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
+			case 7:
+			default: //This data is available at all times
+				//GameplayData = GameplayValues{} //TODO: Refactor
+				hasLeaderboard = false
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
+				GameplayData = GameplayValues{}
+
+			}
+			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 		}
-		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 	}
 
 }
@@ -298,28 +296,23 @@ func bmUpdateData() error {
 	//if (strings.HasSuffix(bmstring, ".osu") && tempBeatmapString != bmstring) { //On map change
 	if bmAddr != 0x0 && bmAddr != DynamicAddresses.BeatmapAddr {
 
-		bmid, err := proc.ReadUint32(uintptr(bmAddr + 0xC4))
-		if err != nil {
-			//log.Println("Dynamic beatmap id error: ", err) //Gets triggered on F2
-		}
-
+		bmid, _ := proc.ReadUint32(uintptr(bmAddr + 0xC4))
 		beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(bmAddr) + 0x8C)
 		if err != nil || beatmapOsuFileStrOffset == 0 {
 			return errors.New("dotOsuPath err")
 		}
 		bmString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
 		if strings.HasSuffix(bmString, ".osu") != true {
-			pp.Println("dotOsuFile err")
-			return err
+			return errors.New("dotOsuFile err")
 		}
 		DynamicAddresses.BeatmapAddr = bmAddr
-		beatmapFolderStrOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
-		bmFolderString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
+		beatmapFolderStrOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
+		bmFolderString, _ := proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
 		MenuData.Bm.BeatmapID = bmid
-		MenuData.Bm.BeatmapSetID, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
-		audioNameOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x64)
-		audioPath, err := proc.ReadNullTerminatedUTF16String(uintptr(audioNameOffset) + 0x8)
-		beatmapBGStringOffset, err := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
+		MenuData.Bm.BeatmapSetID, _ = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr + 0xC8))
+		audioNameOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x64)
+		audioPath, _ := proc.ReadNullTerminatedUTF16String(uintptr(audioNameOffset) + 0x8)
+		beatmapBGStringOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 		for i := 0; i < 10; i++ { //takes some time to get bg on slow HDDs
 			beatmapBGStringOffset, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 			if beatmapBGStringOffset != 0 {
@@ -353,16 +346,26 @@ func bmUpdateData() error {
 	MenuData.Bm.Time.PlayTime, err = proc.ReadInt32(uintptr(timeChain))
 	menuMods, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.InMenuMods+0x9), 0x0)
 	if err != nil {
-		pp.Println(err)
-	} else {
-		if menuMods == 0 {
-			MenuData.Mods.PpMods = "NM"
-			MenuData.Mods.AppliedMods = int32(menuMods)
-		} else {
-			MenuData.Mods.AppliedMods = int32(menuMods)
-			MenuData.Mods.PpMods = Mods(menuMods).String()
-		}
-
+		return err
 	}
+	if menuMods == 0 {
+		MenuData.Mods.PpMods = "NM"
+		MenuData.Mods.AppliedMods = int32(menuMods)
+	} else {
+		MenuData.Mods.AppliedMods = int32(menuMods)
+		MenuData.Mods.PpMods = Mods(menuMods).String()
+	}
+
 	return nil
+}
+func getGamplayData(offset uint32) {
+	GameplayData.Combo.Current, _ = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x90 + offset))
+	GameplayData.Combo.Max, _ = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x68))
+	GameplayData.GameMode, _ = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x64))
+	GameplayData.Score, _ = proc.ReadInt32(uintptr(DynamicAddresses.PlayContainer38 + 0x74 + offset))
+	GameplayData.Hits.H100, _ = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x84 + offset))
+	GameplayData.Hits.H300, _ = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x86 + offset))
+	GameplayData.Hits.H50, _ = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x88 + offset))
+	GameplayData.Hits.H0, _ = proc.ReadInt16(uintptr(DynamicAddresses.PlayContainer38 + 0x8E + offset))
+
 }

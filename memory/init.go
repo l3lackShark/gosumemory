@@ -48,6 +48,14 @@ func initBase() error {
 	if err != nil {
 		return err
 	}
+	_, err = mem.Scan(newproc, "6F 00 73 00 75 00 21 00 63 00 75 00 74")
+	if err != nil {
+		fmt.Println("Stable/Beta detected! Adjusting Offsets...")
+		gameplayOffset = 0x0
+	} else {
+		fmt.Println("Cutting Edge detected! Adjusting Offsets...")
+		gameplayOffset = 0x4
+	}
 	osuStaticAddresses.Status = cast.ToUint32(osuStatusAddr)
 	fmt.Println("[MEMORY] Got osu!status addr...")
 	osuStatus, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Status-0x4), 0x0)
@@ -81,7 +89,7 @@ func initBase() error {
 	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
 		SongsFolderPath, err = resolveSongsFolderWIN32(osuStaticAddresses.SongsFolder)
 		if err != nil || strings.Contains(SongsFolderPath, `:\`) == false {
-			log.Println("Automatic Songs folder finder has failed. Please manually specify it. (see --help) GOT: ", SongsFolderPath)
+			log.Println("Automatic Songs folder finder has failed. Please try again or manually specify it. (see --help) GOT: ", SongsFolderPath, err)
 			time.Sleep(5 * time.Second)
 			log.Fatalln(err)
 		}
