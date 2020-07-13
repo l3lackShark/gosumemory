@@ -51,7 +51,7 @@ By: [Dartandr][1]<br>
 ### Luscent
 
 > Size: 1920x1080\
-Open-Source Implementation of [Luscent's][3] overlay. No elements were stolen. This is a remake. Please [consider buying](https://gumroad.com/l/Luscent) his version!
+Open-Source Implementation of [Luscent's][3] overlay. No elements were stolen. This is a remake. Please [consider buying](https://gumroad.com/l/Luscent) his version!\
 <img  src="https://i.imgur.com/oxTPp21.jpg"  width="500">\
 Remake by: [Dartandr][1]
 
