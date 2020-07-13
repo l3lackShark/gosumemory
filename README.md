@@ -1,14 +1,14 @@
 
 # gosumemory
 
-Yet another memory reader for osu! Supports both Linux and Windows. (**requires sudo on Linux** though, since only root can read /proc)
+Yet another memory reader for osu! Supports both Linux and Windows. (**requires sudo on Linux** though since only root can read /proc)
 
   
 
 Build custom pp counters with ease!
 
   
-  
+ 
 
 # Real-World examples:
 
@@ -16,6 +16,10 @@ Build custom pp counters with ease!
 [Alumetri](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)\
 [Sotarks](https://youtu.be/cRlSIOYkZbM?t=26)\
 [Mathi](https://www.youtube.com/watch?v=rtmKxbnCQtA)
+
+# Usage
+
+First, download the latest [Release](https://github.com/l3lackShark/gosumemory/releases/latest). Then, in the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server. To access one of them, simply specify its name in the URL bar of your browser (Ex: http://localhost:24050/Classic). If using built-in counters covers all of your needs, then you are done here. **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.** If you want to make your own, just create a new directory in the *static* folder.  
 
 # Included counters:
 <details>
@@ -45,12 +49,17 @@ Designer: [cyperdark](https://github.com/cyperdark)
 
 ![](https://media.discordapp.net/attachments/641255341245333514/731843129833160704/unknown.png)
 Initial Design by [Luscent](https://github.com/inix1257), Remake by [Dartandr](https://github.com/Dartandr)
+
+* **Kerli package** [**Kerli1**](https://github.com/l3lackShark/static/tree/master/Kerli1) [**Kerli2**](https://github.com/l3lackShark/static/tree/master/Kerli2)
+
+![](https://cdn.discordapp.com/attachments/530940222771560452/732038445266108486/Kerli_hud.png)
+Designer: [Dartandr](https://github.com/Dartandr)
 </details>
 
 # How does it work?
 
 gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address, please **use WebSocket instead**.
-
+ 
   
   
 
@@ -62,7 +71,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 
 # Linux
 
-You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter, then plesae start the program with the `-wine=true` flag.
+You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter, then please start the program with the `-wine=true` flag.
 Please note that we currently don't support 32-Bit builds. You would need a 64-Bit WINEPREFIX in order for it to work.
 
   
