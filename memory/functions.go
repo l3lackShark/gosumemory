@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"errors"
 	"log"
 	"path/filepath"
 	"runtime"
@@ -180,7 +179,7 @@ func Init() {
 	} else {
 		leaderStart = 0x8
 	}
-	//var tempBeatmapString string = ""
+
 	for {
 		var err error
 		proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
@@ -287,24 +286,24 @@ func Init() {
 	}
 
 }
+
+var tempBeatmapString string = ""
+
 func bmUpdateData() error {
 	bmAddr, err := proc.ReadUint32Ptr(uintptr(osuStaticAddresses.Base-0xC), 0x0)
 	if err != nil {
-		log.Println("Dynamic beatmap addr error: ", err)
+		return nil
 	}
-
-	//if (strings.HasSuffix(bmstring, ".osu") && tempBeatmapString != bmstring) { //On map change
-	if bmAddr != 0x0 && bmAddr != DynamicAddresses.BeatmapAddr {
-
+	beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(bmAddr) + 0x8C)
+	if err != nil || beatmapOsuFileStrOffset == 0 {
+		return nil
+	}
+	bmString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
+	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
+		//	if bmAddr != 0x0 && bmAddr != DynamicAddresses.BeatmapAddr {
+		tempBeatmapString = bmString
 		bmid, _ := proc.ReadUint32(uintptr(bmAddr + 0xC4))
-		beatmapOsuFileStrOffset, err := proc.ReadUint32(uintptr(bmAddr) + 0x8C)
-		if err != nil || beatmapOsuFileStrOffset == 0 {
-			return errors.New("dotOsuPath err")
-		}
-		bmString, err := proc.ReadNullTerminatedUTF16String(uintptr(beatmapOsuFileStrOffset) + 0x8)
-		if strings.HasSuffix(bmString, ".osu") != true {
-			return errors.New("dotOsuFile err")
-		}
+
 		DynamicAddresses.BeatmapAddr = bmAddr
 		beatmapFolderStrOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x74)
 		bmFolderString, _ := proc.ReadNullTerminatedUTF16String(uintptr(beatmapFolderStrOffset) + 0x8)
@@ -313,7 +312,7 @@ func bmUpdateData() error {
 		audioNameOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x64)
 		audioPath, _ := proc.ReadNullTerminatedUTF16String(uintptr(audioNameOffset) + 0x8)
 		beatmapBGStringOffset, _ := proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
-		for i := 0; i < 10; i++ { //takes some time to get bg on slow HDDs
+		for i := 0; i < 15; i++ { //takes some time to get bg on slow HDDs
 			beatmapBGStringOffset, err = proc.ReadUint32(uintptr(DynamicAddresses.BeatmapAddr) + 0x68)
 			if beatmapBGStringOffset != 0 {
 				break

@@ -38,13 +38,13 @@ func main() {
 		time.Sleep(5 * time.Second)
 		os.Exit(1)
 	}
-	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
-
 	go web.SetupStructure()
 	go web.HTTPServer()
 	go web.SetupRoutes()
 	go pp.GetData()
 	go pp.GetFCData()
+	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
+	fmt.Println("Initialization complete, you can now visit http://localhost:24050 or add it as a browser source in OBS")
 	pp.GetEditorData()
 
 }

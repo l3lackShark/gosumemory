@@ -151,7 +151,6 @@ func InitDB() error {
 	internalDB = osudb{}
 	debug.FreeOSMemory()
 	fmt.Println("[DB] Done parsing osu!db")
-	fmt.Println("Initialization complete, you can now visit http://localhost:24050 or add it as a browser source in OBS")
 
 	return nil
 }
