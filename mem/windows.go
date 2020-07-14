@@ -80,10 +80,10 @@ func (p process) ReadAt(b []byte, off int64) (n int, err error) {
 }
 
 func (p process) Maps() ([]Map, error) {
-	lastAddr := uint64(0)
+	lastAddr := int64(0)
 	var maps []Map
 	for {
-		reg, err := virtualQueryEx(p.h, int64(lastAddr))
+		reg, err := virtualQueryEx(p.h, lastAddr)
 		if err != nil {
 			if lastAddr == 0 {
 				return nil, err
@@ -106,10 +106,10 @@ type region struct {
 	type_             int32
 }
 
-func (r region) Start() uint64 {
-	return uint64(r.baseAddress)
+func (r region) Start() int64 {
+	return int64(r.baseAddress)
 }
 
-func (r region) Size() uint64 {
-	return uint64(r.regionSize)
+func (r region) Size() int64 {
+	return int64(r.regionSize)
 }

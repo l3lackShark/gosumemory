@@ -23,8 +23,8 @@ type (
 	}
 
 	Map interface {
-		Start() uint64
-		Size() uint64
+		Start() int64
+		Size() int64
 	}
 )
 

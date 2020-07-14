@@ -93,14 +93,14 @@ func (p process) Maps() ([]Map, error) {
 }
 
 type region struct {
-	start uint64
-	end   uint64
+	start int64
+	end   int64
 }
 
-func (r region) Start() uint64 {
+func (r region) Start() int64 {
 	return r.start
 }
 
-func (r region) Size() uint64 {
+func (r region) Size() int64 {
 	return r.end - r.start
 }
