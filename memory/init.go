@@ -97,7 +97,6 @@ func initBase() error {
 	fmt.Printf("[MEMORY] Songs Folder Path: %s\n", SongsFolderPath)
 
 	DynamicAddresses.IsReady = true
-	debug.FreeOSMemory() //To not scare people with insane amount of memory usage.
 
 	return nil
 }
