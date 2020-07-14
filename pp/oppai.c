@@ -741,9 +741,6 @@ void print_line(slice_t* line) {
 }
 
 int p_warn(char* e, slice_t* line) {
-  info(e);
-  info("\n");
-  print_line(line);
   return 0;
 }
 
