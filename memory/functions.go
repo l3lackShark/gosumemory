@@ -20,7 +20,7 @@ func modsResolver(xor uint32) string {
 var UpdateTime int
 
 //as of 7/13/2020 CuttingEdge has 0x4 offset of gameplay data in some areas
-var gameplayOffset uint32
+var gameplayOffset uint32 = 0x4
 
 //UnderWine?
 var UnderWine bool
