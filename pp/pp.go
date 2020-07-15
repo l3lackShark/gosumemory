@@ -200,7 +200,6 @@ func GetData() {
 				case 2, 7:
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					readData(&data, ez, false, path)
-					pp.Println(memory.GameplayData.Combo.Max)
 					if memory.GameplayData.Combo.Max > 1 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
