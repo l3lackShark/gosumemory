@@ -3,6 +3,7 @@ package mem
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"unicode/utf16"
 )
 
@@ -212,7 +213,35 @@ func ReadUint64Array(r io.ReaderAt, addr int64, offsets ...int64) ([]uint64, err
 	array, err := readUintArray(r, addr, 8, offsets...)
 	array64 := make([]uint64, len(array))
 	for i, v := range array {
-		array64[i] = uint64(v)
+		array64[i] = v
+	}
+	return array64, err
+}
+
+func ReadFloat32(r io.ReaderAt, addr int64, offsets ...int64) (float32, error) {
+	num, err := readUint(r, addr, 4, offsets...)
+	return math.Float32frombits(uint32(num)), err
+}
+
+func ReadFloat32Array(r io.ReaderAt, addr int64, offsets ...int64) ([]float32, error) {
+	array, err := readUintArray(r, addr, 4, offsets...)
+	array32 := make([]float32, len(array))
+	for i, v := range array {
+		array32[i] = math.Float32frombits(uint32(v))
+	}
+	return array32, err
+}
+
+func ReadFloat64(r io.ReaderAt, addr int64, offsets ...int64) (float64, error) {
+	num, err := readUint(r, addr, 8, offsets...)
+	return math.Float64frombits(num), err
+}
+
+func ReadFloat64Array(r io.ReaderAt, addr int64, offsets ...int64) ([]float64, error) {
+	array, err := readUintArray(r, addr, 8, offsets...)
+	array64 := make([]float64, len(array))
+	for i, v := range array {
+		array64[i] = math.Float64frombits(v)
 	}
 	return array64, err
 }
