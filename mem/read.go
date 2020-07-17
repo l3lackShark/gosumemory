@@ -2,9 +2,20 @@ package mem
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"math"
 	"unicode/utf16"
+)
+
+const (
+	MaxStringLength = 4096
+	MaxArrayLength  = 4096
+)
+
+var (
+	ErrStringTooLong = errors.New("read failed, string too long")
+	ErrArrayTooLong  = errors.New("read failed, array too long")
 )
 
 func readFullAt(r io.ReaderAt, buf []byte, off int64) (n int, err error) {
@@ -61,6 +72,10 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 		return nil, err
 	}
 
+	if length > MaxArrayLength {
+		return nil, ErrArrayTooLong
+	}
+
 	data, err := ReadInt32(r, int64(base), 4)
 	if err != nil {
 		return nil, err
@@ -89,6 +104,10 @@ func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
 	length, err := ReadInt32(r, int64(base), 4)
 	if err != nil {
 		return "", err
+	}
+
+	if length > MaxStringLength {
+		return "", ErrStringTooLong
 	}
 
 	buf := make([]byte, length*2)
