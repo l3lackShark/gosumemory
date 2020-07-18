@@ -16,6 +16,9 @@ const (
 var (
 	ErrStringTooLong = errors.New("read failed, string too long")
 	ErrArrayTooLong  = errors.New("read failed, array too long")
+
+	ErrInvalidStringLength = errors.New("read failed, string length < 0")
+	ErrInvalidArrayLength  = errors.New("read failed, array length < 0")
 )
 
 func readFullAt(r io.ReaderAt, buf []byte, off int64) (n int, err error) {
@@ -72,6 +75,10 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 		return nil, err
 	}
 
+	if length < 0 {
+		return nil, ErrInvalidArrayLength
+	}
+
 	if length > MaxArrayLength {
 		return nil, ErrArrayTooLong
 	}
@@ -104,6 +111,10 @@ func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
 	length, err := ReadInt32(r, int64(base), 4)
 	if err != nil {
 		return "", err
+	}
+
+	if length < 0 {
+		return "", ErrInvalidStringLength
 	}
 
 	if length > MaxStringLength {
