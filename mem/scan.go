@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"text/scanner"
+
+	"github.com/pkg/errors"
 )
 
 type pattern struct {
@@ -211,11 +213,14 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 		}
 		expr, err := parseMem(tag, varFunc)
 		if err != nil {
-			return err
+			return errors.Wrapf(err,
+				"failed to parse mem tag for %s.%s",
+				valt.Name(), fieldt.Name)
 		}
 		addr, err := expr.eval(evalFunc)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to read %s.%s",
+				valt.Name(), fieldt.Name)
 		}
 		anyerr = readPrimitive(r, field.Addr().Interface(), addr, 0)
 	}
