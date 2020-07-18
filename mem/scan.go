@@ -164,6 +164,16 @@ func ResolvePatterns(p Process, offsets interface{}) error {
 	return anyErr
 }
 
+type ReadError []error
+
+func (r ReadError) Error() string {
+	var strs []string
+	for _, err := range r {
+		strs = append(strs, err.Error())
+	}
+	return strings.Join(strs, ", ")
+}
+
 func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 	addrpval := reflect.ValueOf(addresses)
 	addrval := addrpval.Elem()
@@ -180,7 +190,7 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 		panic("p must be a pointer to a struct")
 	}
 
-	var anyerr error
+	var errs ReadError
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		fieldt := valt.Field(i)
@@ -222,10 +232,19 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 			return errors.Wrapf(err, "failed to read %s.%s",
 				valt.Name(), fieldt.Name)
 		}
-		anyerr = readPrimitive(r, field.Addr().Interface(), addr, 0)
+		if err := readPrimitive(r, field.Addr().Interface(),
+			addr, 0); err != nil {
+			err = errors.Wrapf(err, "failed to read %s.%s",
+				valt.Name(), fieldt.Name)
+			errs = append(errs, err)
+		}
 	}
 
-	return anyerr
+	if len(errs) != 0 {
+		return errs
+	}
+
+	return nil
 }
 
 func readPrimitive(r io.ReaderAt, p interface{},
