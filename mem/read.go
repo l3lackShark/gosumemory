@@ -82,7 +82,7 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 	}
 
 	buf := make([]byte, int(length)*size)
-	_, err = readFullAt(r, buf, int64(data))
+	_, err = readFullAt(r, buf, int64(data)+8)
 	if err != nil {
 		return nil, err
 	}
