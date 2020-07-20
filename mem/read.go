@@ -27,50 +27,85 @@ func readFullAt(r io.ReaderAt, buf []byte, off int64) (n int, err error) {
 		nn, err = r.ReadAt(buf[n:], off+int64(n))
 		n += nn
 	}
+
 	if n >= len(buf) {
 		err = nil
 	} else if n > 0 && err == io.EOF {
 		err = io.ErrUnexpectedEOF
 	}
+
 	return
 }
 
 func bytesToInt(buf []byte) uint64 {
 	var num uint64
+
 	for i := range buf {
 		num |= uint64(buf[i]) << (8 * i)
 	}
+
 	return num
 }
 
-func readUintRaw(r io.ReaderAt, addr int64, size int) (uint64, error) {
-	var buf [8]byte
-	if _, err := readFullAt(r, buf[:size], addr); err != nil {
-		return 0, err
+func removeLast(slice []int64) ([]int64, *int64) {
+	if len(slice) == 0 {
+		return nil, nil
 	}
-	return bytesToInt(buf[:size]), nil
+
+	return slice[:len(slice)-1], &slice[len(slice)-1]
 }
 
-func readUint(r io.ReaderAt, addr int64, size int, offsets ...int64) (uint64, error) {
-	last := len(offsets) - 1
-	for _, offset := range offsets[:last] {
+func followOffsets(r io.ReaderAt, addr int64, offsets ...int64) (int64, error) {
+	start, last := removeLast(offsets)
+
+	for _, offset := range start {
 		newaddr, err := readUintRaw(r, addr+offset, 4)
 		if err != nil {
 			return 0, err
 		}
 		addr = int64(newaddr)
 	}
-	return readUintRaw(r, addr+offsets[last], size)
+
+	if last != nil {
+		addr += *last
+	}
+
+	return addr, nil
+}
+
+func readUintRaw(r io.ReaderAt, addr int64, size int) (uint64, error) {
+	var buf [8]byte
+
+	if _, err := readFullAt(r, buf[:size], addr); err != nil {
+		return 0, err
+	}
+
+	return bytesToInt(buf[:size]), nil
+}
+
+func readUint(r io.ReaderAt, addr int64, size int, offsets ...int64) (uint64, error) {
+	addr, err := followOffsets(r, addr, offsets...)
+	if err != nil {
+		return 0, err
+	}
+
+	return readUintRaw(r, addr, size)
 }
 
 func readUintArray(r io.ReaderAt, addr int64, size int,
 	offsets ...int64) ([]uint64, error) {
-	base, err := ReadInt32(r, addr, offsets...)
+	start, last := removeLast(offsets)
+
+	base, err := followOffsets(r, addr, start...)
 	if err != nil {
 		return nil, err
 	}
 
-	length, err := ReadInt32(r, int64(base), 12)
+	if last != nil {
+		base += *last
+	}
+
+	length, err := ReadInt32(r, base, 12)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +118,7 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 		return nil, ErrArrayTooLong
 	}
 
-	data, err := ReadInt32(r, int64(base), 4)
+	data, err := ReadInt32(r, base, 4)
 	if err != nil {
 		return nil, err
 	}
@@ -103,12 +138,18 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 }
 
 func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
-	base, err := ReadInt32(r, addr, offsets...)
+	start, last := removeLast(offsets)
+
+	base, err := followOffsets(r, addr, start...)
 	if err != nil {
 		return "", err
 	}
 
-	length, err := ReadInt32(r, int64(base), 4)
+	if last != nil {
+		base += *last
+	}
+
+	length, err := ReadInt32(r, base, 4)
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +164,7 @@ func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
 
 	buf := make([]byte, length*2)
 
-	_, err = readFullAt(r, buf, int64(base)+8)
+	_, err = readFullAt(r, buf, base+8)
 	if err != nil {
 		return "", err
 	}
