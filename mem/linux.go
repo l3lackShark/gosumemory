@@ -11,6 +11,8 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+
+	"golang.org/x/sys/unix"
 )
 
 func FindProcess(re *regexp.Regexp) (Process, error) {
@@ -42,24 +44,17 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 
-		memPath := fmt.Sprintf("/proc/%d/mem", pid)
-		mem, err := os.Open(memPath)
-		if err != nil {
-			return process{}, err
-		}
-
-		return process{pid, mem}, nil
+		return process{pid}, nil
 	}
 	return process{}, ErrNoProcess
 }
 
 type process struct {
 	pid int
-	f   *os.File
 }
 
 func (p process) Close() error {
-	return p.f.Close()
+	return nil
 }
 
 func (p process) Pid() int {
@@ -67,7 +62,14 @@ func (p process) Pid() int {
 }
 
 func (p process) ReadAt(b []byte, off int64) (n int, err error) {
-	return p.f.ReadAt(b, off)
+	localIov := [1]unix.Iovec{
+		{Base: &b[0]},
+	}
+	localIov[0].SetLen(len(b))
+	remoteIov := [1]unix.RemoteIovec{
+		{Base: uintptr(off), Len: len(b)},
+	}
+	return unix.ProcessVMReadv(p.pid, localIov[:], remoteIov[:], 0)
 }
 
 func (p process) Maps() ([]Map, error) {
