@@ -316,3 +316,8 @@ func ReadFloat64Array(r io.ReaderAt, addr int64, offsets ...int64) ([]float64, e
 	}
 	return array64, err
 }
+
+func ReadPtr(r io.ReaderAt, addr int64, offsets ...int64) (int64, error) {
+	num, err := ReadInt32(r, addr, offsets...)
+	return int64(num), err
+}
