@@ -19,7 +19,7 @@ You can contact us here: https://discord.gg/8enr4qD
 
 # Usage
 
-First, download the latest [Release](https://github.com/l3lackShark/gosumemory/releases/latest). Then, in the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server. To access one of them, simply specify its name in the URL bar of your browser (Ex: http://localhost:24050/Classic). If using built-in counters covers all of your needs, then you are done here. **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.** If you want to make your own, just create a new directory in the *static* folder.  
+First, [download the latest Release](https://github.com/l3lackShark/gosumemory/releases/latest). In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server. To access one of them, simply specify its name in the URL bar of your browser (Ex: http://localhost:24050/Classic). If using built-in counters covers all of your needs, then you are done here. **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.** If you want to make your own, just create a new directory in the *static* folder.  
 
 # Included counters:
 <details>
@@ -112,7 +112,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 
 # Linux
 
-You have two options. Either run native, but with sudo privileges, or through WINE. If you choose the latter **AND using a 64-Bit Release**, then please start the program with the `-wine=true` flag to get proper leaderboard data.
+You have two options. Either run native, but with sudo privileges, or through WINE.
 Please note that 32-Bit builds are experimental and don't have leaderboard data. They could contain crashes. Report them if you encounter any.
 
   

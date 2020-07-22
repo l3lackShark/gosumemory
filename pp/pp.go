@@ -91,10 +91,6 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
 		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
 		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-		memory.MenuData.Bm.Metadata.Artist = data.Artist
-		memory.MenuData.Bm.Metadata.Title = data.Title
-		memory.MenuData.Bm.Metadata.Mapper = data.Creator
-		memory.MenuData.Bm.Metadata.Version = data.Version
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
@@ -200,9 +196,11 @@ func GetData() {
 				case 2, 7:
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					readData(&data, ez, false, path)
-					if memory.GameplayData.Combo.Max > 1 {
+					if memory.GameplayData.Combo.Max > 1 && float64(data.Total) > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
+				case 5:
+					memory.GameplayData.PP.Pp = 0
 				}
 
 			case 3:
@@ -234,10 +232,10 @@ func GetData() {
 									maniaSR = db.OsuDB.BmInfo[i].StarRatingMania[j].StarRating
 									maniaHitObjects = float64(db.OsuDB.BmInfo[i].NumHitCircles) + float64(db.OsuDB.BmInfo[i].NumSliders) + float64(db.OsuDB.BmInfo[i].NumSpinners)
 									memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(maniaSR)))
-									memory.MenuData.Bm.Metadata.Artist = db.OsuDB.BmInfo[i].Artist
-									memory.MenuData.Bm.Metadata.Title = db.OsuDB.BmInfo[i].Title
-									memory.MenuData.Bm.Metadata.Mapper = db.OsuDB.BmInfo[i].Creator
-									memory.MenuData.Bm.Metadata.Version = db.OsuDB.BmInfo[i].Difficulty
+									// memory.MenuData.Bm.Metadata.Artist = db.OsuDB.BmInfo[i].Artist
+									// memory.MenuData.Bm.Metadata.Title = db.OsuDB.BmInfo[i].Title
+									// memory.MenuData.Bm.Metadata.Mapper = db.OsuDB.BmInfo[i].Creator
+									// memory.MenuData.Bm.Metadata.Version = db.OsuDB.BmInfo[i].Difficulty //Now sets through memory.
 									memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
 									break
 								}
