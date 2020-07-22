@@ -121,7 +121,6 @@ Please note that 32-Bit builds are experimental and don't have leaderboard data.
 
 * [cast](https://github.com/spf13/cast)
 * [gorilla-websocket](https://github.com/gorilla/websocket)
-* [kiwi](https://github.com/l3lackShark/kiwi)
 * [open](https://github.com/skratchdot/open-golang)
 * [semver](https://github.com/blang/semver)
 * [selfupdate](https://github.com/rhysd/go-github-selfupdate)
