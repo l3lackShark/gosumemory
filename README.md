@@ -22,8 +22,7 @@ You can contact us here: https://discord.gg/8enr4qD
      
 1. [Download the latest Release](https://github.com/l3lackShark/gosumemory/releases/latest)
     * Unzip files anywhere
-
-> In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server
+    > In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server
 
 2. Run gosumemory & osu!
 3. Run obs.exe
