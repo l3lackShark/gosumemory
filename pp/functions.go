@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/tcolgate/mp3"
 )
@@ -43,6 +44,9 @@ func calculateMP3Time() (int32, error) {
 
 		if err := d.Decode(&f, &skipped); err != nil {
 			if err == io.EOF {
+				break
+			} else if err != nil {
+				pp.Println("ERROR CALCULATING MP3 time: ", err)
 				break
 			}
 		}

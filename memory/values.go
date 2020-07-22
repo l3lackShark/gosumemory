@@ -3,7 +3,8 @@ package memory
 //InMenuValues inside osu!memory
 type InMenuValues struct {
 	OsuStatus   uint32 `json:"state"`
-	GameMode    uint32 `json:"gameMode"`
+	SkinFolder  string `json:"skinFolder"`
+	GameMode    int32  `json:"gameMode"`
 	ChatChecker int8   `json:"isChatEnabled"` //bool (1 byte)
 	Bm          bm     `json:"bm"`
 	Mods        modsM  `json:"mods"`
@@ -12,25 +13,28 @@ type InMenuValues struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	GameMode    int32       `json:"gameMode"`
-	Score       int32       `json:"score"`
-	Accuracy    float64     `json:"accuracy"`
-	Combo       combo       `json:"combo"`
-	Hp          hp          `json:"hp"`
-	Hits        hits        `json:"hits"`
-	PP          ppG         `json:"pp"`
-	Leaderboard leaderboard `json:"leaderboard"`
+	GameMode int32   `json:"gameMode"`
+	Name     string  `json:"name"`
+	Score    int32   `json:"score"`
+	Accuracy float64 `json:"accuracy"`
+	Combo    combo   `json:"combo"`
+	Hp       hp      `json:"hp"`
+	Hits     hits    `json:"hits"`
+	PP       ppG     `json:"pp"`
+	//Leaderboard leaderboard `json:"leaderboard"`
 }
 
 type bm struct {
 	Time           tim      `json:"time"`
-	BeatmapID      uint32   `json:"id"`
-	BeatmapSetID   uint32   `json:"set"`
+	BeatmapID      int32    `json:"id"`
+	BeatmapSetID   int32    `json:"set"`
+	BeatmapMD5     string   `json:"md5"`
+	RandkedStatus  int32    `json:"rankedStatus"` //unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
 	Metadata       Metadata `json:"metadata"`
 	Stats          stats    `json:"stats"`
 	Path           path     `json:"path"`
-	HitObjectStats string   `json:"bmStats"`
-	BeatmapString  string   `json:"bmInfo"`
+	HitObjectStats string   `json:"-"`
+	BeatmapString  string   `json:"-"`
 }
 
 type tim struct {
@@ -98,7 +102,9 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
+	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
+	HKatu         int16   `json:"katu"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
