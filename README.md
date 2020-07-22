@@ -12,11 +12,13 @@ You can contact us here: https://discord.gg/8enr4qD
 
 # Real-World examples:
 
+Created by [cyperdark](https://osu.ppy.sh/users/9893708):\
 [![FlyingTuna](https://img.shields.io/badge/FlyingTuna---?style=for-the-badge&color=527FD5)](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
 [![Alumetri](https://img.shields.io/badge/Alumetri---?style=for-the-badge&color=FF94B6)](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)
 [![Sotarks](https://img.shields.io/badge/Sotarks---?style=for-the-badge&color=C63F55)](https://youtu.be/cRlSIOYkZbM?t=26)
 [![Mrekk](https://img.shields.io/badge/Mrekk---?style=for-the-badge&color=72a0d4)](https://www.youtube.com/watch?v=3mjBT7rxXX0)
 [![Mathi](https://img.shields.io/badge/Mathi---?style=for-the-badge&color=4981CE)](https://www.youtube.com/watch?v=rtmKxbnCQtA)
+[![RyuK](https://img.shields.io/badge/RyuK---?style=for-the-badge&color=f72f4d)](https://mega.nz/file/UVE20CoD#GKnybF8gK5WcY0rs1YZCTbNYb8drQceCNZgPvr4Iqug)
 
 # Usage
      
