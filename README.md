@@ -12,14 +12,26 @@ You can contact us here: https://discord.gg/8enr4qD
 
 # Real-World examples:
 
-[FlyingTuna](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)\
-[Alumetri](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)\
-[Sotarks](https://youtu.be/cRlSIOYkZbM?t=26)\
-[Mathi](https://www.youtube.com/watch?v=rtmKxbnCQtA)
+[![FlyingTuna](https://img.shields.io/badge/FlyingTuna---?style=for-the-badge&color=527FD5)](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
+[![Alumetri](https://img.shields.io/badge/Alumetri---?style=for-the-badge&color=FF94B6)](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)
+[![Sotarks](https://img.shields.io/badge/Sotarks---?style=for-the-badge&color=C63F55)](https://youtu.be/cRlSIOYkZbM?t=26)
+[![Mrekk](https://img.shields.io/badge/Mrekk---?style=for-the-badge&color=72a0d4)](https://www.youtube.com/watch?v=3mjBT7rxXX0)
+[![Mathi](https://img.shields.io/badge/Mathi---?style=for-the-badge&color=4981CE)](https://www.youtube.com/watch?v=rtmKxbnCQtA)
 
 # Usage
+     
+1. [Download the latest Release](https://github.com/l3lackShark/gosumemory/releases/latest)
+    * Unzip files anywhere
 
-First, [download the latest Release](https://github.com/l3lackShark/gosumemory/releases/latest). In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server. To access one of them, simply specify its name in the URL bar of your browser (Ex: http://localhost:24050/Classic). If using built-in counters covers all of your needs, then you are done here. **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.** If you want to make your own, just create a new directory in the *static* folder.  
+> In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server
+
+2. Run gosumemory & osu!
+3. Run obs.exe
+    * Open this link: http://localhost:24050 and choose counter which you liked.
+    * Add new browser with that link, and set size ([all sizes of each counter](https://github.com/l3lackShark/static))
+4. If using built-in counters covers all of your needs, then you are done here.
+> **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.**\
+> If you want to make your own, just create a new directory in the *static* folder.  
 
 # Included counters:
 <details>
@@ -78,7 +90,6 @@ By: [cyperdark][2]<br>
 
 > Size: 640x130\
 <img  src="https://cdn.discordapp.com/attachments/641255341245333514/731840161612300358/unknown.png"  width="500">\
-
 By: [cyperdark][2]<br>
   
 
