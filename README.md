@@ -1,24 +1,19 @@
-
 # gosumemory
 
 Yet another memory reader for osu! Supports both Linux and Windows. (**requires sudo on Linux** though since only root can read /proc)
 
-  
-
 Build custom pp counters with ease!\
 You can contact us here: https://discord.gg/8enr4qD
-  
- 
 
 # Real-World examples:
 
 Created by [cyperdark](https://osu.ppy.sh/users/9893708):\
-[![FlyingTuna](https://img.shields.io/badge/FlyingTuna---?style=for-the-badge&color=527FD5)](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
-[![Alumetri](https://img.shields.io/badge/Alumetri---?style=for-the-badge&color=FF94B6)](https://www.twitch.tv/alumetri/clip/WonderfulVenomousCougarGrammarKing)
-[![Sotarks](https://img.shields.io/badge/Sotarks---?style=for-the-badge&color=C63F55)](https://youtu.be/cRlSIOYkZbM?t=26)
-[![Mrekk](https://img.shields.io/badge/Mrekk---?style=for-the-badge&color=72a0d4)](https://www.youtube.com/watch?v=3mjBT7rxXX0)
-[![Mathi](https://img.shields.io/badge/Mathi---?style=for-the-badge&color=4981CE)](https://www.youtube.com/watch?v=rtmKxbnCQtA)
-[![RyuK](https://img.shields.io/badge/RyuK---?style=for-the-badge&color=f72f4d)](https://mega.nz/file/UVE20CoD#GKnybF8gK5WcY0rs1YZCTbNYb8drQceCNZgPvr4Iqug)
+[![FlyingTuna](https://img.shields.io/badge/FlyingTuna%20v1.5---?style=for-the-badge&color=527FD5)](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
+[![Alumetri](https://img.shields.io/badge/Alumetri%20v1.2---?style=for-the-badge&color=FF94B6)](https://mega.nz/file/QV1gTKoI#j1QRjDkrjnFvIhyb9JuGi3g_0XZCFzXEXz9PKWcxgmI)
+[![Sotarks](https://img.shields.io/badge/Sotarks%20v1.0---?style=for-the-badge&color=C63F55)](https://mega.nz/file/oAlmlQoY#8ABeJPGboMLgCiaY5vR21HX2Km--_jiwqRHOmUJvVmg)
+[![Mrekk](https://img.shields.io/badge/Mrekk%20v1.0---?style=for-the-badge&color=72a0d4)](https://mega.nz/file/UZsEUKDK#Ji3JAUr8_04Q7u0RG1BAJFGzZ2-CRhRZkEQqdXVrv60)
+[![Mathi](https://img.shields.io/badge/Mathi%20v1.5---?style=for-the-badge&color=4981CE)](https://mega.nz/file/5dsk1QJD#noUKykU5qJYv53I2DPZ7PY2CIQOftS1ufqzOh4rqOb8)
+[![RyuK](https://img.shields.io/badge/RyuK%20v1.0---?style=for-the-badge&color=f72f4d)](https://mega.nz/file/dY8k1YyZ#1Phdta1CzxXDotjtllUKsZunnCdliYlQ1VrZ_BNaNIs)
 
 # Usage
      
@@ -44,30 +39,23 @@ Created by [cyperdark](https://osu.ppy.sh/users/9893708):\
 <img  src="https://cdn.discordapp.com/attachments/641255341245333514/731838930340544573/unknown.png"  width="500">\
 By: [Dartandr][1]<br>
 
-
-
 ### OldClassic
 
 > Size: 550x300\
 <img  src="https://cdn.discordapp.com/attachments/530940222771560452/732545954468593664/unknown.png"  width="500">\
 By: [Dartandr][1]<br>
   
-
 ### DarkAndWhite
 
 > Size: 840x140\
 <img  src="https://i.imgur.com/mBN375B.jpg"  width="500">\
 By: [cyperdark][2]<br>
 
-  
-
 ### Kerli1 & Kerli2
 
 > Size (1)(2): 794x124 | 353x190\
 <img  src="https://i.imgur.com/n2w260o.jpg"  width="500">\
 By: [Dartandr][1]<br>
-
-  
 
 ### Luscent
 
@@ -76,30 +64,23 @@ Open-Source Implementation of [Luscent's][3] overlay. No elements were stolen. T
 <img  src="https://media.discordapp.net/attachments/641255341245333514/731843129833160704/unknown.png"  width="500">\
 Remake by: [Dartandr][1]
 
-
-  
-
 ### MaximalLime
 
 > Size: 800x306\
 <img  src="https://cdn.discordapp.com/attachments/641255341245333514/731841741715669002/unknown.png"  width="500">\
 By: [cyperdark][2]<br>
 
-  
-
 ### MinimalLime
 
 > Size: 640x130\
 <img  src="https://cdn.discordapp.com/attachments/641255341245333514/731840161612300358/unknown.png"  width="500">\
 By: [cyperdark][2]<br>
-  
 
 ### TrafficLight
 
 > Size: 458x380\
 <img  src="https://cdn.discordapp.com/attachments/641255341245333514/731842011514011698/unknown.png">\
 By: [cyperdark][2]<br>
-  
 
 [1]: https://github.com/Dartandr
 
@@ -112,22 +93,15 @@ By: [cyperdark][2]<br>
 # How does it work?
 
 gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address, please **use WebSocket instead**.
- 
-  
-  
 
 # How do I submit a pp counter?
 
 Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and included in the next release.
 
-  
-
 # Linux
 
 You have two options. Either run native, but with sudo privileges, or through WINE.
 Please note that 32-Bit builds are experimental and don't have leaderboard data. They could contain crashes. Report them if you encounter any.
-
-  
 
 # This project depends on:
 
@@ -139,8 +113,6 @@ Please note that 32-Bit builds are experimental and don't have leaderboard data.
 * [pretty-print](https://github.com/k0kubun/pp)
 * [mp3](https://github.com/tcolgate/mp3)
 * [go-windows](https://github.com/elastic/go-windows)
-
-  
 
 # Special Thanks to:
 
