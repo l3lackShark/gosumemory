@@ -1,13 +1,11 @@
 package memory
 
 type PreSongSelectAddresses struct {
-	Status      int64 `sig:"48 83 F8 04 73 1E"`
-	SongsFolder int64 `sig:"?? ?? 67 ?? 2F 00 28 00"`
+	Status int64 `sig:"48 83 F8 04 73 1E"`
 }
 
 type PreSongSelectData struct {
-	Status              uint32 `mem:"[Status - 0x4]"`
-	SongsFolderPathAddr uint32 `mem:"[[SongsFolder - 0x4] + 0x34] + 0x10"`
+	Status uint32 `mem:"[Status - 0x4]"`
 }
 
 type staticAddresses struct {

@@ -3,6 +3,7 @@
 package mem
 
 import (
+	"fmt"
 	"regexp"
 	"syscall"
 	"unsafe"
@@ -12,8 +13,9 @@ import (
 )
 
 var (
-	modkernel32        = xsyscall.NewLazySystemDLL("kernel32.dll")
-	procVirtualQueryEx = modkernel32.NewProc("VirtualQueryEx")
+	modkernel32                = xsyscall.NewLazySystemDLL("kernel32.dll")
+	procVirtualQueryEx         = modkernel32.NewProc("VirtualQueryEx")
+	queryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 )
 
 func virtualQueryEx(handle syscall.Handle, off int64) (region, error) {
@@ -37,6 +39,25 @@ func virtualQueryEx(handle syscall.Handle, off int64) (region, error) {
 	return reg, nil
 }
 
+func queryFullProcessImageName(hProcess syscall.Handle) (string, error) {
+	var buf [syscall.MAX_PATH]uint16
+	n := uint32(len(buf))
+	r1, _, e1 := queryFullProcessImageNameW.Call(
+		uintptr(hProcess),
+		uintptr(0),
+		uintptr(unsafe.Pointer(&buf[0])),
+		uintptr(unsafe.Pointer(&n)))
+	if r1 == 0 {
+		if e1 != nil {
+			return "", e1
+		} else {
+			return "", syscall.EINVAL
+		}
+	}
+	return syscall.UTF16ToString(buf[:n]), nil
+
+}
+
 func FindProcess(re *regexp.Regexp) (Process, error) {
 	pids, err := windows.EnumProcesses()
 	if err != nil {
@@ -55,15 +76,26 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 		if re.MatchString(name) {
-			return process{pid, handle}, nil
+
+			fullName, err := queryFullProcessImageName(handle)
+			if err != nil {
+				return nil, err
+			}
+
+			return process{pid, handle, fullName}, nil
 		}
 	}
 	return process{}, ErrNoProcess
 }
 
 type process struct {
-	pid uint32
-	h   syscall.Handle
+	pid  uint32
+	h    syscall.Handle
+	path string
+}
+
+func (p process) ExecutablePath() string {
+	return fmt.Sprintf("%v", p.path)
 }
 
 func (p process) Close() error {
