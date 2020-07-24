@@ -53,6 +53,10 @@ type process struct {
 	pid int
 }
 
+func (p process) ExecutablePath() string {
+	return fmt.Sprintf("%v", "Not supported on Linux!")
+}
+
 func (p process) Close() error {
 	return nil
 }
