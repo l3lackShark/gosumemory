@@ -13,14 +13,15 @@ type InMenuValues struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	GameMode int32   `json:"gameMode"`
-	Name     string  `json:"name"`
-	Score    int32   `json:"score"`
-	Accuracy float64 `json:"accuracy"`
-	Combo    combo   `json:"combo"`
-	Hp       hp      `json:"hp"`
-	Hits     hits    `json:"hits"`
-	PP       ppG     `json:"pp"`
+	GameMode int32       `json:"gameMode"`
+	Name     string      `json:"name"`
+	Score    int32       `json:"score"`
+	Accuracy float64     `json:"accuracy"`
+	Replay   ReplayArray `json:"replay"`
+	Combo    combo       `json:"combo"`
+	Hp       hp          `json:"hp"`
+	Hits     hits        `json:"hits"`
+	PP       ppG         `json:"pp"`
 	//Leaderboard leaderboard `json:"leaderboard"`
 }
 

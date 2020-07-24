@@ -76,6 +76,7 @@ type gameplayD struct {
 	ModsXor1       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
 	ModsXor2       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
 	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
+	ReplayDataBase uint32  `mem:"[PlayContainer + 0x38] + 0x34"`
 	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
 	MaxCombo       int32   `mem:"[PlayContainer + 0x38] + 0x68"`
 	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
