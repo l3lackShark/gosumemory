@@ -14,9 +14,9 @@ type staticAddresses struct {
 	MenuMods          int64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
 	PlayTime          int64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"`
 	PlayContainerBase int64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
-	//LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
-	ChatChecker int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
-	SkinData    int64 `sig:"75 21 8B 1D"`
+	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
+	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
+	SkinData          int64 `sig:"75 21 8B 1D"`
 }
 
 func (staticAddresses) Beatmap() string {
@@ -27,9 +27,9 @@ func (staticAddresses) PlayContainer() string {
 	return "[[PlayContainerBase - 0x4]]"
 }
 
-// func (staticAddresses) Leaderboard() string {
-// 	return "[[[[[[LeaderboardBase] + 0x4] + 0x74] + 0x24] + 0x4] + 0x4]"
-// }
+func (staticAddresses) Leaderboard() string {
+	return "[[[LeaderboardBase+0x1] + 0x4] + 0x74] + 0x24"
+}
 
 type menuD struct {
 	PreSongSelectData
@@ -89,4 +89,5 @@ type gameplayD struct {
 	PlayerHPSmooth float64 `mem:"[PlayContainer + 0x40] + 0x14"`
 	PlayerHP       float64 `mem:"[PlayContainer + 0x40] + 0x1C"`
 	Accuracy       float64 `mem:"[PlayContainer + 0x48] + 0xC"`
+	LeaderBoard    uint32  `mem:"Leaderboard"`
 }

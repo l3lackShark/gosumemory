@@ -180,5 +180,60 @@ func getGamplayData() {
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
 	}
+	getLeaderboard()
+
+}
+
+func getLeaderboard() {
+	var board leaderboard
+	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
+	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
+	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
+	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
+	board.Slots = make([]leaderPlayer, amOfSlots)
+	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
+		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
+		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
+	}
+	GameplayData.Leaderboard = board
+}
+
+func readLeaderPlayerStruct(base int64) leaderPlayer {
+	nameOffset, _ := mem.ReadUint32(process, base+0x8, 0)
+	name, _ := mem.ReadString(process, int64(nameOffset), 0)
+	score, _ := mem.ReadInt32(process, base+0x30, 0)
+	combo, _ := mem.ReadInt16(process, base+0x20, 0, 0x94)
+	maxCombo, _ := mem.ReadInt32(process, base+0x20, 0, 0x68)
+	modsXor1, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0x8)
+	modsXor2, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0xC)
+	var mods string
+	if modsXor1^modsXor2 != 0 {
+		mods = modsResolver(modsXor1 ^ modsXor2)
+	} else {
+		mods = "NM"
+	}
+	h300, _ := mem.ReadInt16(process, base+0x20, 0, 0x8A)
+	h100, _ := mem.ReadInt16(process, base+0x20, 0, 0x88)
+	h50, _ := mem.ReadInt16(process, base+0x20, 0, 0x8C)
+	h0, _ := mem.ReadInt16(process, base+0x20, 0, 0x92)
+	team, _ := mem.ReadInt32(process, base+0x40, 0)
+	position, _ := mem.ReadInt32(process, base+0x2C, 0)
+	isPassing, _ := mem.ReadInt8(process, base+0x4B, 0)
+	player := leaderPlayer{
+		name,
+		score,
+		combo,
+		maxCombo,
+		mods,
+		h300,
+		h100,
+		h50,
+		h0,
+		team,
+		position,
+		isPassing,
+	}
+	return player
 
 }
