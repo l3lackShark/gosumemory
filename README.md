@@ -23,7 +23,7 @@ You can contact us here: https://discord.gg/8enr4qD
 2. Run gosumemory & osu!
 3. Run obs.exe
     * Open this link: http://localhost:24050 and choose counter which you liked.
-    * Add new browser with that link, and set size ([all sizes of each counter](https://github.com/l3lackShark/static))
+    * Add a browser source in OBS (Width and Height could be found in the **Included counters** spoiler)
 4. If using built-in counters covers all of your needs, then you are done here.
 > **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.**\
 > If you want to make your own, just create a new directory in the *static* folder.  
