@@ -186,6 +186,12 @@ func getGamplayData() {
 
 func getLeaderboard() {
 	var board leaderboard
+	if gameplayData.LeaderBoard == 0 {
+		board.DoesLeaderBoardExists = false
+		GameplayData.Leaderboard = board
+		return
+	}
+	board.DoesLeaderBoardExists = true
 	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
 	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
 	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)

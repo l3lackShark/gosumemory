@@ -140,8 +140,9 @@ type leaderPlayer struct {
 }
 
 type leaderboard struct {
-	OurPlayer leaderPlayer   `json:"ourplayer"`
-	Slots     []leaderPlayer `json:"slots"`
+	DoesLeaderBoardExists bool           `json:"hasLeaderboard"`
+	OurPlayer             leaderPlayer   `json:"ourplayer"`
+	Slots                 []leaderPlayer `json:"slots"`
 }
 
 //MenuData contains raw values taken from osu! memory
