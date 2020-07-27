@@ -22,7 +22,7 @@ You can contact us here: https://discord.gg/8enr4qD
 
 2. Run gosumemory & osu!
 3. Run obs.exe
-    * Open this link: http://localhost:24050 and choose counter which you liked.
+    * Visit this link in your browser: http://localhost:24050 and choose the counter that you like.
     * Add a browser source in OBS (Width and Height could be found in the **Included counters** spoiler)
 4. If using built-in counters covers all of your needs, then you are done here.
 > **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.**\
