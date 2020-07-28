@@ -21,7 +21,6 @@ You can contact us here: https://discord.gg/8enr4qD
     > In the root folder of the program, you can find the **static** directory. It contains all of the available counters. Those are getting streamed via HTTP-File server
 
 2. Run gosumemory & osu!
-3. Run obs
     * Visit this link in your browser: http://localhost:24050 and choose the counter that you like.
     * Add a browser source in OBS (Width and Height could be found in the **Included counters** spoiler)
 4. If using built-in counters covers all of your needs, then you are done here.
