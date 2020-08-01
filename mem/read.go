@@ -94,15 +94,9 @@ func readUint(r io.ReaderAt, addr int64, size int, offsets ...int64) (uint64, er
 
 func readUintArray(r io.ReaderAt, addr int64, size int,
 	offsets ...int64) ([]uint64, error) {
-	start, last := removeLast(offsets)
-
-	base, err := followOffsets(r, addr, start...)
+	base, err := followOffsets(r, addr, offsets...)
 	if err != nil {
 		return nil, err
-	}
-
-	if last != nil {
-		base += *last
 	}
 
 	length, err := ReadInt32(r, base, 12)
@@ -138,15 +132,9 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 }
 
 func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
-	start, last := removeLast(offsets)
-
-	base, err := followOffsets(r, addr, start...)
+	base, err := followOffsets(r, addr, offsets...)
 	if err != nil {
 		return "", err
-	}
-
-	if last != nil {
-		base += *last
 	}
 
 	length, err := ReadInt32(r, base, 4)
