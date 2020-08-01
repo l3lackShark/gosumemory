@@ -194,8 +194,12 @@ func getLeaderboard() {
 	board.DoesLeaderBoardExists = true
 	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
 	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
 	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
 	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
+	if amOfSlots < 1 || amOfSlots > 64 {
+		return
+	}
 	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
 	board.Slots = make([]leaderPlayer, amOfSlots)
 	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
@@ -206,8 +210,7 @@ func getLeaderboard() {
 }
 
 func readLeaderPlayerStruct(base int64) leaderPlayer {
-	nameOffset, _ := mem.ReadUint32(process, base+0x8, 0)
-	name, _ := mem.ReadString(process, int64(nameOffset), 0)
+	name, _ := mem.ReadString(process, base, 0x8, 0)
 	score, _ := mem.ReadInt32(process, base+0x30, 0)
 	combo, _ := mem.ReadInt16(process, base+0x20, 0, 0x94)
 	maxCombo, _ := mem.ReadInt32(process, base+0x20, 0, 0x68)
