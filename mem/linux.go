@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 
@@ -53,8 +54,13 @@ type process struct {
 	pid int
 }
 
-func (p process) ExecutablePath() string {
-	return fmt.Sprintf("%v", "Not supported on Linux!")
+func (p process) ExecutablePath() (string, error) {
+	path := fmt.Sprintf("/proc/%d/exe", p.pid)
+	path, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Abs(path)
 }
 
 func (p process) Close() error {

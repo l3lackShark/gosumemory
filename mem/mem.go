@@ -16,7 +16,7 @@ type (
 		io.ReaderAt
 		Pid() int
 		Maps() ([]Map, error)
-		ExecutablePath() string
+		ExecutablePath() (string, error)
 	}
 
 	Map interface {

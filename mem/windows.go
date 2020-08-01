@@ -3,7 +3,6 @@
 package mem
 
 import (
-	"fmt"
 	"regexp"
 	"syscall"
 	"unsafe"
@@ -76,13 +75,7 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 		if re.MatchString(name) {
-
-			fullName, err := queryFullProcessImageName(handle)
-			if err != nil {
-				return nil, err
-			}
-
-			return process{pid, handle, fullName}, nil
+			return process{pid, handle}, nil
 		}
 	}
 	return process{}, ErrNoProcess
@@ -91,11 +84,10 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 type process struct {
 	pid  uint32
 	h    syscall.Handle
-	path string
 }
 
-func (p process) ExecutablePath() string {
-	return fmt.Sprintf("%v", p.path)
+func (p process) ExecutablePath() (string, error) {
+	return queryFullProcessImageName(p.h)
 }
 
 func (p process) Close() error {
