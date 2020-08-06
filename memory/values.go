@@ -107,6 +107,7 @@ type hits struct {
 	HKatu         int16   `json:"katu"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
+	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }
 
