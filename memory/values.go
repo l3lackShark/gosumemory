@@ -103,7 +103,7 @@ type hp struct {
 type hits struct {
 	H300          int16   `json:"300"`
 	H200M          int16   `json:"200"`
-	H350         int16   `json:"350"`
+	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
 	H50           int16   `json:"50"`

@@ -83,7 +83,7 @@ type gameplayD struct {
 	Hit300         int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
 	Hit200M        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
 	Hit50          int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
-	Hit350        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
+	HitGeki        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
 	HitKatu        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
 	HitMiss        int16   `mem:"[PlayContainer + 0x38] + 0x92"`
 	Combo          int32   `mem:"[PlayContainer + 0x38] + 0x94"`
