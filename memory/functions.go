@@ -166,8 +166,9 @@ func getGamplayData() {
 	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
+	GameplayData.Hits.H200M = gameplayData.Hit200M
 	GameplayData.Hits.H300 = gameplayData.Hit300
-	GameplayData.Hits.HGeki = gameplayData.HitGeki
+	GameplayData.Hits.H350 = gameplayData.Hit350
 	GameplayData.Hits.H50 = gameplayData.Hit50
 	GameplayData.Hits.H0 = gameplayData.HitMiss
 	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor1)
