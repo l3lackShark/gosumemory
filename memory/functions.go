@@ -1,7 +1,9 @@
 package memory
 
 import (
+	"errors"
 	"log"
+	"math"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -180,6 +182,24 @@ func getGamplayData() {
 	MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
+		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
+}
+
+func calculateUR(HitErrorArray []int32) (float64, error) {
+	if len(HitErrorArray) < 1 {
+		return 0, errors.New("Empty hit error array")
+	}
+	var totalAll float32 //double
+	for _, hit := range HitErrorArray {
+		totalAll += float32(hit)
+	}
+	var average float32 = totalAll / float32(len(HitErrorArray))
+	var variance float64 = 0
+	for _, hit := range HitErrorArray {
+		variance += math.Pow(float64(hit)-float64(average), 2)
+	}
+	variance = variance / float64(len(HitErrorArray))
+	return math.Sqrt(variance) * 10, nil
 
 }

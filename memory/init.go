@@ -25,8 +25,11 @@ var alwaysData allTimesD
 
 func resolveSongsFolder() (string, error) {
 	var err error
-	osuExecutablePath := process.ExecutablePath()
-	if strings.Contains(osuExecutablePath, `:\`) == false {
+	osuExecutablePath, err := process.ExecutablePath()
+	if err != nil {
+		return "", err
+	}
+	if !strings.Contains(osuExecutablePath, `:\`) {
 		log.Println("Automatic executable path finder has failed. Please try again or manually specify it. (see --help) GOT: ", osuExecutablePath)
 		time.Sleep(5 * time.Second)
 		return "", errors.New("osu! executable was not found")
