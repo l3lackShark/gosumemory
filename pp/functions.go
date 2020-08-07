@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
@@ -29,6 +30,10 @@ func hashFileMD5(filePath string) (string, error) {
 
 }
 func calculateMP3Time() (int32, error) {
+	if !strings.HasSuffix(memory.MenuData.Bm.Path.FullMP3Path, ".mp3") {
+		pp.Println("Expected mp3, got something else. Aborting mp3 time calculation. GOT: ", memory.MenuData.Bm.Path.FullMP3Path)
+		return 0, nil
+	}
 	t := 0.0
 	r, err := os.Open(memory.MenuData.Bm.Path.FullMP3Path)
 	if err != nil {
@@ -43,10 +48,7 @@ func calculateMP3Time() (int32, error) {
 	for {
 
 		if err := d.Decode(&f, &skipped); err != nil {
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				pp.Println("ERROR CALCULATING MP3 time: ", err)
+			if err != nil {
 				break
 			}
 		}
