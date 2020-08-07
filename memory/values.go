@@ -91,8 +91,8 @@ type ppM struct {
 }
 
 type combo struct {
-	Current int32 `json:"current"`
-	Max     int32 `json:"max"`
+	Current int16 `json:"current"`
+	Max     int16 `json:"max"`
 }
 
 type hp struct {
@@ -102,7 +102,7 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
-	H200M          int16   `json:"200"`
+	H200M         int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
