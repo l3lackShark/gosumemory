@@ -185,7 +185,6 @@ func getGamplayData() {
 		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
 	getLeaderboard()
-
 }
 
 func getLeaderboard() {
