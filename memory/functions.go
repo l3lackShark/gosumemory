@@ -168,6 +168,7 @@ func getGamplayData() {
 	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
+	GameplayData.Hits.H200M = gameplayData.Hit200M
 	GameplayData.Hits.H300 = gameplayData.Hit300
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50

@@ -102,6 +102,7 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
+	H200M          int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
@@ -144,6 +145,7 @@ type slotPlayerS struct {
 	MaxCombo []int32  `json:"maxcombo"`
 	Mods     []int32  `json:"mods"`
 	H300     []int16  `json:"300"`
+	H200M    []int16  `json:"200"`
 	H100     []int16  `json:"100"`
 	H50      []int16  `json:"50"`
 	H0       []int16  `json:"0"`
