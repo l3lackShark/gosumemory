@@ -128,7 +128,7 @@ type leaderPlayer struct {
 	Name      string `json:"name"`
 	Score     int32  `json:"score"`
 	Combo     int16  `json:"combo"`
-	MaxCombo  int32  `json:"maxCombo"`
+	MaxCombo  int16  `json:"maxCombo"`
 	Mods      string `json:"mods"`
 	H300      int16  `json:"h300"`
 	H100      int16  `json:"h100"`

@@ -213,7 +213,7 @@ func readLeaderPlayerStruct(base int64) leaderPlayer {
 	name, _ := mem.ReadString(process, base, 0x8, 0)
 	score, _ := mem.ReadInt32(process, base+0x30, 0)
 	combo, _ := mem.ReadInt16(process, base+0x20, 0, 0x94)
-	maxCombo, _ := mem.ReadInt32(process, base+0x20, 0, 0x68)
+	maxCombo, _ := mem.ReadInt16(process, base+0x20, 0, 0x68)
 	modsXor1, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0x8)
 	modsXor2, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0xC)
 	var mods string
