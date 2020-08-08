@@ -1,8 +1,10 @@
 package memory
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"math"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -167,6 +169,7 @@ func getGamplayData() {
 	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
+	GameplayData.Hits.H200M = gameplayData.Hit200M
 	GameplayData.Hits.H300 = gameplayData.Hit300
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50
@@ -180,12 +183,104 @@ func getGamplayData() {
 	MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
+		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
+	getLeaderboard()
 	var err error
 	GameplayData.Replay, err = readOSREntries()
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func getLeaderboard() {
+	var board leaderboard
+	if gameplayData.LeaderBoard == 0 {
+		board.DoesLeaderBoardExists = false
+		GameplayData.Leaderboard = board
+		return
+	}
+	board.DoesLeaderBoardExists = true
+	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
+	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
+	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
+	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
+	if amOfSlots < 1 || amOfSlots > 64 {
+		return
+	}
+	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
+	board.Slots = make([]leaderPlayer, amOfSlots)
+	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
+		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
+		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
+	}
+	GameplayData.Leaderboard = board
+}
+
+func readLeaderPlayerStruct(base int64) leaderPlayer {
+	name, _ := mem.ReadString(process, base, 0x8, 0)
+	score, _ := mem.ReadInt32(process, base+0x30, 0)
+	combo, _ := mem.ReadInt16(process, base+0x20, 0, 0x94)
+	maxCombo, _ := mem.ReadInt16(process, base+0x20, 0, 0x68)
+	modsXor1, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0x8)
+	modsXor2, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0xC)
+	var mods string
+	if modsXor1^modsXor2 != 0 {
+		mods = modsResolver(modsXor1 ^ modsXor2)
+	} else {
+		mods = "NM"
+	}
+	h300, _ := mem.ReadInt16(process, base+0x20, 0, 0x8A)
+	h100, _ := mem.ReadInt16(process, base+0x20, 0, 0x88)
+	h50, _ := mem.ReadInt16(process, base+0x20, 0, 0x8C)
+	h0, _ := mem.ReadInt16(process, base+0x20, 0, 0x92)
+	team, _ := mem.ReadInt32(process, base+0x40, 0)
+	position, _ := mem.ReadInt32(process, base+0x2C, 0)
+	isPassing, _ := mem.ReadInt8(process, base+0x4B, 0)
+	player := leaderPlayer{
+		name,
+		score,
+		combo,
+		maxCombo,
+		mods,
+		h300,
+		h100,
+		h50,
+		h0,
+		team,
+		position,
+		isPassing,
+	}
+	return player
+}
+
+func calculateUR(HitErrorArray []int32) (float64, error) {
+	if len(HitErrorArray) < 1 {
+		return 0, errors.New("Empty hit error array")
+	}
+	var totalAll float32 //double
+	for _, hit := range HitErrorArray {
+		totalAll += float32(hit)
+	}
+	var average float32 = totalAll / float32(len(HitErrorArray))
+	var variance float64 = 0
+	for _, hit := range HitErrorArray {
+		variance += math.Pow(float64(hit)-float64(average), 2)
+	}
+	variance = variance / float64(len(HitErrorArray))
+	return math.Sqrt(variance) * 10, nil
+}
+
+type OSREntry struct {
+	X                float32
+	Y                float32
+	WasButtonPressed int8 //bool
+	Time             int32
+	MouseLeftClick1  int8 //bool
+	MouseRightClick1 int8 //bool
+	MouseLeftClick2  int8 //bool
+	MouseRightClick2 int8 //bool
 }
 
 func readOSREntries() (ReplayArray, error) {
@@ -232,15 +327,4 @@ func readOSREntries() (ReplayArray, error) {
 
 type ReplayArray struct {
 	Replays []OSREntry
-}
-
-type OSREntry struct {
-	X                float32
-	Y                float32
-	WasButtonPressed int8 //bool
-	Time             int32
-	MouseLeftClick1  int8 //bool
-	MouseRightClick1 int8 //bool
-	MouseLeftClick2  int8 //bool
-	MouseRightClick2 int8 //bool
 }

@@ -13,16 +13,16 @@ type InMenuValues struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	GameMode int32       `json:"gameMode"`
-	Name     string      `json:"name"`
-	Score    int32       `json:"score"`
-	Accuracy float64     `json:"accuracy"`
-	Replay   ReplayArray `json:"replay"`
-	Combo    combo       `json:"combo"`
-	Hp       hp          `json:"hp"`
-	Hits     hits        `json:"hits"`
-	PP       ppG         `json:"pp"`
-	//Leaderboard leaderboard `json:"leaderboard"`
+	GameMode    int32       `json:"gameMode"`
+	Name        string      `json:"name"`
+	Score       int32       `json:"score"`
+	Accuracy    float64     `json:"accuracy"`
+	Replay      ReplayArray `json:"replay"`
+	Combo       combo       `json:"combo"`
+	Hp          hp          `json:"hp"`
+	Hits        hits        `json:"hits"`
+	PP          ppG         `json:"pp"`
+	Leaderboard leaderboard `json:"leaderboard"`
 }
 
 type bm struct {
@@ -92,8 +92,8 @@ type ppM struct {
 }
 
 type combo struct {
-	Current int32 `json:"current"`
-	Max     int32 `json:"max"`
+	Current int16 `json:"current"`
+	Max     int16 `json:"max"`
 }
 
 type hp struct {
@@ -103,11 +103,13 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
+	H200M         int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
+	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }
 
@@ -125,28 +127,25 @@ type dynamicAddresses struct {
 	LeaderSlotAddr     []uint32
 }
 
-type leaderPlayerS struct {
-	Addr          uint32 `json:"-"`
-	Name          string `json:"name"`
-	Position      int32  `json:"position"`
-	AmountOfSlots int32  `json:"amofslots"`
+type leaderPlayer struct {
+	Name      string `json:"name"`
+	Score     int32  `json:"score"`
+	Combo     int16  `json:"combo"`
+	MaxCombo  int16  `json:"maxCombo"`
+	Mods      string `json:"mods"`
+	H300      int16  `json:"h300"`
+	H100      int16  `json:"h100"`
+	H50       int16  `json:"h50"`
+	H0        int16  `json:"h0"`
+	Team      int32  `json:"team"`
+	Position  int32  `json:"position"`
+	IsPassing int8   `json:"isPassing"` //bool
 }
 
 type leaderboard struct {
-	OurPlayer leaderPlayerS `json:"ourplayer"`
-	Slots     slotPlayerS   `json:"slots"`
-}
-
-type slotPlayerS struct {
-	Name     []string `json:"name"`
-	Score    []int32  `json:"score"`
-	Combo    []int16  `json:"combo"`
-	MaxCombo []int32  `json:"maxcombo"`
-	Mods     []int32  `json:"mods"`
-	H300     []int16  `json:"300"`
-	H100     []int16  `json:"100"`
-	H50      []int16  `json:"50"`
-	H0       []int16  `json:"0"`
+	DoesLeaderBoardExists bool           `json:"hasLeaderboard"`
+	OurPlayer             leaderPlayer   `json:"ourplayer"`
+	Slots                 []leaderPlayer `json:"slots"`
 }
 
 //MenuData contains raw values taken from osu! memory

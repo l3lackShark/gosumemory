@@ -14,9 +14,9 @@ type staticAddresses struct {
 	MenuMods          int64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
 	PlayTime          int64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"`
 	PlayContainerBase int64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
-	//LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
-	ChatChecker int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
-	SkinData    int64 `sig:"75 21 8B 1D"`
+	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
+	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
+	SkinData          int64 `sig:"75 21 8B 1D"`
 }
 
 func (staticAddresses) Beatmap() string {
@@ -27,9 +27,9 @@ func (staticAddresses) PlayContainer() string {
 	return "[[PlayContainerBase - 0x4]]"
 }
 
-// func (staticAddresses) Leaderboard() string {
-// 	return "[[[[[[LeaderboardBase] + 0x4] + 0x74] + 0x24] + 0x4] + 0x4]"
-// }
+func (staticAddresses) Leaderboard() string {
+	return "[[[LeaderboardBase+0x1] + 0x4] + 0x74] + 0x24"
+}
 
 type menuD struct {
 	PreSongSelectData
@@ -78,16 +78,18 @@ type gameplayD struct {
 	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
 	ReplayDataBase uint32  `mem:"[PlayContainer + 0x38] + 0x34"`
 	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
-	MaxCombo       int32   `mem:"[PlayContainer + 0x38] + 0x68"`
+	MaxCombo       int16   `mem:"[PlayContainer + 0x38] + 0x68"`
 	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
 	Hit100         int16   `mem:"[PlayContainer + 0x38] + 0x88"`
 	Hit300         int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
+	Hit200M        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
 	Hit50          int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
 	HitGeki        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
 	HitKatu        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
 	HitMiss        int16   `mem:"[PlayContainer + 0x38] + 0x92"`
-	Combo          int32   `mem:"[PlayContainer + 0x38] + 0x94"`
+	Combo          int16   `mem:"[PlayContainer + 0x38] + 0x94"`
 	PlayerHPSmooth float64 `mem:"[PlayContainer + 0x40] + 0x14"`
 	PlayerHP       float64 `mem:"[PlayContainer + 0x40] + 0x1C"`
 	Accuracy       float64 `mem:"[PlayContainer + 0x48] + 0xC"`
+	LeaderBoard    uint32  `mem:"Leaderboard"`
 }
