@@ -14,6 +14,8 @@ type InMenuValues struct {
 //GameplayValues inside osu!memory
 type GameplayValues struct {
 	GameMode    int32       `json:"gameMode"`
+	IsFailed    int8        `json:"isFailed"`
+	FailTime    int32       `json:"-"`
 	Name        string      `json:"name"`
 	Score       int32       `json:"score"`
 	Accuracy    float64     `json:"accuracy"`

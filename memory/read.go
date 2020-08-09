@@ -72,11 +72,13 @@ type allTimesD struct {
 }
 
 type gameplayD struct {
+	IsFailed       int8    `mem:"[Base - 0x33] + 0x1C"` //bool
 	PlayerName     string  `mem:"[[PlayContainer + 0x38] + 0x28]"`
 	ModsXor1       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
 	ModsXor2       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
 	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
 	ReplayDataBase uint32  `mem:"[PlayContainer + 0x38] + 0x34"`
+	ReplayFailTime int32   `mem:"[PlayContainer + 0x38] + 0x74"`
 	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
 	DateTime       int64   `mem:"[PlayContainer + 0x38] + 0x6C"`
 	MaxCombo       int16   `mem:"[PlayContainer + 0x38] + 0x68"`
