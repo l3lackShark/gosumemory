@@ -301,7 +301,7 @@ func readOSREntries() (ReplayArray, error) {
 	var osr ReplayArray
 
 	osr.Replays = make([]OSREntry, items)
-	for i, j := 0x8, 0; i < int(items); i, j = i+0x4, j+1 {
+	for i, j := 0x8, 0; j < int(items); i, j = i+0x4, j+1 {
 		ourArray, err := mem.ReadUint32(process, int64(arraysBase)+int64(i), 0)
 		if err != nil {
 			return ReplayArray{}, err
