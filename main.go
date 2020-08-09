@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	db.WriteOSR()
+	go db.WriteOSR()
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")

@@ -78,6 +78,7 @@ type gameplayD struct {
 	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
 	ReplayDataBase uint32  `mem:"[PlayContainer + 0x38] + 0x34"`
 	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
+	DateTime       int64   `mem:"[PlayContainer + 0x38] + 0x6C"`
 	MaxCombo       int16   `mem:"[PlayContainer + 0x38] + 0x68"`
 	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
 	Hit100         int16   `mem:"[PlayContainer + 0x38] + 0x88"`

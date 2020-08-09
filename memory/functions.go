@@ -272,23 +272,27 @@ func calculateUR(HitErrorArray []int32) (float64, error) {
 	return math.Sqrt(variance) * 10, nil
 }
 
+type ReplayArray struct {
+	BmHash  string
+	Replays []OSREntry
+}
+
 type OSREntry struct {
 	X                float32
 	Y                float32
-	WasButtonPressed int8 //bool
+	WasButtonPressed int8 //Bitwise combination of keys/mouse buttons (0 - no keypress)
 	Time             int32
-	MouseLeftClick1  int8 //bool
-	MouseRightClick1 int8 //bool
-	MouseLeftClick2  int8 //bool
-	MouseRightClick2 int8 //bool
 }
 
 func readOSREntries() (ReplayArray, error) {
 
-	items, err := mem.ReadInt32(process, int64(gameplayData.ReplayDataBase)+0xC, 0)
+	items, err := mem.ReadInt32(process, int64(gameplayData.ReplayDataBase)+0xC)
 	//	var osr ReplayArray
 	if err != nil {
 		return ReplayArray{}, err
+	}
+	if items > 100000 || items < 1 {
+		return ReplayArray{}, errors.New("invalid struct or empty array")
 	}
 	arraysBase, err := mem.ReadInt32(process, int64(gameplayData.ReplayDataBase)+0x4, 0)
 	if err != nil {
@@ -306,25 +310,14 @@ func readOSREntries() (ReplayArray, error) {
 		y, _ := mem.ReadFloat32(process, int64(ourArray)+0x8, 0)
 		wasButtonPressed, err := mem.ReadInt8(process, int64(ourArray)+0xC, 0)
 		time, _ := mem.ReadInt32(process, int64(ourArray)+0x10, 0)
-		mouseLeftClick1, _ := mem.ReadInt8(process, int64(ourArray)+0x14, 0)
-		mouseRightClick1, _ := mem.ReadInt8(process, int64(ourArray)+0x15, 0)
-		mouseLeftClick2, _ := mem.ReadInt8(process, int64(ourArray)+0x16, 0)
-		mouseRightClick2, _ := mem.ReadInt8(process, int64(ourArray)+0x17, 0)
 
 		osr.Replays[j] = OSREntry{
 			x,
 			y,
 			wasButtonPressed,
 			time,
-			mouseLeftClick1,
-			mouseRightClick1,
-			mouseLeftClick2,
-			mouseRightClick2,
 		}
 	}
+	osr.BmHash = MenuData.Bm.BeatmapMD5
 	return osr, nil
-}
-
-type ReplayArray struct {
-	Replays []OSREntry
 }

@@ -17,7 +17,7 @@ type GameplayValues struct {
 	Name        string      `json:"name"`
 	Score       int32       `json:"score"`
 	Accuracy    float64     `json:"accuracy"`
-	Replay      ReplayArray `json:"replay"`
+	Replay      ReplayArray `json:"-"`
 	Combo       combo       `json:"combo"`
 	Hp          hp          `json:"hp"`
 	Hits        hits        `json:"hits"`

@@ -73,6 +73,7 @@ func HTTPServer() {
 		fmt.Println(err)
 		time.Sleep(5 * time.Second)
 		log.Fatalln(err)
+
 	}
 }
 func handler(w http.ResponseWriter, r *http.Request) {

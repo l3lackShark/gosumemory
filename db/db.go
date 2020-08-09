@@ -113,6 +113,7 @@ func InitDB() error {
 	}
 	osuDB := bufio.NewReader(file)
 	defer file.Close()
+	
 	binary.Read(osuDB, binary.LittleEndian, &internalDB.buildVer)
 	binary.Read(osuDB, binary.LittleEndian, &internalDB.songsFolderSize)
 	binary.Read(osuDB, binary.LittleEndian, &internalDB.isAccountUnlocked)

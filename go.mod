@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/elastic/go-windows v1.0.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
@@ -15,5 +16,5 @@ require (
 	github.com/spf13/cast v1.3.1
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	github.com/ulikunitz/xz v0.5.7
-	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6
+	golang.org/x/sys v0.0.0-20200808120158-1030fc2bf1d9
 )
