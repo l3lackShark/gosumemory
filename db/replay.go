@@ -43,6 +43,8 @@ type osr struct {
 
 var tempBeatmapFailTime int32
 
+const ticksUnix = 621355968000000000 //C# DateTime
+
 //WriteOSR does the write replay magic
 func WriteOSR() {
 
@@ -161,7 +163,7 @@ func convertMemoryDataToOSRStruct() osr {
 		IsPerfect:        false,
 		Mods:             memory.MenuData.Mods.AppliedMods,
 		Lifebar:          "",                 //not needed for a functioning replay
-		DateTime:         637032411839988684, //monkaS (WIP C# DateTime)
+		DateTime:         time.Now().Unix() * 10000000 + ticksUnix, //monkaS (WIP C# DateTime)
 		LengthReplayData: int32(len(compressed)),
 		ReplayData:       []uint8(compressed),
 		ScoreID:          0,
