@@ -2,7 +2,6 @@ package memory
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"math"
 	"path/filepath"
@@ -163,6 +162,9 @@ func bmUpdateData() error {
 }
 func getGamplayData() {
 	mem.Read(process, &patterns, &gameplayData)
+	if gameplayData.IsFailed == 1 {
+		GameplayData.Replay, _ = readOSREntries()
+	}
 	GameplayData.IsFailed = gameplayData.IsFailed
 	GameplayData.FailTime = gameplayData.ReplayFailTime
 	GameplayData.Combo.Current = gameplayData.Combo
@@ -188,11 +190,7 @@ func getGamplayData() {
 		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
 	getLeaderboard()
-	var err error
-	GameplayData.Replay, err = readOSREntries()
-	if err != nil {
-		fmt.Println(err)
-	}
+
 }
 
 func getLeaderboard() {
@@ -289,7 +287,6 @@ type OSREntry struct {
 func readOSREntries() (ReplayArray, error) {
 
 	items, err := mem.ReadInt32(process, int64(gameplayData.ReplayDataBase)+0xC)
-	//	var osr ReplayArray
 	if err != nil {
 		return ReplayArray{}, err
 	}
