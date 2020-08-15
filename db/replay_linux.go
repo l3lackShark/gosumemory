@@ -5,6 +5,6 @@ package db
 import "fmt"
 
 func writeOSR() {
-	fmt.Pritln("FailedReplays feature is not yet supported on Linux")
+	fmt.Println("FailedReplays feature is not yet supported on Linux")
 	return
 }
