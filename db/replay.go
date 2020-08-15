@@ -8,14 +8,11 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
-	"github.com/MakeNowJust/hotkey"
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
-	"github.com/skratchdot/open-golang/open"
 
 	"github.com/ulikunitz/xz/lzma"
 )
@@ -48,64 +45,17 @@ var tempBeatmapFailTime int32
 const ticksUnix = 621355968000000000 //C# DateTime
 
 //WriteOSR does the write replay magic
-func WriteOSR() {
+func InitOSRWriting() {
 	if _, err := os.Stat("FailedReplays"); os.IsNotExist(err) {
 		fmt.Println("FailedReplays Directory does not exist. Making one..")
-		os.Mkdir("FailedReplays", 0644)
+		err := os.Mkdir("FailedReplays", 0644)
+		if err != nil {
+			pp.Println("Wasn't able to create the 'FailedReplays' direcory. Failed replays functionality will be unavailable'")
+			return
+		}
 	}
-	hkey := hotkey.New()
-	for {
-		hkey.Register(0, hotkey.F2, func() { //Windows only for now
-			if memory.DynamicAddresses.IsReady == true && memory.GameplayData.GameMode != 3 && memory.GameplayData.IsFailed == 1 && tempBeatmapFailTime != memory.GameplayData.FailTime && memory.GameplayData.FailTime != 0 {
-				tempBeatmapFailTime = memory.GameplayData.FailTime
-				fmt.Println("Writing replay file...")
-				name := fmt.Sprintf("FailedReplays/%s - %s - %s [%s] (%s) %s.osr", memory.GameplayData.Name+"(Failed)", memory.MenuData.Bm.Metadata.Artist, memory.MenuData.Bm.Metadata.Title, memory.MenuData.Bm.Metadata.Version, strings.ReplaceAll(time.Now().Format(time.RFC1123), ":", "-"), gamemodeToStr(memory.GameplayData.GameMode))
-				fmt.Println(name)
-				file, err := os.Create(name)
-				if err != nil {
-					fmt.Println(err)
-				}
-				replayWriter := bufio.NewWriter(file)
-				OsrStruct := convertMemoryDataToOSRStruct()
-				v := reflect.ValueOf(OsrStruct)
-				values := make([]interface{}, v.NumField())
-				for i := 0; i < v.NumField(); i++ {
-					values[i] = v.Field(i).Interface()
-					switch v.Field(i).Kind() {
-					case reflect.String:
-						replayWriter.WriteByte(0x0B) //please never exceed 255 (TODO: proper strings handler)
-						replayWriter.WriteByte(byte(len(v.Field(i).String())))
-						replayWriter.WriteString(v.Field(i).String())
-					case reflect.Uint8:
-						writeUint8(replayWriter, uint8(v.Field(i).Uint()))
-					case reflect.Uint16:
-						writeUint16(replayWriter, uint16(v.Field(i).Uint()))
-					case reflect.Int32:
-						writeInt32(replayWriter, int32(v.Field(i).Int()))
-					case reflect.Bool:
-						writeBool(replayWriter, v.Field(i).Bool())
-					case reflect.Int64:
-						writeInt64(replayWriter, v.Field(i).Int())
-					case reflect.Slice:
-						replayWriter.Write(v.Field(i).Bytes())
-					default:
-						log.Fatalln("Unsupported struct type!")
-					}
-
-				}
-				replayWriter.Flush()
-				file.Close()
-				fmt.Println("Finished writing replay file!")
-				err = open.Start(filepath.Join(name))
-				if err != nil {
-					fmt.Println("Replay open err: ", err)
-				}
-			}
-
-		})
-		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
-	}
-
+	writeOSR()
+	return
 }
 
 func writeUint8(replayFile *bufio.Writer, number uint8) {
@@ -141,21 +91,17 @@ func compressToLZMA(input string) []byte {
 	return buf.Bytes()
 }
 
-type lzmaString []string
-
 func convertMemoryDataToOSRStruct() osr {
 	osrStruct := memory.GameplayData.Replay
-	var lzma lzmaString
-	lzma = make(lzmaString, len(osrStruct.Replays)+1)
+	var lzma []string
 	for i, replayTick := range osrStruct.Replays {
 		if i > 0 {
 			replayTick.Time = replayTick.Time - osrStruct.Replays[i-1].Time
 		}
 
-		lzma[i] = fmt.Sprintf("%d|%f|%f|%d", replayTick.Time, replayTick.X, replayTick.Y, replayTick.WasButtonPressed) //0|256|-500|0, f.e.
+		lzma = append(lzma, fmt.Sprintf("%d|%f|%f|%d", replayTick.Time, replayTick.X, replayTick.Y, replayTick.WasButtonPressed)) //0|256|-500|0, f.e.
 	}
-
-	lzma[len(lzma)-1] = "-12345|0|0|0," //every replay has this at the end
+	lzma = append(lzma, "-12345|0|0|0,") //every replay has this at the end
 	decompressedLZMAStr := strings.Join(lzma, ",")
 	compressed := compressToLZMA(decompressedLZMAStr)
 
@@ -163,7 +109,7 @@ func convertMemoryDataToOSRStruct() osr {
 		Gamemode:         uint8(memory.GameplayData.GameMode),
 		OsuVer:           20190828, //doesn't really matter
 		MD5:              memory.MenuData.Bm.BeatmapMD5,
-		PlayerName:       memory.GameplayData.Name + ("(Failed)"),
+		PlayerName:       memory.GameplayData.Name + "(Failed)",
 		BmChecksum:       "", //not needed for a functioning replay
 		Hit300s:          uint16(memory.GameplayData.Hits.H300),
 		Hit100s:          uint16(memory.GameplayData.Hits.H100),

@@ -81,10 +81,11 @@ func Init() {
 			MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
 			MenuData.SkinFolder = alwaysData.SkinFolder
+
 			switch menuData.Status {
 
 			case 2:
-				if MenuData.Bm.Time.PlayTime < 150 { //To catch up with the F2-->Enter
+				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
 					if err != nil {
 						pp.Println(err)
@@ -273,7 +274,6 @@ func calculateUR(HitErrorArray []int32) (float64, error) {
 }
 
 type ReplayArray struct {
-	BmHash  string
 	Replays []OSREntry
 }
 
@@ -290,7 +290,7 @@ func readOSREntries() (ReplayArray, error) {
 	if err != nil {
 		return ReplayArray{}, err
 	}
-	if items > 100000 || items < 1 {
+	if items < 1 {
 		return ReplayArray{}, errors.New("invalid struct or empty array")
 	}
 	arraysBase, err := mem.ReadInt32(process, int64(gameplayData.ReplayDataBase)+0x4, 0)
@@ -317,6 +317,5 @@ func readOSREntries() (ReplayArray, error) {
 			time,
 		}
 	}
-	osr.BmHash = MenuData.Bm.BeatmapMD5
 	return osr, nil
 }

@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-	go db.WriteOSR()
 	updateTimeFlag := flag.Int("update", 100, "How fast should we update the values? (in milliseconds)")
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
@@ -33,6 +32,7 @@ func main() {
 	}
 
 	go memory.Init()
+	go db.InitOSRWriting()
 	err := db.InitDB()
 	if err != nil {
 		log.Println(err)
