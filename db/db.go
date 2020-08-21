@@ -131,8 +131,8 @@ func InitDB() error {
 	OsuDB.buildVer = internalDB.buildVer
 	OsuDB.Nickname = internalDB.Nickname
 	OsuDB.songsFolderSize = internalDB.songsFolderSize
-	for i := 0; i < len(internalDB.BmInfo); i++ {
-		OsuDB.BmInfo[i].StarRatingMania = make([]starRating, 3)
+	for i := 0; i < len(internalDB.BmInfo); i++ {		
+		OsuDB.BmInfo[i].StarRatingMania = make([]starRating, len(internalDB.BmInfo[i].StarRatingMania))
 		OsuDB.BmInfo[i].Filename = internalDB.BmInfo[i].Filename
 		OsuDB.BmInfo[i].Artist = internalDB.BmInfo[i].Artist
 		OsuDB.BmInfo[i].Title = internalDB.BmInfo[i].Title
