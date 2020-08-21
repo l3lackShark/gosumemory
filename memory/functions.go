@@ -84,7 +84,7 @@ func Init() {
 			switch menuData.Status {
 
 			case 2:
-				if MenuData.Bm.Time.PlayTime < 150 { //To catch up with the F2-->Enter
+				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
 					if err != nil {
 						pp.Println(err)
