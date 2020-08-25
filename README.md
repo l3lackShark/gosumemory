@@ -90,7 +90,7 @@ By: [cyperdark][2]<br>
 
 # How does it work?
 
-gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address, please **use WebSocket instead**.
+gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address in production, please **use WebSocket instead**.
 
 # How do I submit a pp counter?
 
@@ -99,7 +99,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 # Linux
 
 You have two options. Either run native, but with sudo privileges, or through WINE.
-Please note that 32-Bit builds are experimental and don't have leaderboard data. They could contain crashes. Report them if you encounter any.
+Please note that Linux builds are not well tested and could contain crashes. Report them if you encounter any.
 
 # This project depends on:
 
