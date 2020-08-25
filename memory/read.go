@@ -72,23 +72,24 @@ type allTimesD struct {
 }
 
 type gameplayD struct {
-	PlayerName     string  `mem:"[[PlayContainer + 0x38] + 0x28]"`
-	ModsXor1       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
-	ModsXor2       int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
-	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
-	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
-	MaxCombo       int16   `mem:"[PlayContainer + 0x38] + 0x68"`
-	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
-	Hit100         int16   `mem:"[PlayContainer + 0x38] + 0x88"`
-	Hit300         int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
-	Hit200M        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
-	Hit50          int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
-	HitGeki        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
-	HitKatu        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
-	HitMiss        int16   `mem:"[PlayContainer + 0x38] + 0x92"`
-	Combo          int16   `mem:"[PlayContainer + 0x38] + 0x94"`
-	PlayerHPSmooth float64 `mem:"[PlayContainer + 0x40] + 0x14"`
-	PlayerHP       float64 `mem:"[PlayContainer + 0x40] + 0x1C"`
-	Accuracy       float64 `mem:"[PlayContainer + 0x48] + 0xC"`
-	LeaderBoard    uint32  `mem:"Leaderboard"`
+	PlayerName      string  `mem:"[[PlayContainer + 0x38] + 0x28]"`
+	ModsXor1        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
+	ModsXor2        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
+	BitwiseKeypress int8    `mem:"[Base - 0x33] + 0x260"`
+	HitErrors       []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
+	Mode            int32   `mem:"[PlayContainer + 0x38] + 0x64"`
+	MaxCombo        int16   `mem:"[PlayContainer + 0x38] + 0x68"`
+	Score           int32   `mem:"[PlayContainer + 0x38] + 0x78"`
+	Hit100          int16   `mem:"[PlayContainer + 0x38] + 0x88"`
+	Hit300          int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
+	Hit200M         int16   `mem:"[PlayContainer + 0x38] + 0x90"`
+	Hit50           int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
+	HitGeki         int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
+	HitKatu         int16   `mem:"[PlayContainer + 0x38] + 0x90"`
+	HitMiss         int16   `mem:"[PlayContainer + 0x38] + 0x92"`
+	Combo           int16   `mem:"[PlayContainer + 0x38] + 0x94"`
+	PlayerHPSmooth  float64 `mem:"[PlayContainer + 0x40] + 0x14"`
+	PlayerHP        float64 `mem:"[PlayContainer + 0x40] + 0x1C"`
+	Accuracy        float64 `mem:"[PlayContainer + 0x48] + 0xC"`
+	LeaderBoard     uint32  `mem:"Leaderboard"`
 }

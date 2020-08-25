@@ -162,6 +162,7 @@ func bmUpdateData() error {
 }
 func getGamplayData() {
 	mem.Read(process, &patterns, &gameplayData)
+	GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
 	GameplayData.GameMode = gameplayData.Mode
