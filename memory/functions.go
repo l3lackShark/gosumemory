@@ -180,7 +180,11 @@ func getGamplayData() {
 	GameplayData.Hp.Smooth = gameplayData.PlayerHPSmooth
 	GameplayData.Name = gameplayData.PlayerName
 	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor2)
-	MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
+	if MenuData.Mods.AppliedMods == 0 {
+		MenuData.Mods.PpMods = "NM"
+	} else {
+		MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
+	}
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
 		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
