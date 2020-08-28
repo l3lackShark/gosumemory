@@ -34,8 +34,8 @@ func (staticAddresses) Leaderboard() string {
 type menuD struct {
 	PreSongSelectData
 	MenuGameMode       int32   `mem:"[Base - 0x33]"`
-	Retries            int32   `mem:"[Base - 0x33] + 0x4"`
-	Plays              int32   `mem:"[Base - 0x33] + 0x8"`
+	Retries            int32   `mem:"[Base - 0x33] + 0x8"`
+	Plays              int32   `mem:"[Base - 0x33] + 0xC"`
 	Artist             string  `mem:"[[Beatmap] + 0x18]"`
 	Title              string  `mem:"[[Beatmap] + 0x24]"`
 	AR                 float32 `mem:"[Beatmap] + 0x2C"`
@@ -70,12 +70,11 @@ type allTimesD struct {
 	ChatStatus int8   `mem:"ChatChecker - 0x20"`
 	SkinFolder string `mem:"[[[SkinData + 4] + 0] + 68]"`
 }
-
 type gameplayD struct {
 	PlayerName      string  `mem:"[[PlayContainer + 0x38] + 0x28]"`
 	ModsXor1        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
 	ModsXor2        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
-	BitwiseKeypress int8    `mem:"[Base - 0x33] + 0x260"`
+	BitwiseKeypress int8    `mem:"[Status - 0x4] - 0x268"`
 	HitErrors       []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
 	Mode            int32   `mem:"[PlayContainer + 0x38] + 0x64"`
 	MaxCombo        int16   `mem:"[PlayContainer + 0x38] + 0x68"`
