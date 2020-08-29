@@ -7,6 +7,7 @@ You can contact us here: https://discord.gg/8enr4qD
 
 # Real-World examples:
 
+[![cpol](https://img.shields.io/badge/cpol%20v5.0---?style=for-the-badge&color=DFD895)](https://youtu.be/neHcOLycieE)
 [![FlyingTuna](https://img.shields.io/badge/FlyingTuna%20v1.5---?style=for-the-badge&color=527FD5)](https://www.twitch.tv/flyingtuna/clip/TransparentObliviousHawkAMPEnergyCherry)
 [![Alumetri](https://img.shields.io/badge/Alumetri%20v1.2---?style=for-the-badge&color=FF94B6)](https://mega.nz/file/QV1gTKoI#j1QRjDkrjnFvIhyb9JuGi3g_0XZCFzXEXz9PKWcxgmI)
 [![Sotarks](https://img.shields.io/badge/Sotarks%20v1.0---?style=for-the-badge&color=C63F55)](https://mega.nz/file/oAlmlQoY#8ABeJPGboMLgCiaY5vR21HX2Km--_jiwqRHOmUJvVmg)
