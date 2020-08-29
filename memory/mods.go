@@ -40,6 +40,7 @@ const (
 	ModsKey3
 	ModsKey2
 	ModsScoreV2
+	ModsMirror
 
 	ModsKeyMod         Mods = ModsKey1 | ModsKey2 | ModsKey3 | ModsKey4 | ModsKey5 | ModsKey6 | ModsKey7 | ModsKey8 | ModsKey9
 	ModsFreeModAllowed Mods = ModsNoFail | ModsEasy | ModsHidden | ModsHardRock | ModsSuddenDeath | ModsFlashlight | ModsFadeIn | ModsRelax | ModsSpunOut | ModsKeyMod
@@ -65,6 +66,7 @@ const (
 	SO Mods = ModsSpunOut
 	PF Mods = ModsPerfect
 
+	MR Mods = ModsMirror
 	V2 Mods = ModsScoreV2
 	AT Mods = ModsAutoplay
 	AP Mods = ModsRelax2
@@ -120,6 +122,7 @@ var modStrings = []struct {
 	{K3, "3K"},
 	{K2, "2K"},
 	{V2, "V2"},
+	{MR, "MR"},
 }
 
 func (m Mods) String() string {
