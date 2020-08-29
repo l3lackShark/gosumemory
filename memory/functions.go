@@ -32,6 +32,8 @@ var SongsFolderPath string
 
 var process, procerr = mem.FindProcess(osuProcessRegex)
 
+var tempRetries int32
+
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
 	if UnderWine == true || runtime.GOOS != "windows" {
@@ -82,13 +84,18 @@ func Init() {
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
 			MenuData.SkinFolder = alwaysData.SkinFolder
 			switch menuData.Status {
-
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
 					if err != nil {
 						pp.Println(err)
 					}
+				}
+				if gameplayData.Retries > tempRetries {
+					tempRetries = gameplayData.Retries
+					GameplayData = GameplayValues{}
+					gameplayData = gameplayD{}
+
 				}
 				getGamplayData()
 			case 1:
@@ -98,7 +105,9 @@ func Init() {
 				}
 			case 7:
 			default:
+				tempRetries = -1
 				GameplayData = GameplayValues{}
+				gameplayData = gameplayD{}
 				hasLeaderboard = false
 				err = bmUpdateData()
 				if err != nil {
@@ -174,6 +183,11 @@ func getGamplayData() {
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50
 	GameplayData.Hits.H0 = gameplayData.HitMiss
+	if GameplayData.Combo.Current < GameplayData.Combo.Temp && GameplayData.Hits.H0Temp == GameplayData.Hits.H0 {
+		GameplayData.Hits.HSB++
+	}
+	GameplayData.Hits.H0Temp = GameplayData.Hits.H0
+	GameplayData.Combo.Temp = GameplayData.Combo.Current
 	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor1)
 	GameplayData.Accuracy = gameplayData.Accuracy
 	GameplayData.Hp.Normal = gameplayData.PlayerHP

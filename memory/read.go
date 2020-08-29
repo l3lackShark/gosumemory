@@ -34,7 +34,6 @@ func (staticAddresses) Leaderboard() string {
 type menuD struct {
 	PreSongSelectData
 	MenuGameMode       int32   `mem:"[Base - 0x33]"`
-	Retries            int32   `mem:"[Base - 0x33] + 0x8"`
 	Plays              int32   `mem:"[Base - 0x33] + 0xC"`
 	Artist             string  `mem:"[[Beatmap] + 0x18]"`
 	Title              string  `mem:"[[Beatmap] + 0x24]"`
@@ -71,6 +70,7 @@ type allTimesD struct {
 	SkinFolder string `mem:"[[[SkinData + 4] + 0] + 68]"`
 }
 type gameplayD struct {
+	Retries         int32   `mem:"[Base - 0x33] + 0x8"`
 	PlayerName      string  `mem:"[[PlayContainer + 0x38] + 0x28]"`
 	ModsXor1        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
 	ModsXor2        int32   `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`

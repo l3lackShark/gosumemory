@@ -94,6 +94,7 @@ type ppM struct {
 type combo struct {
 	Current int16 `json:"current"`
 	Max     int16 `json:"max"`
+	Temp    int16 `json:"-"`
 }
 
 type hp struct {
@@ -109,6 +110,8 @@ type hits struct {
 	HKatu         int16   `json:"katu"`
 	H50           int16   `json:"50"`
 	H0            int16   `json:"0"`
+	H0Temp        int16   `json:"-"`
+	HSB           int16   `json:"sliderBreaks"`
 	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }
