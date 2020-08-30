@@ -108,6 +108,10 @@ OPPAIAPI int ezpp_mods(ezpp_t ez);
 OPPAIAPI int ezpp_score_version(ezpp_t ez);
 OPPAIAPI float ezpp_time_at(ezpp_t ez, int i);
 OPPAIAPI float ezpp_strain_at(ezpp_t ez, int i, int difficulty_type);
+OPPAIAPI int ezpp_ntiming_points(ezpp_t ez);
+OPPAIAPI float ezpp_timing_time(ezpp_t ez, int i); /* milliseconds */
+OPPAIAPI float ezpp_timing_ms_per_beat(ezpp_t ez, int i);
+OPPAIAPI int ezpp_timing_change(ezpp_t ez, int i);
 
 OPPAIAPI void ezpp_set_aim_stars(ezpp_t ez, float aim_stars);
 OPPAIAPI void ezpp_set_speed_stars(ezpp_t ez, float speed_stars);
@@ -218,8 +222,8 @@ OPPAIAPI char* oppai_version_str(void);
 #include <math.h>
 
 #define OPPAI_VERSION_MAJOR 3
-#define OPPAI_VERSION_MINOR 2
-#define OPPAI_VERSION_PATCH 3
+#define OPPAI_VERSION_MINOR 3
+#define OPPAI_VERSION_PATCH 0
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
 
@@ -2471,7 +2475,21 @@ OPPAIAPI float ezpp_strain_at(ezpp_t ez, int i, int difficulty_type) {
   return ez->objects.len ? ez->objects.data[i].strains[difficulty_type] : 0;
 }
 
+OPPAIAPI int ezpp_ntiming_points(ezpp_t ez) {
+  return ez->timing_points.len;
+}
 
+OPPAIAPI float ezpp_timing_time(ezpp_t ez, int i) {
+  return ez->timing_points.len ? ez->timing_points.data[i].time : 0;
+}
+
+OPPAIAPI float ezpp_timing_ms_per_beat(ezpp_t ez, int i) {
+  return ez->timing_points.len ? ez->timing_points.data[i].ms_per_beat : 0;
+}
+
+OPPAIAPI int ezpp_timing_change(ezpp_t ez, int i) {
+  return ez->timing_points.len ? ez->timing_points.data[i].change : 0;
+}
 
 #define setter(t, x) \
 OPPAIAPI void ezpp_set_##x(ezpp_t ez, t x) { \
