@@ -54,16 +54,22 @@ type Metadata struct {
 }
 
 type stats struct {
-	BeatmapAR float32 `json:"AR"`
-	BeatmapCS float32 `json:"CS"`
-	BeatmapOD float32 `json:"OD"`
-	BeatmapHP float32 `json:"HP"`
-	BeatmapSR float32 `json:"SR"`
-	FullSR    float32 `json:"fullSR"`
-	MemoryAR  float32 `json:"memoryAR"`
-	MemoryCS  float32 `json:"memoryCS"`
-	MemoryOD  float32 `json:"memoryOD"`
-	MemoryHP  float32 `json:"memoryHP"`
+	BeatmapAR  float32 `json:"AR"`
+	BeatmapCS  float32 `json:"CS"`
+	BeatmapOD  float32 `json:"OD"`
+	BeatmapHP  float32 `json:"HP"`
+	BeatmapSR  float32 `json:"SR"`
+	BeatmapBPM bpm     `json:"BPM"`
+	FullSR     float32 `json:"fullSR"`
+	MemoryAR   float32 `json:"memoryAR"`
+	MemoryCS   float32 `json:"memoryCS"`
+	MemoryOD   float32 `json:"memoryOD"`
+	MemoryHP   float32 `json:"memoryHP"`
+}
+
+type bpm struct {
+	Minimal int `json:"min"`
+	Maximal int `json:"max"`
 }
 
 type path struct {

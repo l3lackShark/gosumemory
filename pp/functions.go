@@ -58,3 +58,20 @@ func calculateMP3Time() (int32, error) {
 
 	return int32(t * 1000), nil
 }
+
+func minMax(array []int) (int, int) {
+	if len(array) < 1 {
+		return 0, 0
+	}
+	var max int = array[0]
+	var min int = array[0]
+	for _, value := range array {
+		if max < value {
+			max = value
+		}
+		if min > value {
+			min = value
+		}
+	}
+	return min, max
+}

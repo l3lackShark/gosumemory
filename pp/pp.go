@@ -67,6 +67,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 
 		defer C.free(unsafe.Pointer(cpath))
 		if rc := C.ezpp(ez, cpath); rc < 0 {
+			memory.MenuData.PP.PpStrains = nil
 			return errors.New(C.GoString(C.errstr(rc)))
 		}
 		C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.MemoryAR))
@@ -91,11 +92,24 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
 		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
 		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
+
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
 			C.ezpp_set_nmiss(ez, 0)
 			memory.MenuData.Bm.Stats.FullSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(C.ezpp_stars(ez))))
+			var bpmChanges []int
+			for i := 0; i < int(C.ezpp_ntiming_points(ez)); i++ {
+				msPerBeat := float64(C.ezpp_timing_ms_per_beat(ez, C.int(i)))
+				timingChanges := int(C.ezpp_timing_change(ez, C.int(i)))
+				if timingChanges == 1 {
+					bpmFormula := int(math.Round(1 / msPerBeat * 1000 * 60 * 1)) //1 = bmpMultiplier
+					if bpmFormula > 0 {
+						bpmChanges = append(bpmChanges, bpmFormula)
+					}
+				}
+			}
+			memory.MenuData.Bm.Stats.BeatmapBPM.Minimal, memory.MenuData.Bm.Stats.BeatmapBPM.Maximal = minMax(bpmChanges)
 			strainArray = nil
 			seek := 0
 			var window []float64
@@ -185,9 +199,6 @@ func GetData() {
 					}
 					//Get Strains
 					readData(&data, ez, true, path)
-					if data.Artist == "" {
-						readData(&data, ez, true, path)
-					}
 
 					//pp.Println(memory.MenuData.Bm.Metadata)
 				}
