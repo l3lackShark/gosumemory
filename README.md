@@ -108,6 +108,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 You have two options. Either run native, but with sudo privileges, or through WINE.
 Please note that Linux builds are not well tested and could contain crashes. Report them if you encounter any.
 
+# Consider supporting
 <a href="https://www.buymeacoffee.com/BlackShark" target="_blank"><img src="https://cdn.discordapp.com/attachments/530940222771560452/750051751025049741/default-blue_1.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
 
 # This project depends on:
