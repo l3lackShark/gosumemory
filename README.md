@@ -66,7 +66,7 @@ Remake by: [Dartandr][1]
 ### UnstableRate
 
 > Size: 300x100\
-Just a plain number that shows current UnstableRate, could be useful if you want to put it above your UR Bar.
+Just a plain number that shows current UnstableRate, could be useful if you want to put it above your UR Bar.\
 By: [Dartandr][1]
 
 ### MaximalLime
