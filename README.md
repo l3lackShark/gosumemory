@@ -63,6 +63,12 @@ Open-Source Implementation of [Luscent's][3] overlay. No elements were stolen. T
 <img  src="https://media.discordapp.net/attachments/641255341245333514/731843129833160704/unknown.png"  width="500">\
 Remake by: [Dartandr][1]
 
+### UnstableRate
+
+> Size: 300x100\
+Just a plain number that shows current UnstableRate, could be useful if you want to put it above your UR Bar.
+By: [Dartandr][1]
+
 ### MaximalLime
 
 > Size: 800x306\
