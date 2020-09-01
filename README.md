@@ -133,4 +133,4 @@ Please note that Linux builds are not well tested and could contain crashes. Rep
 * [omkelderman](https://github.com/omkelderman) for helping out with the [db](https://github.com/l3lackShark/gosumemory/tree/master/db) package
 * [jamuwu](https://github.com/jamuwu/osu-strain) and his [osu-strain](https://github.com/jamuwu/osu-strain) for difficulty strain logic
 * [cyperdark](https://github.com/cyperdark) and [Dartandr](https://github.com/Dartandr) for frontend designs
-* [KotRik](https://github.com/KotRikD) for making an OBS Script and porting legacy counters
+* [KotRik](https://github.com/KotRikD) for making an [OBS Script](https://github.com/l3lackShark/gosumemory-helpers/blob/master/gosumemory-reader.py) and porting legacy counters
