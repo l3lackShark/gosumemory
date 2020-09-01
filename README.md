@@ -99,6 +99,9 @@ By: [cyperdark][2]<br>
 
 gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address in production, please **use WebSocket instead**.
 
+# What if I don't know any programming languages but still want to output data to OBS?
+https://www.youtube.com/watch?v=8ApXBEO5bes 
+
 # How do I submit a pp counter?
 
 Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and included in the next release.
@@ -130,4 +133,4 @@ Please note that Linux builds are not well tested and could contain crashes. Rep
 * [omkelderman](https://github.com/omkelderman) for helping out with the [db](https://github.com/l3lackShark/gosumemory/tree/master/db) package
 * [jamuwu](https://github.com/jamuwu/osu-strain) and his [osu-strain](https://github.com/jamuwu/osu-strain) for difficulty strain logic
 * [cyperdark](https://github.com/cyperdark) and [Dartandr](https://github.com/Dartandr) for frontend designs
-* [KotRik](https://github.com/KotRikD) for porting legacy counters
+* [KotRik](https://github.com/KotRikD) for making an OBS Script and porting legacy counters
