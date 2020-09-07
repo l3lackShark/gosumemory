@@ -10,7 +10,7 @@ import (
 
 const (
 	MaxStringLength = 4096
-	MaxArrayLength  = 4096
+	MaxArrayLength  = 65536
 )
 
 var (
