@@ -59,11 +59,11 @@ func followOffsets(r io.ReaderAt, addr int64, offsets ...int64) (int64, error) {
 	start, last := removeLast(offsets)
 
 	for _, offset := range start {
-		newaddr, err := readUintRaw(r, addr+offset, 4)
+		newaddr, err := ReadPtr(r, addr+offset, 4)
 		if err != nil {
 			return 0, err
 		}
-		addr = int64(newaddr)
+		addr = newaddr
 	}
 
 	if last != nil {
@@ -112,13 +112,13 @@ func readUintArray(r io.ReaderAt, addr int64, size int,
 		return nil, ErrArrayTooLong
 	}
 
-	data, err := ReadInt32(r, base, 4)
+	data, err := ReadPtr(r, base, 4)
 	if err != nil {
 		return nil, err
 	}
 
 	buf := make([]byte, int(length)*size)
-	_, err = readFullAt(r, buf, int64(data)+8)
+	_, err = readFullAt(r, buf, data+8)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
 		return "", err
 	}
 
-	length, err := ReadInt32(r, base, 4)
+	length, err := ReadUint32(r, base, 4)
 	if err != nil {
 		return "", err
 	}
@@ -158,7 +158,7 @@ func ReadString(r io.ReaderAt, addr int64, offsets ...int64) (string, error) {
 	}
 
 	buf16 := make([]uint16, length)
-	for i := int32(0); i < length; i += 1 {
+	for i := uint32(0); i < length; i += 1 {
 		buf16[i] = binary.LittleEndian.Uint16(buf[i*2 : i*2+2])
 	}
 
@@ -306,6 +306,6 @@ func ReadFloat64Array(r io.ReaderAt, addr int64, offsets ...int64) ([]float64, e
 }
 
 func ReadPtr(r io.ReaderAt, addr int64, offsets ...int64) (int64, error) {
-	num, err := ReadInt32(r, addr, offsets...)
+	num, err := ReadUint32(r, addr, offsets...)
 	return int64(num), err
 }

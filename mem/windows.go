@@ -82,8 +82,8 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 }
 
 type process struct {
-	pid  uint32
-	h    syscall.Handle
+	pid uint32
+	h   syscall.Handle
 }
 
 func (p process) ExecutablePath() (string, error) {

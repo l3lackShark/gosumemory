@@ -197,8 +197,7 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 			continue
 		}
 		evalFunc := func(addr int64) (int64, error) {
-			v, err := ReadInt32(r, addr, 0x0)
-			return int64(v), err
+			return ReadPtr(r, addr, 0)
 		}
 		var varFunc func(name string) (int64, error)
 		varFunc = func(name string) (int64, error) {
