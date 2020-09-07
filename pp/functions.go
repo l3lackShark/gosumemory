@@ -75,3 +75,7 @@ func minMax(array []int) (int, int) {
 	}
 	return min, max
 }
+
+func calculateAccuracy(h300 float32, h100 float32, h50 float32, h0 float32) float32 {
+	return 100 * (h50*50 + h100*100 + h300*300) / (h50*300 + h100*300 + h300*300 + h0*300)
+}

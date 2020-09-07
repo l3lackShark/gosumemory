@@ -21,7 +21,8 @@ import "C"
 var ezfc C.ezpp_t
 
 type PPfc struct {
-	Total C.float
+	EndsNow C.float
+	RestSS  C.float
 }
 
 func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
@@ -38,14 +39,20 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		C.ezpp_set_base_od(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapOD))
 		C.ezpp_set_base_cs(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
-
-		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
-
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
+
+		totalObj := C.ezpp_nobjects(ezfc)
+		remaining := int16(totalObj) - memory.GameplayData.Hits.H300 - memory.GameplayData.Hits.H100 - memory.GameplayData.Hits.H50 - memory.GameplayData.Hits.H0
+		ifRestSSACC := calculateAccuracy(float32(memory.GameplayData.Hits.H300+remaining), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0))
+		C.ezpp_set_accuracy_percent(ezfc, C.float(ifRestSSACC))
+		ifRestSS := C.ezpp_pp(ezfc)
+		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
+		//fmt.Println("True: ", ifRestSS, " EndsNow: ", C.ezpp_pp(ezfc))
 
 		//C.ezpp_set_score_version(ezfc)
 		*data = PPfc{
-			Total: C.ezpp_pp(ezfc),
+			EndsNow: C.ezpp_pp(ezfc),
+			RestSS:  ifRestSS,
 		}
 
 	}
@@ -67,7 +74,8 @@ func GetFCData() {
 					var data PPfc
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
 					if memory.GameplayData.Combo.Max > 0 {
-						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.Total))
+						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
+						memory.GameplayData.PP.PPEndsNow = cast.ToInt32(float64(data.EndsNow))
 					}
 				}
 				switch memory.MenuData.OsuStatus {
@@ -80,17 +88,17 @@ func GetFCData() {
 
 					var data PPfc
 					readFCData(&data, ezfc, 100.0)
-					memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.PpSS = cast.ToInt32(float64(data.EndsNow))
 					readFCData(&data, ezfc, 99.0)
-					memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.Pp99 = cast.ToInt32(float64(data.EndsNow))
 					readFCData(&data, ezfc, 98.0)
-					memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.Pp98 = cast.ToInt32(float64(data.EndsNow))
 					readFCData(&data, ezfc, 97.0)
-					memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.Pp97 = cast.ToInt32(float64(data.EndsNow))
 					readFCData(&data, ezfc, 96.0)
-					memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.Pp96 = cast.ToInt32(float64(data.EndsNow))
 					readFCData(&data, ezfc, 95.0)
-					memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Total))
+					memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.EndsNow))
 				}
 				C.ezpp_free(ezfc)
 			}
