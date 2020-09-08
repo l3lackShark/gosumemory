@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -64,11 +66,16 @@ func HTTPServer() {
 	for memory.DynamicAddresses.IsReady != true {
 		time.Sleep(100 * time.Millisecond)
 	}
-	fs := http.FileServer(http.Dir("static"))
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	fs := http.FileServer(http.Dir(filepath.Join(exPath, "static")))
 	http.Handle("/", fs)
 	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath))))
 	http.HandleFunc("/json", handler)
-	err := http.ListenAndServe("127.0.0.1:24050", nil)
+	err = http.ListenAndServe("127.0.0.1:24050", nil)
 	if err != nil {
 		fmt.Println(err)
 		time.Sleep(5 * time.Second)
