@@ -59,7 +59,7 @@ func followOffsets(r io.ReaderAt, addr int64, offsets ...int64) (int64, error) {
 	start, last := removeLast(offsets)
 
 	for _, offset := range start {
-		newaddr, err := ReadPtr(r, addr+offset, 4)
+		newaddr, err := ReadPtr(r, addr+offset, 0)
 		if err != nil {
 			return 0, err
 		}
