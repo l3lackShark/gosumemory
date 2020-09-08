@@ -75,7 +75,6 @@ func GetFCData() {
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
-						memory.GameplayData.PP.PPEndsNow = cast.ToInt32(float64(data.EndsNow))
 					}
 				}
 				switch memory.MenuData.OsuStatus {
