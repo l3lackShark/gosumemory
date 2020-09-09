@@ -232,40 +232,41 @@ func getLeaderboard() {
 }
 
 func readLeaderPlayerStruct(base int64) leaderPlayer {
-	name, _ := mem.ReadString(process, base, 0x8, 0)
-	score, _ := mem.ReadInt32(process, base+0x30, 0)
-	combo, _ := mem.ReadInt16(process, base+0x20, 0, 0x94)
-	maxCombo, _ := mem.ReadInt16(process, base+0x20, 0, 0x68)
-	modsXor1, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0x8)
-	modsXor2, _ := mem.ReadUint32(process, base+0x20, 0, 0x1C, 0xC)
-	var mods string
-	if modsXor1^modsXor2 != 0 {
-		mods = modsResolver(modsXor1 ^ modsXor2)
-	} else {
+	addresses := struct{ Base int64 }{base}
+	var player struct {
+		Name      string `mem:"[Base + 0x8]"`
+		Score     int32  `mem:"Base + 0x30"`
+		Combo     int16  `mem:"[Base + 0x20] + 0x94"`
+		MaxCombo  int16  `mem:"[Base + 0x20] + 0x68"`
+		ModsXor1  uint32 `mem:"[[Base + 0x20] + 0x1C] + 0x8"`
+		ModsXor2  uint32 `mem:"[[Base + 0x20] + 0x1C] + 0xC"`
+		H300      int16  `mem:"[Base + 0x20] + 0x8A"`
+		H100      int16  `mem:"[Base + 0x20] + 0x88"`
+		H50       int16  `mem:"[Base + 0x20] + 0x8C"`
+		H0        int16  `mem:"[Base + 0x20] + 0x92"`
+		Team      int32  `mem:"Base + 0x40"`
+		Position  int32  `mem:"Base + 0x2C"`
+		IsPassing int8   `mem:"Base + 0x4B"`
+	}
+	mem.Read(process, &addresses, &player)
+	mods := modsResolver(player.ModsXor1 ^ player.ModsXor2)
+	if mods == "" {
 		mods = "NM"
 	}
-	h300, _ := mem.ReadInt16(process, base+0x20, 0, 0x8A)
-	h100, _ := mem.ReadInt16(process, base+0x20, 0, 0x88)
-	h50, _ := mem.ReadInt16(process, base+0x20, 0, 0x8C)
-	h0, _ := mem.ReadInt16(process, base+0x20, 0, 0x92)
-	team, _ := mem.ReadInt32(process, base+0x40, 0)
-	position, _ := mem.ReadInt32(process, base+0x2C, 0)
-	isPassing, _ := mem.ReadInt8(process, base+0x4B, 0)
-	player := leaderPlayer{
-		name,
-		score,
-		combo,
-		maxCombo,
-		mods,
-		h300,
-		h100,
-		h50,
-		h0,
-		team,
-		position,
-		isPassing,
+	return leaderPlayer{
+		Name:      player.Name,
+		Score:     player.Score,
+		Combo:     player.Combo,
+		MaxCombo:  player.MaxCombo,
+		Mods:      mods,
+		H300:      player.H300,
+		H100:      player.H100,
+		H50:       player.H50,
+		H0:        player.H0,
+		Team:      player.Team,
+		Position:  player.Position,
+		IsPassing: player.IsPassing,
 	}
-	return player
 }
 
 func calculateUR(HitErrorArray []int32) (float64, error) {
