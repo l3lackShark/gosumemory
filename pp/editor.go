@@ -89,7 +89,7 @@ var tempOsuMD5 string
 
 func GetEditorData() {
 
-	ezeditor := C.ezpp_new()
+	ezeditor = C.ezpp_new()
 	C.ezpp_set_autocalc(ezeditor, 1)
 	//defer C.ezpp_free(ezeditor)
 	var data PP

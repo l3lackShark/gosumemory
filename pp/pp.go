@@ -93,7 +93,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
 		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
 		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-		
+
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
@@ -181,7 +181,7 @@ var tempMods string
 
 func GetData() {
 
-	ez := C.ezpp_new()
+	ez = C.ezpp_new()
 	C.ezpp_set_autocalc(ez, 1)
 	//defer C.ezpp_free(ez)
 

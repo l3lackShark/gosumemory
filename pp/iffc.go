@@ -42,9 +42,7 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
 		totalObj := C.ezpp_nobjects(ezfc)
-		totalCombo := C.ezpp_max_combo(ezfc)
-
-		C.ezpp_set_combo(ezfc, C.int(totalCombo)) //since we are not freeing the counter every time we need to clear the combo
+		C.ezpp_set_combo(ezfc, C.int(-1)) //since we are not freeing the counter every time we need to clear the combo TODO: Consider dropped sliderends
 		C.ezpp_set_nmiss(ezfc, C.int(0))
 
 		remaining := int16(totalObj) - memory.GameplayData.Hits.H300 - memory.GameplayData.Hits.H100 - memory.GameplayData.Hits.H50 - memory.GameplayData.Hits.H0
@@ -64,7 +62,7 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 }
 
 func GetFCData() {
-	ezfc := C.ezpp_new()
+	ezfc = C.ezpp_new()
 	C.ezpp_set_autocalc(ezfc, 1)
 	for {
 

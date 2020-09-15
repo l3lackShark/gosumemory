@@ -41,7 +41,6 @@ func readMaxData(data *PPmax, ezmax C.ezpp_t) error {
 		C.ezpp_set_mods(ezmax, C.int(memory.MenuData.Mods.AppliedMods))
 		totalObj := C.ezpp_nobjects(ezmax)
 		totalCombo := C.ezpp_max_combo(ezmax)
-
 		remaining := int16(totalObj) - memory.GameplayData.Hits.H300 - memory.GameplayData.Hits.H100 - memory.GameplayData.Hits.H50 - memory.GameplayData.Hits.H0
 		ifRestSSACC := float64(calculateAccuracy(float32(memory.GameplayData.Hits.H300+remaining), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0)))
 		ifRestSSACC = math.Round(ifRestSSACC*100) / 100
@@ -84,7 +83,7 @@ func readMaxData(data *PPmax, ezmax C.ezpp_t) error {
 }
 
 func GetMaxData() {
-	ezmax := C.ezpp_new()
+	ezmax = C.ezpp_new()
 	C.ezpp_set_autocalc(ezmax, 1)
 	for {
 
