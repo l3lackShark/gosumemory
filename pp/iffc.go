@@ -58,9 +58,6 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 			RestSS: ifRestSS,
 			Acc:    C.ezpp_pp(ezfc),
 		}
-
-		//fmt.Println("True: ", ifRestSS, " MaxThisPlay: ", maxThisPlay, " Current: ", memory.GameplayData.PP.Pp, " PossibleMaxCombo: ", possibleMax)
-
 	}
 
 	return nil
@@ -79,14 +76,11 @@ func GetFCData() {
 				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
 					var data PPfc
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
-					if memory.GameplayData.Combo.Max > 0 {
-						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
-					}
+					memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
 				}
 				switch memory.MenuData.OsuStatus {
 				case 1, 4, 5, 13, 2:
 					if memory.MenuData.OsuStatus == 2 && memory.MenuData.Bm.Time.PlayTime > 150 { //To catch up with the F2-->Enter
-						//C.ezpp_free(ezfc)
 						time.Sleep(250 * time.Millisecond)
 						continue
 					}
@@ -105,7 +99,6 @@ func GetFCData() {
 					readFCData(&data, ezfc, 95.0)
 					memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Acc))
 				}
-				//C.ezpp_free(ezfc)
 			}
 
 		}

@@ -96,21 +96,9 @@ func GetMaxData() {
 				if memory.MenuData.OsuStatus == 2 && memory.GameplayData.Combo.Max > 0 {
 					var data PPmax
 					readMaxData(&data, ezmax)
-					if memory.GameplayData.Combo.Max > 0 {
-						memory.GameplayData.PP.PPMaxThisPlay = cast.ToInt32(float64(data.MaxThisPlay))
-					}
+					memory.GameplayData.PP.PPMaxThisPlay = cast.ToInt32(float64(data.MaxThisPlay))
 				}
-				switch memory.MenuData.OsuStatus {
-				case 1, 4, 5, 13, 2:
-					if memory.MenuData.OsuStatus == 2 && memory.MenuData.Bm.Time.PlayTime > 150 { //To catch up with the F2-->Enter
-						//C.ezpp_free(ezmax)
-						time.Sleep(250 * time.Millisecond)
-						continue
-					}
-				}
-				//C.ezpp_free(ezmax)
 			}
-
 		}
 
 		time.Sleep(250 * time.Millisecond)
