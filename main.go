@@ -43,6 +43,7 @@ func main() {
 	go web.SetupRoutes()
 	go pp.GetData()
 	go pp.GetFCData()
+	go pp.GetMaxData()
 	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
 	fmt.Println("Initialization complete, you can now visit http://localhost:24050 or add it as a browser source in OBS")
 	pp.GetEditorData()

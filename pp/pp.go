@@ -59,6 +59,7 @@ type PP struct {
 
 var strainArray []float64
 var tempBeatmapFile string
+var currMaxCombo C.int
 
 func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 
@@ -92,7 +93,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
 		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
 		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
-
+		
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
@@ -137,6 +138,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			memory.MenuData.Bm.Time.FullTime = int32(C.ezpp_time_at(ez, C.ezpp_nobjects(ez)-1))
 		} else {
 			C.ezpp_set_end_time(ez, C.float(memory.MenuData.Bm.Time.PlayTime))
+			currMaxCombo = C.ezpp_max_combo(ez) //for RestSS
 			C.ezpp_set_combo(ez, C.int(memory.GameplayData.Combo.Max))
 			C.ezpp_set_nmiss(ez, C.int(memory.GameplayData.Hits.H0))
 		}

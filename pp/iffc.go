@@ -4,6 +4,7 @@ package pp
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"time"
 	"unsafe"
@@ -21,9 +22,8 @@ import "C"
 var ezfc C.ezpp_t
 
 type PPfc struct {
-	RestSS      C.float
-	MaxThisPlay C.float
-	Acc         C.float
+	RestSS C.float
+	Acc    C.float
 }
 
 func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
@@ -41,22 +41,25 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		C.ezpp_set_base_cs(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapCS))
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
-
 		totalObj := C.ezpp_nobjects(ezfc)
+		totalCombo := C.ezpp_max_combo(ezfc)
+
+		C.ezpp_set_combo(ezfc, C.int(totalCombo)) //since we are not freeing the counter every time we need to clear the combo
+		C.ezpp_set_nmiss(ezfc, C.int(0))
+
 		remaining := int16(totalObj) - memory.GameplayData.Hits.H300 - memory.GameplayData.Hits.H100 - memory.GameplayData.Hits.H50 - memory.GameplayData.Hits.H0
-		ifRestSSACC := calculateAccuracy(float32(memory.GameplayData.Hits.H300+remaining), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0))
+		ifRestSSACC := float64(calculateAccuracy(float32(memory.GameplayData.Hits.H300+remaining), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0)))
+		ifRestSSACC = math.Round(ifRestSSACC*100) / 100
 		C.ezpp_set_accuracy_percent(ezfc, C.float(ifRestSSACC))
 		ifRestSS := C.ezpp_pp(ezfc)
-		C.ezpp_set_nmiss(ezfc, C.int(memory.GameplayData.Hits.H0))
-		maxThisPlay := C.ezpp_pp(ezfc)
 		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
 		//C.ezpp_set_score_version(ezfc)
 		*data = PPfc{
-			RestSS:      ifRestSS,
-			MaxThisPlay: maxThisPlay,
-			Acc:         C.ezpp_pp(ezfc),
+			RestSS: ifRestSS,
+			Acc:    C.ezpp_pp(ezfc),
 		}
-		//fmt.Println("True: ", ifRestSS, " MaxThisPlay: ", maxThisPlay)
+
+		//fmt.Println("True: ", ifRestSS, " MaxThisPlay: ", maxThisPlay, " Current: ", memory.GameplayData.PP.Pp, " PossibleMaxCombo: ", possibleMax)
 
 	}
 
@@ -64,12 +67,12 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 }
 
 func GetFCData() {
-
+	ezfc := C.ezpp_new()
+	C.ezpp_set_autocalc(ezfc, 1)
 	for {
 
 		if memory.DynamicAddresses.IsReady == true {
-			ezfc := C.ezpp_new()
-			C.ezpp_set_autocalc(ezfc, 1)
+
 			switch memory.GameplayData.GameMode {
 			case 0, 1:
 
@@ -78,13 +81,12 @@ func GetFCData() {
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
 					if memory.GameplayData.Combo.Max > 0 {
 						memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
-						memory.GameplayData.PP.PPMaxThisPlay = cast.ToInt32(float64(data.MaxThisPlay))
 					}
 				}
 				switch memory.MenuData.OsuStatus {
 				case 1, 4, 5, 13, 2:
 					if memory.MenuData.OsuStatus == 2 && memory.MenuData.Bm.Time.PlayTime > 150 { //To catch up with the F2-->Enter
-						C.ezpp_free(ezfc)
+						//C.ezpp_free(ezfc)
 						time.Sleep(250 * time.Millisecond)
 						continue
 					}
@@ -103,7 +105,7 @@ func GetFCData() {
 					readFCData(&data, ezfc, 95.0)
 					memory.MenuData.PP.Pp95 = cast.ToInt32(float64(data.Acc))
 				}
-				C.ezpp_free(ezfc)
+				//C.ezpp_free(ezfc)
 			}
 
 		}
