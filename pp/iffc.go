@@ -42,7 +42,14 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		C.ezpp_set_base_hp(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapHP))
 		C.ezpp_set_mods(ezfc, C.int(memory.MenuData.Mods.AppliedMods))
 		totalObj := C.ezpp_nobjects(ezfc)
-		C.ezpp_set_combo(ezfc, C.int(-1)) //since we are not freeing the counter every time we need to clear the combo TODO: Consider dropped sliderends
+
+		if memory.GameplayData.Hits.H0+memory.GameplayData.Hits.HSB == 0 {
+			totalCombo := C.ezpp_max_combo(ezfc)
+			diff := currMaxCombo - C.int(memory.GameplayData.Combo.Max)
+			C.ezpp_set_combo(ezfc, C.int(totalCombo-diff))
+		} else {
+			C.ezpp_set_combo(ezfc, C.int(-1)) //since we are not freeing the counter every time we need to clear the combo TODO: Consider dropped sliderends
+		}
 		C.ezpp_set_nmiss(ezfc, C.int(0))
 
 		remaining := int16(totalObj) - memory.GameplayData.Hits.H300 - memory.GameplayData.Hits.H100 - memory.GameplayData.Hits.H50 - memory.GameplayData.Hits.H0

@@ -183,6 +183,9 @@ func getGamplayData() {
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50
 	GameplayData.Hits.H0 = gameplayData.HitMiss
+	if GameplayData.Combo.Temp > GameplayData.Combo.Max {
+		GameplayData.Combo.Temp = 0
+	}
 	if GameplayData.Combo.Current < GameplayData.Combo.Temp && GameplayData.Hits.H0Temp == GameplayData.Hits.H0 {
 		GameplayData.Hits.HSB++
 	}
