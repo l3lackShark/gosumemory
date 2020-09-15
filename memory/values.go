@@ -123,8 +123,9 @@ type hits struct {
 }
 
 type ppG struct {
-	Pp     int32 `json:"current"`
-	PPifFC int32 `json:"fc"`
+	Pp            int32 `json:"current"`
+	PPifFC        int32 `json:"fc"`
+	PPMaxThisPlay int32 `json:"maxThisPlay"`
 }
 
 type dynamicAddresses struct {

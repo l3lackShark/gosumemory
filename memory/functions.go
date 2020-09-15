@@ -73,8 +73,8 @@ func Init() {
 				&menuData.PreSongSelectData)
 			if err != nil {
 				DynamicAddresses.IsReady = false
-				log.Println("It appears that we lost the precess, retrying")
-				initBase()
+				log.Println("It appears that we lost the precess, retrying", err)
+				continue
 			}
 			MenuData.OsuStatus = menuData.Status
 

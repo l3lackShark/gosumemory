@@ -34,7 +34,7 @@ func calculateMP3Time() (int32, error) {
 		pp.Println("Expected mp3, got something else. Aborting mp3 time calculation. GOT: ", memory.MenuData.Bm.Path.FullMP3Path)
 		return 0, nil
 	}
-	t := 0.0
+	var t int64
 	r, err := os.Open(memory.MenuData.Bm.Path.FullMP3Path)
 	if err != nil {
 		fmt.Println(err)
@@ -53,10 +53,10 @@ func calculateMP3Time() (int32, error) {
 			}
 		}
 
-		t = t + f.Duration().Seconds()
+		t = t + f.Duration().Milliseconds()
 	}
 
-	return int32(t * 1000), nil
+	return int32(t), nil
 }
 
 func minMax(array []int) (int, int) {
