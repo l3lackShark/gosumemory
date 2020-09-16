@@ -4,7 +4,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     steps:
 
     - name: Set up Go 1.15
@@ -26,11 +26,11 @@ jobs:
     - name: Build
       run: go build -v -o build/gosumemory
 
-    # - name: Upload artifact
-    #   uses: actions/upload-artifact@v1.0.0
-    #   with:
-    #   # Artifact name
-    #     name: gosumemory
-    #   # Directory containing files to upload
-    #     path: ./build
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+       with:
+       # Artifact name
+         name: gosumemory
+       # Directory containing files to upload
+         path: ./build
 
