@@ -24,13 +24,37 @@ jobs:
             dep ensure
         fi
     - name: Build
-      run: go build -v -o build/gosumemory
+      run: CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -o win64/gosumemory_windows_amd64.exe && CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o win32/gosumemory_windows_386.exe && CC=gcc go build -v -o lin64/gosumemory_linux_amd64 && CC=gcc CGO_ENABLED=1 GOARCH=386 go build -v -o lin32/gosumemory_linux_386
 
-    - name: Upload artifact
+    - name: Upload win32
       uses: actions/upload-artifact@v1.0.0
       with:
        # Artifact name
-        name: gosumemory
+        name: gosumemory_windows_386
        # Directory containing files to upload
-        path: ./build
+        path: ./win32
+
+    - name: Upload win64
+      uses: actions/upload-artifact@v1.0.0
+      with:
+       # Artifact name
+        name: gosumemory_windows_amd64
+       # Directory containing files to upload
+        path: ./win64
+
+    - name: Upload lin32
+      uses: actions/upload-artifact@v1.0.0
+      with:
+       # Artifact name
+        name: gosumemory_linux_386
+       # Directory containing files to upload
+        path: ./lin32
+        
+    - name: Upload lin64
+      uses: actions/upload-artifact@v1.0.0
+      with:
+       # Artifact name
+        name: gosumemory_linux_amd64
+       # Directory containing files to upload
+        path: ./lin64
 
