@@ -92,10 +92,10 @@ func resolveSongsFolder() (string, error) {
 	return "", errors.New("Songs Folder was not found")
 }
 
-func initBase() error {
+func initBase() (isTournamentClient bool, err error) {
 	process, err := mem.FindProcess(osuProcessRegex)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
@@ -107,14 +107,14 @@ func initBase() error {
 
 	err = mem.ResolvePatterns(process[0], &patterns.PreSongSelectAddresses)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	err = mem.Read(process[0],
 		&patterns.PreSongSelectAddresses,
 		&menuData.PreSongSelectData)
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
 	if menuData.Status == 22 || len(process) > 1 {
@@ -122,6 +122,8 @@ func initBase() error {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		DynamicAddresses.IsReady = true
+		return true, nil
 	}
 	if menuData.Status == 0 {
 		log.Println("Please go to song select to proceed!")
@@ -131,18 +133,18 @@ func initBase() error {
 				&patterns.PreSongSelectAddresses,
 				&menuData.PreSongSelectData)
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
 	fmt.Println("[MEMORY] Resolving patterns...")
 	err = mem.ResolvePatterns(process[0], &patterns)
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Println("[MEMORY] Got all patterns...")
 
 	DynamicAddresses.IsReady = true
 
-	return nil
+	return false, nil
 }

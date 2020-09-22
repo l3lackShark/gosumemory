@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"path/filepath"
@@ -23,6 +24,8 @@ var UpdateTime int
 //UnderWine?
 var UnderWine bool
 
+var isTournamentClient bool
+
 //var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
 var hasLeaderboard = false
@@ -41,26 +44,26 @@ func Init() {
 	} else {
 		leaderStart = 0x8
 	}
-
+	var err error
 	for {
 		process, procerr = mem.FindProcess(osuProcessRegex)
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
 				process, procerr = mem.FindProcess(osuProcessRegex)
-				log.Println("It seems that we lost the process[0], retrying!")
+				log.Println("It seems that we lost the process, retrying!")
 				time.Sleep(1 * time.Second)
 			}
-			err := initBase()
+			isTournamentClient, err = initBase()
 			for err != nil {
-				err = initBase()
+				isTournamentClient, err = initBase()
 				time.Sleep(1 * time.Second)
 			}
 		}
 		if DynamicAddresses.IsReady == false {
-			err := initBase()
+			isTournamentClient, err = initBase()
 			for err != nil {
-				err = initBase()
+				isTournamentClient, err = initBase()
 				if err != nil {
 					log.Println("Failure mid getting offsets, retrying")
 				}
@@ -68,52 +71,57 @@ func Init() {
 
 			}
 		} else {
-			err := mem.Read(process[0],
-				&patterns.PreSongSelectAddresses,
-				&menuData.PreSongSelectData)
-			if err != nil {
-				DynamicAddresses.IsReady = false
-				log.Println("It appears that we lost the precess, retrying", err)
-				continue
-			}
-			MenuData.OsuStatus = menuData.Status
+			if isTournamentClient {
+				fmt.Println("We are in tournament mode!")
 
-			mem.Read(process[0], &patterns, &alwaysData)
+			} else {
 
-			MenuData.ChatChecker = alwaysData.ChatStatus
-			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-			MenuData.SkinFolder = alwaysData.SkinFolder
-			switch menuData.Status {
-			case 2:
-				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
-					err := bmUpdateData()
+				err := mem.Read(process[0],
+					&patterns.PreSongSelectAddresses,
+					&menuData.PreSongSelectData)
+				if err != nil {
+					DynamicAddresses.IsReady = false
+					log.Println("It appears that we lost the precess, retrying", err)
+					continue
+				}
+				MenuData.OsuStatus = menuData.Status
+
+				mem.Read(process[0], &patterns, &alwaysData)
+
+				MenuData.ChatChecker = alwaysData.ChatStatus
+				MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
+				MenuData.SkinFolder = alwaysData.SkinFolder
+				switch menuData.Status {
+				case 2:
+					if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
+						err := bmUpdateData()
+						if err != nil {
+							pp.Println(err)
+						}
+					}
+					if gameplayData.Retries > tempRetries {
+						tempRetries = gameplayData.Retries
+						GameplayData = GameplayValues{}
+						gameplayData = gameplayD{}
+
+					}
+					getGamplayData()
+				case 1:
+					err = bmUpdateData()
+					if err != nil {
+						pp.Println(err)
+					}
+				case 7:
+				default:
+					tempRetries = -1
+					GameplayData = GameplayValues{}
+					gameplayData = gameplayD{}
+					hasLeaderboard = false
+					err = bmUpdateData()
 					if err != nil {
 						pp.Println(err)
 					}
 				}
-				if gameplayData.Retries > tempRetries {
-					tempRetries = gameplayData.Retries
-					GameplayData = GameplayValues{}
-					gameplayData = gameplayD{}
-
-				}
-				getGamplayData()
-			case 1:
-				err = bmUpdateData()
-				if err != nil {
-					pp.Println(err)
-				}
-			case 7:
-			default:
-				tempRetries = -1
-				GameplayData = GameplayValues{}
-				gameplayData = gameplayD{}
-				hasLeaderboard = false
-				err = bmUpdateData()
-				if err != nil {
-					pp.Println(err)
-				}
-
 			}
 			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 		}
