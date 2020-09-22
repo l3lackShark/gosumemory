@@ -49,7 +49,7 @@ func FindProcess(re *regexp.Regexp) ([]Process, error) {
 		procs = append(procs, process{pid})
 	}
 	if len(procs) < 1 {
-		return process{}, ErrNoProcess
+		return nil, ErrNoProcess
 	}
 	return procs, nil
 }
