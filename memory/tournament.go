@@ -9,13 +9,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/k0kubun/pp"
 )
 
 //initTournement should be called on tournament manager
 func initTournement() error {
 
 	//read tournament.cfg to check how many clients we are expecting
-	osuExecutablePath, err := process.ExecutablePath()
+	osuExecutablePath, err := process[0].ExecutablePath()
 	if err != nil {
 		return err
 	}
@@ -36,6 +38,7 @@ func initTournement() error {
 				return err
 			}
 			fmt.Println("Total expected amount of tournament clients:", teamSize*2)
+			pp.Println("Total clients so far:", process)
 
 		}
 	}

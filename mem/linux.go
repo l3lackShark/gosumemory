@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func FindProcess(re *regexp.Regexp) (Process, error) {
+func FindProcess(re *regexp.Regexp) ([]Process, error) {
 	dirs, err := ioutil.ReadDir("/proc")
 	if err != nil {
 		return nil, err
@@ -27,6 +27,7 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			pids = append(pids, pid)
 		}
 	}
+	var procs []Process
 	for _, pid := range pids {
 		path := fmt.Sprintf("/proc/%d/cmdline", pid)
 		f, err := os.Open(path)
@@ -45,9 +46,12 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 
-		return process{pid}, nil
+		procs = append(procs, process{pid})
 	}
-	return process{}, ErrNoProcess
+	if len(procs) < 1 {
+		return process{}, ErrNoProcess
+	}
+	return procs, nil
 }
 
 type process struct {

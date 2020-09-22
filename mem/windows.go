@@ -57,7 +57,8 @@ func queryFullProcessImageName(hProcess syscall.Handle) (string, error) {
 
 }
 
-func FindProcess(re *regexp.Regexp) (Process, error) {
+func FindProcess(re *regexp.Regexp) ([]Process, error) {
+	var procs []Process
 	pids, err := windows.EnumProcesses()
 	if err != nil {
 		return nil, err
@@ -75,10 +76,13 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 		if re.MatchString(name) {
-			return process{pid, handle}, nil
+			procs = append(procs, process{pid, handle})
 		}
 	}
-	return process{}, ErrNoProcess
+	if len(procs) < 1 {
+		return nil, ErrNoProcess
+	}
+	return procs, nil
 }
 
 type process struct {

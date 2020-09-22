@@ -25,7 +25,7 @@ var alwaysData allTimesD
 
 func resolveSongsFolder() (string, error) {
 	var err error
-	osuExecutablePath, err := process.ExecutablePath()
+	osuExecutablePath, err := process[0].ExecutablePath()
 	if err != nil {
 		return "", err
 	}
@@ -105,19 +105,19 @@ func initBase() error {
 		}
 	}
 
-	err = mem.ResolvePatterns(process, &patterns.PreSongSelectAddresses)
+	err = mem.ResolvePatterns(process[0], &patterns.PreSongSelectAddresses)
 	if err != nil {
 		return err
 	}
 
-	err = mem.Read(process,
+	err = mem.Read(process[0],
 		&patterns.PreSongSelectAddresses,
 		&menuData.PreSongSelectData)
 	if err != nil {
 		return err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
-	if menuData.Status == 22 {
+	if menuData.Status == 22 || len(process) > 1 {
 		err := initTournement()
 		if err != nil {
 			log.Fatalln(err)
@@ -127,7 +127,7 @@ func initBase() error {
 		log.Println("Please go to song select to proceed!")
 		for menuData.Status == 0 {
 			time.Sleep(100 * time.Millisecond)
-			err := mem.Read(process,
+			err := mem.Read(process[0],
 				&patterns.PreSongSelectAddresses,
 				&menuData.PreSongSelectData)
 			if err != nil {
@@ -136,7 +136,7 @@ func initBase() error {
 		}
 	}
 	fmt.Println("[MEMORY] Resolving patterns...")
-	err = mem.ResolvePatterns(process, &patterns)
+	err = mem.ResolvePatterns(process[0], &patterns)
 	if err != nil {
 		return err
 	}

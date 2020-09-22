@@ -48,7 +48,7 @@ func Init() {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
 				process, procerr = mem.FindProcess(osuProcessRegex)
-				log.Println("It seems that we lost the process, retrying!")
+				log.Println("It seems that we lost the process[0], retrying!")
 				time.Sleep(1 * time.Second)
 			}
 			err := initBase()
@@ -68,7 +68,7 @@ func Init() {
 
 			}
 		} else {
-			err := mem.Read(process,
+			err := mem.Read(process[0],
 				&patterns.PreSongSelectAddresses,
 				&menuData.PreSongSelectData)
 			if err != nil {
@@ -78,7 +78,7 @@ func Init() {
 			}
 			MenuData.OsuStatus = menuData.Status
 
-			mem.Read(process, &patterns, &alwaysData)
+			mem.Read(process[0], &patterns, &alwaysData)
 
 			MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
@@ -124,7 +124,7 @@ func Init() {
 var tempBeatmapString string = ""
 
 func bmUpdateData() error {
-	mem.Read(process, &patterns, &menuData)
+	mem.Read(process[0], &patterns, &menuData)
 
 	bmString := menuData.Path
 	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
@@ -133,7 +133,7 @@ func bmUpdateData() error {
 				break
 			}
 			time.Sleep(25 * time.Millisecond)
-			mem.Read(process, &patterns, &menuData)
+			mem.Read(process[0], &patterns, &menuData)
 		}
 		tempBeatmapString = bmString
 		MenuData.Bm.BeatmapID = menuData.MapID
@@ -170,7 +170,7 @@ func bmUpdateData() error {
 	return nil
 }
 func getGamplayData() {
-	mem.Read(process, &patterns, &gameplayData)
+	mem.Read(process[0], &patterns, &gameplayData)
 	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
@@ -217,18 +217,18 @@ func getLeaderboard() {
 		return
 	}
 	board.DoesLeaderBoardExists = true
-	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
+	ourPlayerStruct, _ := mem.ReadUint32(process[0], int64(gameplayData.LeaderBoard)+0x10, 0)
 	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
 	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
-	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
-	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
+	playersArray, _ := mem.ReadUint32(process[0], int64(gameplayData.LeaderBoard)+0x4)
+	amOfSlots, _ := mem.ReadInt32(process[0], int64(playersArray+0xC))
 	if amOfSlots < 1 || amOfSlots > 64 {
 		return
 	}
-	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
+	items, _ := mem.ReadInt32(process[0], int64(playersArray+0x4))
 	board.Slots = make([]leaderPlayer, amOfSlots)
 	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
-		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
+		slot, _ := mem.ReadUint32(process[0], int64(items), int64(i))
 		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
 	}
 	GameplayData.Leaderboard = board
@@ -251,7 +251,7 @@ func readLeaderPlayerStruct(base int64) leaderPlayer {
 		Position  int32  `mem:"Base + 0x2C"`
 		IsPassing int8   `mem:"Base + 0x4B"`
 	}
-	mem.Read(process, &addresses, &player)
+	mem.Read(process[0], &addresses, &player)
 	mods := modsResolver(player.ModsXor1 ^ player.ModsXor2)
 	if mods == "" {
 		mods = "NM"
