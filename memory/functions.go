@@ -35,6 +35,7 @@ var SongsFolderPath string
 
 var process, procerr = mem.FindProcess(osuProcessRegex)
 
+var tempBeatmapString string = ""
 var tempRetries int32
 
 //Init the whole thing and get osu! memory values to start working with it.
@@ -75,64 +76,67 @@ func Init() {
 				fmt.Println("We are in tournament mode!")
 
 			} else {
-
-				err := mem.Read(process[0],
-					&patterns.PreSongSelectAddresses,
-					&menuData.PreSongSelectData)
-				if err != nil {
-					DynamicAddresses.IsReady = false
-					log.Println("It appears that we lost the precess, retrying", err)
-					continue
-				}
-				MenuData.OsuStatus = menuData.Status
-
-				mem.Read(process[0], &patterns, &alwaysData)
-
-				MenuData.ChatChecker = alwaysData.ChatStatus
-				MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-				MenuData.SkinFolder = alwaysData.SkinFolder
-				switch menuData.Status {
-				case 2:
-					if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
-						err := bmUpdateData()
-						if err != nil {
-							pp.Println(err)
-						}
-					}
-					if gameplayData.Retries > tempRetries {
-						tempRetries = gameplayData.Retries
-						GameplayData = GameplayValues{}
-						gameplayData = gameplayD{}
-
-					}
-					getGamplayData()
-				case 1:
-					err = bmUpdateData()
-					if err != nil {
-						pp.Println(err)
-					}
-				case 7:
-				default:
-					tempRetries = -1
-					GameplayData = GameplayValues{}
-					gameplayData = gameplayD{}
-					hasLeaderboard = false
-					err = bmUpdateData()
-					if err != nil {
-						pp.Println(err)
-					}
-				}
+				readProcessMemory(0)
 			}
-			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 		}
+
 	}
 
 }
 
-var tempBeatmapString string = ""
+func readProcessMemory(proc int) error {
 
-func bmUpdateData() error {
-	mem.Read(process[0], &patterns, &menuData)
+	err := mem.Read(process[proc],
+		&patterns.PreSongSelectAddresses,
+		&menuData.PreSongSelectData)
+	if err != nil {
+		DynamicAddresses.IsReady = false
+		log.Println("It appears that we lost the precess, retrying", err)
+		return err
+	}
+	MenuData.OsuStatus = menuData.Status
+
+	mem.Read(process[proc], &patterns, &alwaysData)
+
+	MenuData.ChatChecker = alwaysData.ChatStatus
+	MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
+	MenuData.SkinFolder = alwaysData.SkinFolder
+	switch menuData.Status {
+	case 2:
+		if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
+			err := bmUpdateData(proc)
+			if err != nil {
+				pp.Println(err)
+			}
+		}
+		if gameplayData.Retries > tempRetries {
+			tempRetries = gameplayData.Retries
+			GameplayData = GameplayValues{}
+			gameplayData = gameplayD{}
+
+		}
+		getGamplayData(proc)
+	case 1:
+		err = bmUpdateData(proc)
+		if err != nil {
+			pp.Println(err)
+		}
+	case 7:
+	default:
+		tempRetries = -1
+		GameplayData = GameplayValues{}
+		gameplayData = gameplayD{}
+		hasLeaderboard = false
+		err = bmUpdateData(proc)
+		if err != nil {
+			pp.Println(err)
+		}
+	}
+	return nil
+}
+
+func bmUpdateData(proc int) error {
+	mem.Read(process[proc], &patterns, &menuData)
 
 	bmString := menuData.Path
 	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
@@ -141,7 +145,7 @@ func bmUpdateData() error {
 				break
 			}
 			time.Sleep(25 * time.Millisecond)
-			mem.Read(process[0], &patterns, &menuData)
+			mem.Read(process[proc], &patterns, &menuData)
 		}
 		tempBeatmapString = bmString
 		MenuData.Bm.BeatmapID = menuData.MapID
@@ -177,8 +181,8 @@ func bmUpdateData() error {
 
 	return nil
 }
-func getGamplayData() {
-	mem.Read(process[0], &patterns, &gameplayData)
+func getGamplayData(proc int) {
+	mem.Read(process[proc], &patterns, &gameplayData)
 	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
@@ -214,10 +218,10 @@ func getGamplayData() {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
 		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
-	getLeaderboard()
+	getLeaderboard(proc)
 }
 
-func getLeaderboard() {
+func getLeaderboard(proc int) {
 	var board leaderboard
 	if gameplayData.LeaderBoard == 0 {
 		board.DoesLeaderBoardExists = false
@@ -225,24 +229,24 @@ func getLeaderboard() {
 		return
 	}
 	board.DoesLeaderBoardExists = true
-	ourPlayerStruct, _ := mem.ReadUint32(process[0], int64(gameplayData.LeaderBoard)+0x10, 0)
-	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+	ourPlayerStruct, _ := mem.ReadUint32(process[proc], int64(gameplayData.LeaderBoard)+0x10, 0)
+	board.OurPlayer = readLeaderPlayerStruct(proc, int64(ourPlayerStruct))
 	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
-	playersArray, _ := mem.ReadUint32(process[0], int64(gameplayData.LeaderBoard)+0x4)
-	amOfSlots, _ := mem.ReadInt32(process[0], int64(playersArray+0xC))
+	playersArray, _ := mem.ReadUint32(process[proc], int64(gameplayData.LeaderBoard)+0x4)
+	amOfSlots, _ := mem.ReadInt32(process[proc], int64(playersArray+0xC))
 	if amOfSlots < 1 || amOfSlots > 64 {
 		return
 	}
-	items, _ := mem.ReadInt32(process[0], int64(playersArray+0x4))
+	items, _ := mem.ReadInt32(process[proc], int64(playersArray+0x4))
 	board.Slots = make([]leaderPlayer, amOfSlots)
 	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
-		slot, _ := mem.ReadUint32(process[0], int64(items), int64(i))
-		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
+		slot, _ := mem.ReadUint32(process[proc], int64(items), int64(i))
+		board.Slots[j] = readLeaderPlayerStruct(proc, int64(slot))
 	}
 	GameplayData.Leaderboard = board
 }
 
-func readLeaderPlayerStruct(base int64) leaderPlayer {
+func readLeaderPlayerStruct(proc int, base int64) leaderPlayer {
 	addresses := struct{ Base int64 }{base}
 	var player struct {
 		Name      string `mem:"[Base + 0x8]"`
@@ -259,7 +263,7 @@ func readLeaderPlayerStruct(base int64) leaderPlayer {
 		Position  int32  `mem:"Base + 0x2C"`
 		IsPassing int8   `mem:"Base + 0x4B"`
 	}
-	mem.Read(process[0], &addresses, &player)
+	mem.Read(process[proc], &addresses, &player)
 	mods := modsResolver(player.ModsXor1 ^ player.ModsXor2)
 	if mods == "" {
 		mods = "NM"

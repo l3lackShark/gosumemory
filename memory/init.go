@@ -93,7 +93,7 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() (isTournamentClient bool, err error) {
-	process, err := mem.FindProcess(osuProcessRegex)
+	process, err = mem.FindProcess(osuProcessRegex)
 	if err != nil {
 		return false, err
 	}
@@ -118,6 +118,7 @@ func initBase() (isTournamentClient bool, err error) {
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
 	if menuData.Status == 22 || len(process) > 1 {
+		fmt.Println("[MEMORY] Operating in tournament mode")
 		err := initTournement()
 		if err != nil {
 			log.Fatalln(err)
@@ -145,6 +146,6 @@ func initBase() (isTournamentClient bool, err error) {
 	fmt.Println("[MEMORY] Got all patterns...")
 
 	DynamicAddresses.IsReady = true
-
+	fmt.Println("[MEMORY] Operating in normal mode")
 	return false, nil
 }

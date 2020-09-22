@@ -9,8 +9,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/k0kubun/pp"
+	"github.com/l3lackShark/gosumemory/mem"
 )
 
 //initTournement should be called on tournament manager
@@ -30,17 +31,33 @@ func initTournement() error {
 		return err
 	}
 	defer cfgFile.Close()
+
+	var totalClients int
 	scanner := bufio.NewScanner(cfgFile)
+
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), "TeamSize") {
 			teamSize, err := strconv.Atoi(scanner.Text()[len(scanner.Text())-1:])
 			if err != nil {
 				return err
 			}
-			fmt.Println("Total expected amount of tournament clients:", teamSize*2)
-			pp.Println("Total clients so far:", process)
-
+			totalClients = teamSize * 2
+			fmt.Println("Total expected amount of tournament clients:", totalClients)
+			break
 		}
+	}
+
+	if totalClients == 0 {
+		return errors.New("total clients is 0")
+	}
+	fmt.Println("[TOURNAMENT] Awaiting all clients to load...")
+	for len(process) != totalClients+1 { //+1 is Tournament Manager
+		process, err = mem.FindProcess(osuProcessRegex)
+		if err != nil {
+			return err
+		}
+		fmt.Println("[TOURNAMENT] Loaded", len(process), "clients..", "wating for", totalClients+1-len(process), "more...")
+		time.Sleep(500 * time.Millisecond)
 	}
 	return nil
 }
