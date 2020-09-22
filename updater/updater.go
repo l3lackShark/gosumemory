@@ -16,7 +16,7 @@ const version = "1.2.3"
 
 //DoSelfUpdate updates the application
 func DoSelfUpdate() {
-	fmt.Println("Checking Updates...")
+	fmt.Println("Checking Updates... (can take some time if you have bad routing to GitHub)")
 	name, err := os.Executable()
 	if err != nil {
 		log.Fatalln(err)
