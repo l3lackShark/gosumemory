@@ -117,6 +117,12 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
+	if menuData.Status == 22 {
+		err := initTournement()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 	if menuData.Status == 0 {
 		log.Println("Please go to song select to proceed!")
 		for menuData.Status == 0 {
