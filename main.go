@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/l3lackShark/gosumemory/db"
+	"github.com/l3lackShark/gosumemory/mem"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/pp"
 	"github.com/l3lackShark/gosumemory/updater"
@@ -20,7 +21,9 @@ func main() {
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
+	memDebugFlag := flag.Bool("memdebug", false, `Enable verbose memory debugging?`)
 	flag.Parse()
+	mem.Debug = *memDebugFlag
 	memory.UpdateTime = *updateTimeFlag
 	memory.SongsFolderPath = *songsFolderFlag
 	memory.UnderWine = *isRunningInWINE
