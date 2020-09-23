@@ -83,7 +83,9 @@ func (p process) ReadAt(b []byte, off int64) (n int, err error) {
 	remoteIov := [1]unix.RemoteIovec{
 		{Base: uintptr(off), Len: len(b)},
 	}
-	return unix.ProcessVMReadv(p.pid, localIov[:], remoteIov[:], 0)
+	n, err = unix.ProcessVMReadv(p.pid, localIov[:], remoteIov[:], 0)
+	logRead(b, n, off, err)
+	return n, err
 }
 
 func (p process) Maps() ([]Map, error) {

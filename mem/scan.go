@@ -173,6 +173,9 @@ func (r ReadError) Error() string {
 }
 
 func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
+	beginDebug()
+	defer endDebug()
+
 	addrpval := reflect.ValueOf(addresses)
 	addrval := addrpval.Elem()
 
@@ -204,20 +207,34 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 			field := addrval.FieldByName(name)
 			if field.IsValid() {
 				addr := field.Interface().(int64)
+				log("%s: 0x%x\n", name, addr)
 				return addr, nil
 			}
 			method := addrval.Addr().MethodByName(name)
 			if method.IsValid() {
 				ret := method.Call([]reflect.Value{})
-				expr, err := parseMem(
-					ret[0].Interface().(string), varFunc)
+				exprStr := ret[0].Interface().(string)
+				expr, err := parseMem(exprStr, varFunc)
 				if err != nil {
+					log("Failed to parse variable %s: %v\n",
+						name, err)
 					return 0, err
 				}
-				return expr.eval(evalFunc)
+				log("%s(): %#v\n", name, exprStr)
+				val, err := expr.eval(evalFunc)
+				if err == nil {
+					log("%s() = 0x%x\n",
+						name, val)
+				} else {
+					log("Failed to resolve variable %s: %v\n",
+						name, err)
+				}
+				return val, err
 			}
 			return 0, fmt.Errorf("undefined variable %s", name)
 		}
+		log("%v: %#v\n", fieldt.Name, tag)
+		dbg := pushDebug()
 		expr, err := parseMem(tag, varFunc)
 		if err != nil {
 			return fmt.Errorf(
@@ -235,6 +252,7 @@ func Read(r io.ReaderAt, addresses interface{}, p interface{}) error {
 				valt.Name(), fieldt.Name, err)
 			errs = append(errs, err)
 		}
+		popDebug(dbg)
 	}
 
 	if len(errs) != 0 {
@@ -326,6 +344,13 @@ func (m *mem) eval(f func(p int64) (int64, error)) (int64, error) {
 		dereferenced, err := f(childAddr)
 		if err != nil {
 			return 0, err
+		}
+
+		if m.Offset == 0 {
+			log("[0x%x] = 0x%x\n", childAddr, dereferenced)
+		} else {
+			log("[0x%x] + 0x%x = 0x%x\n", childAddr, m.Offset,
+				dereferenced+m.Offset)
 		}
 
 		return dereferenced + m.Offset, nil
