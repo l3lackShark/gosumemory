@@ -25,6 +25,7 @@ var UpdateTime int
 var UnderWine bool
 
 var isTournamentClient bool
+var tourneyPID int
 
 //var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32

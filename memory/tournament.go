@@ -11,8 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/mem"
 )
+
+var tourneyClients []staticAddresses
+var tourneyClientsMenuD []menuD
 
 //initTournement should be called on tournament manager
 func initTournement() error {
@@ -56,8 +60,23 @@ func initTournement() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("[TOURNAMENT] Loaded", len(process), "clients..", "wating for", totalClients+1-len(process), "more...")
+		fmt.Println("[TOURNAMENT] Loaded", len(process), "clients..", "wating for", totalClients-len(process), "more...")
 		time.Sleep(500 * time.Millisecond)
 	}
+
+	tourneyClients = make([]staticAddresses, len(process))
+	tourneyClientsMenuD = make([]menuD, len(process))
+
+	pp.Println(process)
+	for i := range process {
+		err = mem.Read(process[i],
+			&tourneyClients[i].PreSongSelectAddresses,
+			&tourneyClientsMenuD[i].PreSongSelectData)
+		if err != nil {
+			return err
+		}
+		fmt.Println(tourneyClients[i].Status)
+	}
+
 	return nil
 }
