@@ -17,11 +17,11 @@ import (
 )
 
 var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
-var patterns staticAddresses
+var patterns []staticAddresses
 
-var menuData menuD
-var gameplayData gameplayD
-var alwaysData allTimesD
+var menuData []menuD
+var gameplayData []gameplayD
+var alwaysData []allTimesD
 
 func resolveSongsFolder() (string, error) {
 	var err error
@@ -93,6 +93,7 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() (isTournamentClient bool, err error) {
+	tourneyManagerID = 0
 	process, err = mem.FindProcess(osuProcessRegex)
 	if err != nil {
 		return false, err
@@ -104,20 +105,24 @@ func initBase() (isTournamentClient bool, err error) {
 			log.Fatalln(err)
 		}
 	}
+	menuData = make([]menuD, 1)
+	patterns = make([]staticAddresses, 1)
+	gameplayData = make([]gameplayD, 1)
+	alwaysData = make([]allTimesD, 1)
 
-	err = mem.ResolvePatterns(process[0], &patterns.PreSongSelectAddresses)
+	err = mem.ResolvePatterns(process[0], &patterns[0].PreSongSelectAddresses)
 	if err != nil {
 		return false, err
 	}
 
 	err = mem.Read(process[0],
-		&patterns.PreSongSelectAddresses,
-		&menuData.PreSongSelectData)
+		&patterns[0].PreSongSelectAddresses,
+		&menuData[0].PreSongSelectData)
 	if err != nil {
 		return false, err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
-	if menuData.Status == 22 || len(process) > 1 {
+	if menuData[0].Status == 22 || len(process) > 1 {
 		fmt.Println("[MEMORY] Operating in tournament mode")
 		err := initTournement()
 		if err != nil {
@@ -126,24 +131,24 @@ func initBase() (isTournamentClient bool, err error) {
 		DynamicAddresses.IsReady = true
 		return true, nil
 	}
-	if menuData.Status == 0 {
+	if menuData[0].Status == 0 {
 		log.Println("Please go to song select to proceed!")
-		for menuData.Status == 0 {
+		for menuData[0].Status == 0 {
 			time.Sleep(100 * time.Millisecond)
 			err := mem.Read(process[0],
-				&patterns.PreSongSelectAddresses,
-				&menuData.PreSongSelectData)
+				&patterns[0].PreSongSelectAddresses,
+				&menuData[0].PreSongSelectData)
 			if err != nil {
 				return false, err
 			}
 		}
 	}
-	fmt.Println("[MEMORY] Resolving patterns...")
-	err = mem.ResolvePatterns(process[0], &patterns)
+	fmt.Println("[MEMORY] Resolving patterns[0]...")
+	err = mem.ResolvePatterns(process[0], &patterns[0])
 	if err != nil {
 		return false, err
 	}
-	fmt.Println("[MEMORY] Got all patterns...")
+	fmt.Println("[MEMORY] Got all patterns[0]...")
 
 	DynamicAddresses.IsReady = true
 	fmt.Println("[MEMORY] Operating in normal mode")

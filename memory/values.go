@@ -25,6 +25,15 @@ type GameplayValues struct {
 	Leaderboard leaderboard `json:"leaderboard"`
 }
 
+type TournamentValues struct {
+	Clients []tournamentClients
+}
+
+type tournamentClients struct {
+	MenuData     []InMenuValues
+	GameplayData []GameplayValues
+}
+
 type bm struct {
 	Time           tim      `json:"time"`
 	BeatmapID      int32    `json:"id"`

@@ -13,7 +13,7 @@ type staticAddresses struct {
 	Base              int64 `sig:"F8 01 74 04 83 65"`
 	MenuMods          int64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
 	PlayTime          int64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"`
-	PlayContainerBase int64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
+	PlayContainerBase int64 `sig:"89 46 08 EB 2A 8B 35"`
 	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
 	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
 	SkinData          int64 `sig:"75 21 8B 1D"`
@@ -24,7 +24,7 @@ func (staticAddresses) Beatmap() string {
 }
 
 func (staticAddresses) PlayContainer() string {
-	return "[[PlayContainerBase - 0x4]]"
+	return "[[PlayContainerBase + 0x7] + 0x4 + 0xC4] + 0x4"
 }
 
 func (staticAddresses) Leaderboard() string {

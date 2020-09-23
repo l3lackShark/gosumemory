@@ -74,13 +74,18 @@ func Init() {
 			}
 		} else {
 			if isTournamentClient {
+				for i := 0; i < len(process); i++ {
+					if i != tourneyManagerID {
+						readProcessMemory(i)
+					}
+				}
 				fmt.Println("We are in tournament mode!")
 
 			} else {
 				readProcessMemory(0)
 			}
 		}
-
+		time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 	}
 
 }
@@ -88,32 +93,32 @@ func Init() {
 func readProcessMemory(proc int) error {
 
 	err := mem.Read(process[proc],
-		&patterns.PreSongSelectAddresses,
-		&menuData.PreSongSelectData)
+		&patterns[proc].PreSongSelectAddresses,
+		&menuData[proc].PreSongSelectData)
 	if err != nil {
 		DynamicAddresses.IsReady = false
 		log.Println("It appears that we lost the precess, retrying", err)
 		return err
 	}
-	MenuData.OsuStatus = menuData.Status
+	MenuData.OsuStatus = menuData[proc].Status
 
-	mem.Read(process[proc], &patterns, &alwaysData)
+	mem.Read(process[proc], &patterns[proc], &alwaysData[proc])
 
-	MenuData.ChatChecker = alwaysData.ChatStatus
-	MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-	MenuData.SkinFolder = alwaysData.SkinFolder
-	switch menuData.Status {
+	MenuData.ChatChecker = alwaysData[proc].ChatStatus
+	MenuData.Bm.Time.PlayTime = alwaysData[proc].PlayTime
+	MenuData.SkinFolder = alwaysData[proc].SkinFolder
+	switch menuData[proc].Status {
 	case 2:
-		if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
+		if MenuData.Bm.Time.PlayTime < 150 || menuData[proc].Path == "" { //To catch up with the F2-->Enter
 			err := bmUpdateData(proc)
 			if err != nil {
 				pp.Println(err)
 			}
 		}
-		if gameplayData.Retries > tempRetries {
-			tempRetries = gameplayData.Retries
+		if gameplayData[proc].Retries > tempRetries {
+			tempRetries = gameplayData[proc].Retries
 			GameplayData = GameplayValues{}
-			gameplayData = gameplayD{}
+			gameplayData[proc] = gameplayD{}
 
 		}
 		getGamplayData(proc)
@@ -126,7 +131,7 @@ func readProcessMemory(proc int) error {
 	default:
 		tempRetries = -1
 		GameplayData = GameplayValues{}
-		gameplayData = gameplayD{}
+		gameplayData[proc] = gameplayD{}
 		hasLeaderboard = false
 		err = bmUpdateData(proc)
 		if err != nil {
@@ -137,65 +142,66 @@ func readProcessMemory(proc int) error {
 }
 
 func bmUpdateData(proc int) error {
-	mem.Read(process[proc], &patterns, &menuData)
+	mem.Read(process[proc], &patterns[proc], &menuData[proc])
 
-	bmString := menuData.Path
+	bmString := menuData[proc].Path
 	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
 		for i := 0; i < 50; i++ {
-			if menuData.BackgroundFilename != "" {
+			if menuData[proc].BackgroundFilename != "" {
 				break
 			}
 			time.Sleep(25 * time.Millisecond)
-			mem.Read(process[proc], &patterns, &menuData)
+			mem.Read(process[proc], &patterns[proc], &menuData[proc])
 		}
 		tempBeatmapString = bmString
-		MenuData.Bm.BeatmapID = menuData.MapID
-		MenuData.Bm.BeatmapSetID = menuData.SetID
+		MenuData.Bm.BeatmapID = menuData[proc].MapID
+		MenuData.Bm.BeatmapSetID = menuData[proc].SetID
 		MenuData.Bm.Path = path{
-			AudioPath:            menuData.AudioFilename,
-			BGPath:               menuData.BackgroundFilename,
-			BeatmapOsuFileString: menuData.Path,
-			BeatmapFolderString:  menuData.Folder,
-			FullMP3Path:          filepath.Join(SongsFolderPath, menuData.Folder, menuData.AudioFilename),
-			FullDotOsu:           filepath.Join(SongsFolderPath, menuData.Folder, bmString),
-			InnerBGPath:          filepath.Join(menuData.Folder, menuData.BackgroundFilename),
+			AudioPath:            menuData[proc].AudioFilename,
+			BGPath:               menuData[proc].BackgroundFilename,
+			BeatmapOsuFileString: menuData[proc].Path,
+			BeatmapFolderString:  menuData[proc].Folder,
+			FullMP3Path:          filepath.Join(SongsFolderPath, menuData[proc].Folder, menuData[proc].AudioFilename),
+			FullDotOsu:           filepath.Join(SongsFolderPath, menuData[proc].Folder, bmString),
+			InnerBGPath:          filepath.Join(menuData[proc].Folder, menuData[proc].BackgroundFilename),
 		}
-		MenuData.Bm.Stats.MemoryAR = menuData.AR
-		MenuData.Bm.Stats.MemoryCS = menuData.CS
-		MenuData.Bm.Stats.MemoryHP = menuData.HP
-		MenuData.Bm.Stats.MemoryOD = menuData.OD
-		MenuData.Bm.Metadata.Artist = menuData.Artist
-		MenuData.Bm.Metadata.Title = menuData.Title
-		MenuData.Bm.Metadata.Mapper = menuData.Creator
-		MenuData.Bm.Metadata.Version = menuData.Difficulty
-		MenuData.GameMode = menuData.MenuGameMode
-		MenuData.Bm.RandkedStatus = menuData.RankedStatus
-		MenuData.Bm.BeatmapMD5 = menuData.MD5
+		MenuData.Bm.Stats.MemoryAR = menuData[proc].AR
+		MenuData.Bm.Stats.MemoryCS = menuData[proc].CS
+		MenuData.Bm.Stats.MemoryHP = menuData[proc].HP
+		MenuData.Bm.Stats.MemoryOD = menuData[proc].OD
+		MenuData.Bm.Metadata.Artist = menuData[proc].Artist
+		MenuData.Bm.Metadata.Title = menuData[proc].Title
+		MenuData.Bm.Metadata.Mapper = menuData[proc].Creator
+		MenuData.Bm.Metadata.Version = menuData[proc].Difficulty
+		MenuData.GameMode = menuData[proc].MenuGameMode
+		MenuData.Bm.RandkedStatus = menuData[proc].RankedStatus
+		MenuData.Bm.BeatmapMD5 = menuData[proc].MD5
 	}
-	if alwaysData.MenuMods == 0 {
+	if alwaysData[proc].MenuMods == 0 {
 		MenuData.Mods.PpMods = "NM"
-		MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
+		MenuData.Mods.AppliedMods = int32(alwaysData[proc].MenuMods)
 	} else {
-		MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
-		MenuData.Mods.PpMods = Mods(alwaysData.MenuMods).String()
+		MenuData.Mods.AppliedMods = int32(alwaysData[proc].MenuMods)
+		MenuData.Mods.PpMods = Mods(alwaysData[proc].MenuMods).String()
 	}
 
 	return nil
 }
 func getGamplayData(proc int) {
-	mem.Read(process[proc], &patterns, &gameplayData)
-	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
-	GameplayData.Combo.Current = gameplayData.Combo
-	GameplayData.Combo.Max = gameplayData.MaxCombo
-	GameplayData.GameMode = gameplayData.Mode
-	GameplayData.Score = gameplayData.Score
-	GameplayData.Hits.H100 = gameplayData.Hit100
-	GameplayData.Hits.HKatu = gameplayData.HitKatu
-	GameplayData.Hits.H200M = gameplayData.Hit200M
-	GameplayData.Hits.H300 = gameplayData.Hit300
-	GameplayData.Hits.HGeki = gameplayData.HitGeki
-	GameplayData.Hits.H50 = gameplayData.Hit50
-	GameplayData.Hits.H0 = gameplayData.HitMiss
+	mem.Read(process[proc], &patterns[proc], &gameplayData[proc])
+	//GameplayData.BitwiseKeypress = gameplayData[proc].BitwiseKeypress
+	GameplayData.Combo.Current = gameplayData[proc].Combo
+	GameplayData.Combo.Max = gameplayData[proc].MaxCombo
+	fmt.Println(gameplayData[proc].Score)
+	GameplayData.GameMode = gameplayData[proc].Mode
+	GameplayData.Score = gameplayData[proc].Score
+	GameplayData.Hits.H100 = gameplayData[proc].Hit100
+	GameplayData.Hits.HKatu = gameplayData[proc].HitKatu
+	GameplayData.Hits.H200M = gameplayData[proc].Hit200M
+	GameplayData.Hits.H300 = gameplayData[proc].Hit300
+	GameplayData.Hits.HGeki = gameplayData[proc].HitGeki
+	GameplayData.Hits.H50 = gameplayData[proc].Hit50
+	GameplayData.Hits.H0 = gameplayData[proc].HitMiss
 	if GameplayData.Combo.Temp > GameplayData.Combo.Max {
 		GameplayData.Combo.Temp = 0
 	}
@@ -204,19 +210,19 @@ func getGamplayData(proc int) {
 	}
 	GameplayData.Hits.H0Temp = GameplayData.Hits.H0
 	GameplayData.Combo.Temp = GameplayData.Combo.Current
-	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor1)
-	GameplayData.Accuracy = gameplayData.Accuracy
-	GameplayData.Hp.Normal = gameplayData.PlayerHP
-	GameplayData.Hp.Smooth = gameplayData.PlayerHPSmooth
-	GameplayData.Name = gameplayData.PlayerName
-	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor2)
+	MenuData.Mods.AppliedMods = int32(gameplayData[proc].ModsXor1 ^ gameplayData[proc].ModsXor1)
+	GameplayData.Accuracy = gameplayData[proc].Accuracy
+	GameplayData.Hp.Normal = gameplayData[proc].PlayerHP
+	GameplayData.Hp.Smooth = gameplayData[proc].PlayerHPSmooth
+	GameplayData.Name = gameplayData[proc].PlayerName
+	MenuData.Mods.AppliedMods = int32(gameplayData[proc].ModsXor1 ^ gameplayData[proc].ModsXor2)
 	if MenuData.Mods.AppliedMods == 0 {
 		MenuData.Mods.PpMods = "NM"
 	} else {
-		MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
+		MenuData.Mods.PpMods = Mods(gameplayData[proc].ModsXor1 ^ gameplayData[proc].ModsXor2).String()
 	}
 	if GameplayData.Combo.Max > 0 {
-		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
+		GameplayData.Hits.HitErrorArray = gameplayData[proc].HitErrors
 		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
 	}
 	getLeaderboard(proc)
@@ -224,16 +230,16 @@ func getGamplayData(proc int) {
 
 func getLeaderboard(proc int) {
 	var board leaderboard
-	if gameplayData.LeaderBoard == 0 {
+	if gameplayData[proc].LeaderBoard == 0 {
 		board.DoesLeaderBoardExists = false
 		GameplayData.Leaderboard = board
 		return
 	}
 	board.DoesLeaderBoardExists = true
-	ourPlayerStruct, _ := mem.ReadUint32(process[proc], int64(gameplayData.LeaderBoard)+0x10, 0)
+	ourPlayerStruct, _ := mem.ReadUint32(process[proc], int64(gameplayData[proc].LeaderBoard)+0x10, 0)
 	board.OurPlayer = readLeaderPlayerStruct(proc, int64(ourPlayerStruct))
 	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
-	playersArray, _ := mem.ReadUint32(process[proc], int64(gameplayData.LeaderBoard)+0x4)
+	playersArray, _ := mem.ReadUint32(process[proc], int64(gameplayData[proc].LeaderBoard)+0x4)
 	amOfSlots, _ := mem.ReadInt32(process[proc], int64(playersArray+0xC))
 	if amOfSlots < 1 || amOfSlots > 64 {
 		return

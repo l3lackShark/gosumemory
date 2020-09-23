@@ -15,8 +15,7 @@ import (
 	"github.com/l3lackShark/gosumemory/mem"
 )
 
-var tourneyClients []staticAddresses
-var tourneyClientsMenuD []menuD
+var tourneyManagerID = 0
 
 //initTournement should be called on tournament manager
 func initTournement() error {
@@ -64,18 +63,34 @@ func initTournement() error {
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	tourneyClients = make([]staticAddresses, len(process))
-	tourneyClientsMenuD = make([]menuD, len(process))
+	menuData = make([]menuD, len(process))
+	patterns = make([]staticAddresses, len(process))
+	gameplayData = make([]gameplayD, len(process))
+	alwaysData = make([]allTimesD, len(process))
 
 	pp.Println(process)
 	for i := range process {
-		err = mem.Read(process[i],
-			&tourneyClients[i].PreSongSelectAddresses,
-			&tourneyClientsMenuD[i].PreSongSelectData)
+		err = mem.ResolvePatterns(process[i], &patterns[i].PreSongSelectAddresses)
 		if err != nil {
 			return err
 		}
-		fmt.Println(tourneyClients[i].Status)
+		err = mem.Read(process[i],
+			&patterns[i].PreSongSelectAddresses,
+			&menuData[i].PreSongSelectData)
+		if err != nil {
+			return err
+		}
+		if menuData[i].PreSongSelectData.Status == 22 {
+			tourneyManagerID = i
+		}
+		fmt.Println(process[i].Pid())
+		if i != tourneyManagerID {
+			err = mem.ResolvePatterns(process[i], &patterns[i])
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
