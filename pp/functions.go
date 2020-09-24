@@ -30,7 +30,7 @@ func hashFileMD5(filePath string) (string, error) {
 
 }
 func calculateMP3Time() (int32, error) {
-	if !strings.HasSuffix(memory.MenuData.Bm.Path.FullMP3Path, ".mp3") {
+	if !strings.HasSuffix(strings.ToLower(memory.MenuData.Bm.Path.FullMP3Path), ".mp3") {
 		pp.Println("Expected mp3, got something else. Aborting mp3 time calculation. GOT: ", memory.MenuData.Bm.Path.FullMP3Path)
 		return 0, nil
 	}
