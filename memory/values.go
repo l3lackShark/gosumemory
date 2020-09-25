@@ -13,7 +13,7 @@ type InMenuValues struct {
 
 type gGrade struct {
 	Current  string `json:"current"`
-	Expected string `json:"expected"`
+	Expected string `json:"maxThisPlay"`
 }
 
 //GameplayValues inside osu!memory
