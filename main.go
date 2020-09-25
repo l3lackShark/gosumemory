@@ -21,7 +21,7 @@ func main() {
 	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
-	memDebugFlag := flag.Bool("memdebug", true, `Enable verbose memory debugging?`)
+	memDebugFlag := flag.Bool("memdebug", false, `Enable verbose memory debugging?`)
 	flag.Parse()
 	mem.Debug = *memDebugFlag
 	memory.UpdateTime = *updateTimeFlag

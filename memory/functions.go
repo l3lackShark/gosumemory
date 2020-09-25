@@ -215,6 +215,7 @@ func getGamplayData(proc int) {
 	GameplayData.Hp.Normal = gameplayData[proc].PlayerHP
 	GameplayData.Hp.Smooth = gameplayData[proc].PlayerHPSmooth
 	GameplayData.Name = gameplayData[proc].PlayerName
+	fmt.Println(gameplayData[proc].PlayerName)
 	MenuData.Mods.AppliedMods = int32(gameplayData[proc].ModsXor1 ^ gameplayData[proc].ModsXor2)
 	if MenuData.Mods.AppliedMods == 0 {
 		MenuData.Mods.PpMods = "NM"

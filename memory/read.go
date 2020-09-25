@@ -24,7 +24,7 @@ func (staticAddresses) Beatmap() string {
 }
 
 func (staticAddresses) PlayContainer() string {
-	return "[[PlayContainerBase + 0x7] + 0x4 + 0xC4] + 0x4"
+	return "[[[[PlayContainerBase + 0x7] + 0x4] + 0xC4] + 0x4]"
 }
 
 func (staticAddresses) Leaderboard() string {
