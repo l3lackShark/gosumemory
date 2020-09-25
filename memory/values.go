@@ -11,6 +11,11 @@ type InMenuValues struct {
 	PP          ppM    `json:"pp"`
 }
 
+type gGrade struct {
+	Current  string `json:"current"`
+	Expected string `json:"expected"`
+}
+
 //GameplayValues inside osu!memory
 type GameplayValues struct {
 	GameMode int32 `json:"gameMode"`
@@ -118,6 +123,7 @@ type hits struct {
 	H0            int16   `json:"0"`
 	H0Temp        int16   `json:"-"`
 	HSB           int16   `json:"sliderBreaks"`
+	Grade         gGrade  `json:"grade"`
 	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }

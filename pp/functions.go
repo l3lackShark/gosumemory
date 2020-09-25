@@ -79,3 +79,23 @@ func minMax(array []int) (int, int) {
 func calculateAccuracy(h300 float32, h100 float32, h50 float32, h0 float32) float32 {
 	return 100 * (h50*50 + h100*100 + h300*300) / (h50*300 + h100*300 + h300*300 + h0*300)
 }
+
+func calculateGrade(h300 float32, h100 float32, h50 float32, h0 float32) string { //https://osu.ppy.sh/help/wiki/FAQ#grades
+	onePercent := (h300 + h100 + h50 + h0) / 100
+	if h100 == 0 && h50 == 0 && h0 == 0 {
+		return "SS"
+	}
+	if h0 == 0 && onePercent*90 < h300 && h50 < onePercent {
+		return "S"
+	}
+	if h0 == 0 && onePercent*80 < h300 || onePercent*90 < h300 {
+		return "A"
+	}
+	if h0 == 0 && onePercent*70 < h300 || onePercent*80 < h300 {
+		return "B"
+	}
+	if onePercent*60 < h300 {
+		return "C"
+	}
+	return "D"
+}

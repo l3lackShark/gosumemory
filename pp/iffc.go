@@ -22,8 +22,10 @@ import "C"
 var ezfc C.ezpp_t
 
 type PPfc struct {
-	RestSS C.float
-	Acc    C.float
+	RestSS        C.float
+	Acc           C.float
+	GradeCurrent  string
+	GradeExpected string
 }
 
 func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
@@ -60,8 +62,10 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
 		//C.ezpp_set_score_version(ezfc)
 		*data = PPfc{
-			RestSS: ifRestSS,
-			Acc:    C.ezpp_pp(ezfc),
+			RestSS:        ifRestSS,
+			Acc:           C.ezpp_pp(ezfc),
+			GradeCurrent:  calculateGrade(float32(memory.GameplayData.Hits.H300), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0)),
+			GradeExpected: calculateGrade(float32(memory.GameplayData.Hits.H300+remaining), float32(memory.GameplayData.Hits.H100), float32(memory.GameplayData.Hits.H50), float32(memory.GameplayData.Hits.H0)),
 		}
 	}
 
@@ -82,6 +86,8 @@ func GetFCData() {
 					var data PPfc
 					readFCData(&data, ezfc, C.float(memory.GameplayData.Accuracy))
 					memory.GameplayData.PP.PPifFC = cast.ToInt32(float64(data.RestSS))
+					memory.GameplayData.Hits.Grade.Current = data.GradeCurrent
+					memory.GameplayData.Hits.Grade.Expected = data.GradeExpected
 				}
 				switch memory.MenuData.OsuStatus {
 				case 1, 4, 5, 13, 2:
