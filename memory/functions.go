@@ -204,7 +204,14 @@ func getGamplayData() {
 	}
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
-		GameplayData.Hits.UnstableRate, _ = calculateUR(GameplayData.Hits.HitErrorArray)
+		baseUR, _ := calculateUR(GameplayData.Hits.HitErrorArray)
+		if strings.Contains(MenuData.Mods.PpMods, "DT") || strings.Contains(MenuData.Mods.PpMods, "NC") {
+			GameplayData.Hits.UnstableRate = baseUR / 1.5
+		} else if strings.Contains(MenuData.Mods.PpMods, "HT") {
+			GameplayData.Hits.UnstableRate = baseUR * 1.33
+		} else {
+			GameplayData.Hits.UnstableRate = baseUR
+		}
 	}
 	getLeaderboard()
 }
