@@ -117,6 +117,8 @@ By: [cyperdark][2]<br>
 
 gosumemory streams WebSocket data to **ws://localhost:24050/ws** that you can use in any programming language to develop a frontend. We recommend JavaScript though, as it's much easier to make something pretty with the Web framework. All of the included counters are good starting points. There is also http://localhost:24050/json that you can open in a web browser to see the available data. We strongly recommend against sending GET requests to that address in production, please **use WebSocket instead**.
 
+**[Example JSON and a little wiki of it's values](https://github.com/l3lackShark/gosumemory/wiki/JSON-values)**
+
 # What if I don't know any programming languages but still want to output data to OBS?
 https://www.youtube.com/watch?v=8ApXBEO5bes 
 
