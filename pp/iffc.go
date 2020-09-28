@@ -59,6 +59,7 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 		ifRestSSACC = math.Round(ifRestSSACC*100) / 100
 		C.ezpp_set_accuracy_percent(ezfc, C.float(ifRestSSACC))
 		ifRestSS := C.ezpp_pp(ezfc)
+		C.ezpp_set_combo(ezfc, C.int(-1))
 		C.ezpp_set_accuracy_percent(ezfc, C.float(acc))
 		//C.ezpp_set_score_version(ezfc)
 		*data = PPfc{
