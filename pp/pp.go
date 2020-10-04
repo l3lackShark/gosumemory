@@ -98,6 +98,7 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			C.ezpp_set_end_time(ez, 0)
 			C.ezpp_set_combo(ez, 0)
 			C.ezpp_set_nmiss(ez, 0)
+			memory.MenuData.Bm.Stats.BeatmapMaxCombo = int32(C.ezpp_max_combo(ez))
 			memory.MenuData.Bm.Stats.FullSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(C.ezpp_stars(ez))))
 			var bpmChanges []int
 			for i := 0; i < int(C.ezpp_ntiming_points(ez)); i++ {
@@ -169,7 +170,6 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			ScoreVersion: C.ezpp_score_version(ez),
 		}
 		memory.MenuData.PP.PpStrains = data.Strain
-
 	}
 	return nil
 }

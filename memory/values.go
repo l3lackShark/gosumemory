@@ -59,17 +59,18 @@ type Metadata struct {
 }
 
 type stats struct {
-	BeatmapAR  float32 `json:"AR"`
-	BeatmapCS  float32 `json:"CS"`
-	BeatmapOD  float32 `json:"OD"`
-	BeatmapHP  float32 `json:"HP"`
-	BeatmapSR  float32 `json:"SR"`
-	BeatmapBPM bpm     `json:"BPM"`
-	FullSR     float32 `json:"fullSR"`
-	MemoryAR   float32 `json:"memoryAR"`
-	MemoryCS   float32 `json:"memoryCS"`
-	MemoryOD   float32 `json:"memoryOD"`
-	MemoryHP   float32 `json:"memoryHP"`
+	BeatmapAR       float32 `json:"AR"`
+	BeatmapCS       float32 `json:"CS"`
+	BeatmapOD       float32 `json:"OD"`
+	BeatmapHP       float32 `json:"HP"`
+	BeatmapSR       float32 `json:"SR"`
+	BeatmapBPM      bpm     `json:"BPM"`
+	BeatmapMaxCombo int32   `json:"maxCombo"`
+	FullSR          float32 `json:"fullSR"`
+	MemoryAR        float32 `json:"memoryAR"`
+	MemoryCS        float32 `json:"memoryCS"`
+	MemoryOD        float32 `json:"memoryOD"`
+	MemoryHP        float32 `json:"memoryHP"`
 }
 
 type bpm struct {
@@ -135,12 +136,7 @@ type ppG struct {
 }
 
 type dynamicAddresses struct {
-	PlayContainer38    uint32
-	BeatmapAddr        uint32
-	LeaderBoardStruct  uint32
-	IsReady            bool
-	LeaderBaseSlotAddr []uint32
-	LeaderSlotAddr     []uint32
+	IsReady bool
 }
 
 type leaderPlayer struct {
