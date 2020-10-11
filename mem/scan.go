@@ -17,6 +17,7 @@ type pattern struct {
 }
 
 func parsePattern(s string) (pattern, error) {
+	fmt.Println("Parsing pattern: ", s)
 	var bytes, mask []byte
 	for _, bytestr := range strings.Split(s, " ") {
 		if bytestr == "??" {

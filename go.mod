@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/elastic/go-windows v1.0.1
+	github.com/gookit/ini/v2 v2.0.7 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible

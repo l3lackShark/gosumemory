@@ -82,7 +82,6 @@ func Init() {
 
 			MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-			MenuData.SkinFolder = alwaysData.SkinFolder
 			switch menuData.Status {
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
