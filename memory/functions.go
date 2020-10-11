@@ -80,9 +80,9 @@ func Init() {
 
 			mem.Read(process, &patterns, &alwaysData)
 
-			MenuData.ChatChecker = alwaysData.ChatStatus
+			//	MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-			MenuData.SkinFolder = alwaysData.SkinFolder
+			//	MenuData.SkinFolder = alwaysData.SkinFolder
 			switch menuData.Status {
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
@@ -213,33 +213,33 @@ func getGamplayData() {
 			GameplayData.Hits.UnstableRate = baseUR
 		}
 	}
-	getLeaderboard()
+	//getLeaderboard()
 }
 
-func getLeaderboard() {
-	var board leaderboard
-	if gameplayData.LeaderBoard == 0 {
-		board.DoesLeaderBoardExists = false
-		GameplayData.Leaderboard = board
-		return
-	}
-	board.DoesLeaderBoardExists = true
-	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
-	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
-	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
-	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
-	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
-	if amOfSlots < 1 || amOfSlots > 64 {
-		return
-	}
-	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
-	board.Slots = make([]leaderPlayer, amOfSlots)
-	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
-		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
-		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
-	}
-	GameplayData.Leaderboard = board
-}
+// func getLeaderboard() {
+// 	var board leaderboard
+// 	if gameplayData.LeaderBoard == 0 {
+// 		board.DoesLeaderBoardExists = false
+// 		GameplayData.Leaderboard = board
+// 		return
+// 	}
+// 	board.DoesLeaderBoardExists = true
+// 	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
+// 	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+// 	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
+// 	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
+// 	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
+// 	if amOfSlots < 1 || amOfSlots > 64 {
+// 		return
+// 	}
+// 	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
+// 	board.Slots = make([]leaderPlayer, amOfSlots)
+// 	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
+// 		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
+// 		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
+// 	}
+// 	GameplayData.Leaderboard = board
+// }
 
 func readLeaderPlayerStruct(base int64) leaderPlayer {
 	addresses := struct{ Base int64 }{base}
