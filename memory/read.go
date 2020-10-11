@@ -16,6 +16,7 @@ type staticAddresses struct {
 	PlayContainerBase int64 `sig:"85 C9 74 1F 8D 55 F0 8B 01"`
 	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
 	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
+	SkinData          int64 `sig:"75 21 8B 1D"`
 }
 
 func (staticAddresses) Beatmap() string {
@@ -66,6 +67,7 @@ type allTimesD struct {
 	PlayTime   int32  `mem:"[PlayTime + 0x5]"`
 	MenuMods   uint32 `mem:"[MenuMods + 0x9]"`
 	ChatStatus int8   `mem:"ChatChecker - 0x20"`
+	SkinFolder string `mem:"[[[SkinData + 4] + 0] + 68]"`
 }
 type gameplayD struct {
 	Retries    int32  `mem:"[Base - 0x33] + 0x8"`
