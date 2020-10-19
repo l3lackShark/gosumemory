@@ -45,6 +45,7 @@ func Init() {
 	}
 
 	for {
+		start := time.Now()
 		process, procerr = mem.FindProcess(osuProcessRegex)
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
@@ -52,6 +53,7 @@ func Init() {
 				process, procerr = mem.FindProcess(osuProcessRegex)
 				log.Println("It seems that we lost the process, retrying!")
 				time.Sleep(1 * time.Second)
+
 			}
 			err := initBase()
 			for err != nil {
@@ -117,6 +119,8 @@ func Init() {
 				}
 
 			}
+			elapsed := time.Since(start)
+			log.Printf("Cycle took %s", elapsed)
 			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 		}
 	}

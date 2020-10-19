@@ -1,11 +1,13 @@
 package memory
 
 type PreSongSelectAddresses struct {
-	Status int64 `sig:"48 83 F8 04 73 1E"`
+	Status        int64 `sig:"48 83 F8 04 73 1E"`
+	SettingsClass int64 `sig:"83 E0 20 85 C0 7E 2F"`
 }
 
 type PreSongSelectData struct {
-	Status uint32 `mem:"[Status - 0x4]"`
+	Status      uint32 `mem:"[Status - 0x4]"`
+	SongsFolder string `mem:"[[Settings + 0xB4] + 0x4]"`
 }
 
 type staticAddresses struct {
@@ -17,14 +19,13 @@ type staticAddresses struct {
 	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
 	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
 	SkinData          int64 `sig:"75 21 8B 1D"`
-	SettingsClass     int64 `sig:"83 E0 20 85 C0 7E 2F"`
 }
 
 func (staticAddresses) Beatmap() string {
 	return "[Base - 0xC]"
 }
 
-func (staticAddresses) Settings() string {
+func (PreSongSelectAddresses) Settings() string {
 	return "[SettingsClass + 0x8]"
 }
 
