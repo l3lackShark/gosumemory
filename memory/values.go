@@ -161,6 +161,7 @@ type leaderPlayer struct {
 
 type leaderboard struct {
 	DoesLeaderBoardExists bool           `json:"hasLeaderboard"`
+	IsLeaderBoardVisible  bool           `json:"isVisible"`
 	OurPlayer             leaderPlayer   `json:"ourplayer"`
 	Slots                 []leaderPlayer `json:"slots"`
 }

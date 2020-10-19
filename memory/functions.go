@@ -227,7 +227,7 @@ func getLeaderboard() {
 	}
 	board.DoesLeaderBoardExists = true
 	ourPlayerStruct, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x10, 0)
-	board.OurPlayer = readLeaderPlayerStruct(int64(ourPlayerStruct))
+	board.OurPlayer, board.IsLeaderBoardVisible = readLeaderPlayerStruct(int64(ourPlayerStruct))
 	board.OurPlayer.Mods = MenuData.Mods.PpMods //ourplayer mods is sometimes delayed so better default to PlayContainer Here
 	playersArray, _ := mem.ReadUint32(process, int64(gameplayData.LeaderBoard)+0x4)
 	amOfSlots, _ := mem.ReadInt32(process, int64(playersArray+0xC))
@@ -238,27 +238,28 @@ func getLeaderboard() {
 	board.Slots = make([]leaderPlayer, amOfSlots)
 	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
 		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
-		board.Slots[j] = readLeaderPlayerStruct(int64(slot))
+		board.Slots[j], _ = readLeaderPlayerStruct(int64(slot))
 	}
 	GameplayData.Leaderboard = board
 }
 
-func readLeaderPlayerStruct(base int64) leaderPlayer {
+func readLeaderPlayerStruct(base int64) (leaderPlayer, bool) {
 	addresses := struct{ Base int64 }{base}
 	var player struct {
-		Name      string `mem:"[Base + 0x8]"`
-		Score     int32  `mem:"Base + 0x30"`
-		Combo     int16  `mem:"[Base + 0x20] + 0x94"`
-		MaxCombo  int16  `mem:"[Base + 0x20] + 0x68"`
-		ModsXor1  uint32 `mem:"[[Base + 0x20] + 0x1C] + 0x8"`
-		ModsXor2  uint32 `mem:"[[Base + 0x20] + 0x1C] + 0xC"`
-		H300      int16  `mem:"[Base + 0x20] + 0x8A"`
-		H100      int16  `mem:"[Base + 0x20] + 0x88"`
-		H50       int16  `mem:"[Base + 0x20] + 0x8C"`
-		H0        int16  `mem:"[Base + 0x20] + 0x92"`
-		Team      int32  `mem:"Base + 0x40"`
-		Position  int32  `mem:"Base + 0x2C"`
-		IsPassing int8   `mem:"Base + 0x4B"`
+		Name                 string `mem:"[Base + 0x8]"`
+		Score                int32  `mem:"Base + 0x30"`
+		Combo                int16  `mem:"[Base + 0x20] + 0x94"`
+		MaxCombo             int16  `mem:"[Base + 0x20] + 0x68"`
+		ModsXor1             uint32 `mem:"[[Base + 0x20] + 0x1C] + 0x8"`
+		ModsXor2             uint32 `mem:"[[Base + 0x20] + 0x1C] + 0xC"`
+		H300                 int16  `mem:"[Base + 0x20] + 0x8A"`
+		H100                 int16  `mem:"[Base + 0x20] + 0x88"`
+		H50                  int16  `mem:"[Base + 0x20] + 0x8C"`
+		H0                   int16  `mem:"[Base + 0x20] + 0x92"`
+		Team                 int32  `mem:"Base + 0x40"`
+		Position             int32  `mem:"Base + 0x2C"`
+		IsPassing            int8   `mem:"Base + 0x4B"`
+		IsLeaderboardVisible int8   `mem:"[Base + 0x24] + 0x20"`
 	}
 	mem.Read(process, &addresses, &player)
 	mods := modsResolver(player.ModsXor1 ^ player.ModsXor2)
@@ -278,7 +279,7 @@ func readLeaderPlayerStruct(base int64) leaderPlayer {
 		Team:      player.Team,
 		Position:  player.Position,
 		IsPassing: player.IsPassing,
-	}
+	}, cast.ToBool(int(player.IsLeaderboardVisible))
 }
 
 func calculateUR(HitErrorArray []int32) (float64, error) {
