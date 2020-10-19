@@ -12,13 +12,15 @@ import (
 func SetupStructure() {
 	var err error
 	type wsStruct struct { //order sets here
-		A memory.InMenuValues   `json:"menu"`
-		B memory.GameplayValues `json:"gameplay"`
+		A memory.InSettingsValues `json:"settings"`
+		B memory.InMenuValues     `json:"menu"`
+		C memory.GameplayValues   `json:"gameplay"`
 	}
 	for {
 		group := wsStruct{
-			A: memory.MenuData,
-			B: memory.GameplayData,
+			A: memory.SettingsData,
+			B: memory.MenuData,
+			C: memory.GameplayData,
 		}
 
 		JSONByte, err = json.Marshal(group)

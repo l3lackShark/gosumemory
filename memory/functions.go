@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cast"
+
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/mem"
 )
@@ -79,10 +81,10 @@ func Init() {
 			MenuData.OsuStatus = menuData.Status
 
 			mem.Read(process, &patterns, &alwaysData)
-
 			MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
 			MenuData.SkinFolder = alwaysData.SkinFolder
+			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
 			switch menuData.Status {
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter

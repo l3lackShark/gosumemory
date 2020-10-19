@@ -11,6 +11,11 @@ type InMenuValues struct {
 	PP          ppM    `json:"pp"`
 }
 
+//InSettingsValues are values represented inside settings class, could be dynamic
+type InSettingsValues struct {
+	ShowInterface bool `json:"showInterface"` //dynamic in gameplay
+}
+
 type gGrade struct {
 	Current  string `json:"current"`
 	Expected string `json:"maxThisPlay"`
@@ -165,6 +170,9 @@ var MenuData = InMenuValues{}
 
 //GameplayData contains raw values taken from osu! memory
 var GameplayData = GameplayValues{}
+
+//SettingsData contains raw values taken from osu! memory
+var SettingsData = InSettingsValues{}
 
 //DynamicAddresses are in-between pointers that lead to values
 var DynamicAddresses = dynamicAddresses{}
