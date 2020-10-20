@@ -5,9 +5,12 @@ type PreSongSelectAddresses struct {
 	SettingsClass int64 `sig:"83 E0 20 85 C0 7E 2F"`
 }
 
-type PreSongSelectData struct {
-	Status      uint32 `mem:"[Status - 0x4]"`
+type songsFolderD struct {
 	SongsFolder string `mem:"[[Settings + 0xB4] + 0x4]"`
+}
+
+type PreSongSelectData struct {
+	Status uint32 `mem:"[Status - 0x4]"`
 }
 
 type staticAddresses struct {

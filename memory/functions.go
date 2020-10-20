@@ -55,7 +55,7 @@ func Init() {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
 				allProcs, procerr = mem.FindProcess(osuProcessRegex)
-				log.Println("It seems that we lost the process, retrying!")
+				log.Println("It seems that we lost the process, retrying!", procerr)
 				time.Sleep(1 * time.Second)
 			}
 			err := initBase()

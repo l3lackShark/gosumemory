@@ -27,7 +27,7 @@ type TourneyClient struct {
 
 type tourneyManager struct {
 	IPCState     int32 `json:"ipcState"`
-	BO           int32 `json:"BO"`
+	BO           int32 `json:"bestOF"`
 	StarsLeft    int32 `json:"starsLeftTeam"`
 	StarsRight   int32 `json:"starsRightTeam"`
 	ScoreVisible bool  `json:"scoreVisible"`

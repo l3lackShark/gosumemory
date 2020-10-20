@@ -22,6 +22,7 @@ var tourneyGameplayData []gameplayD
 var tourneyAlwaysData []allTimesD
 
 var menuData menuD
+var songsFolderData songsFolderD
 var gameplayData gameplayD
 var alwaysData allTimesD
 
@@ -38,10 +39,10 @@ func resolveSongsFolder() (string, error) {
 	}
 	rootFolder := strings.TrimSuffix(osuExecutablePath, "osu!.exe")
 	songsFolder := filepath.Join(rootFolder, "Songs")
-	if menuData.PreSongSelectData.SongsFolder == "Songs" {
+	if songsFolderData.SongsFolder == "Songs" {
 		return songsFolder, nil
 	}
-	return menuData.PreSongSelectData.SongsFolder, nil
+	return songsFolderData.SongsFolder, nil
 }
 
 func initBase() error {
@@ -64,6 +65,20 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
+
+	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
+		err = mem.Read(process,
+			&patterns.PreSongSelectAddresses,
+			&songsFolderData)
+		if err != nil {
+			return err
+		}
+		SongsFolderPath, err = resolveSongsFolder()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	fmt.Println("[MEMORY] Songs folder:", SongsFolderPath)
 
 	if menuData.PreSongSelectData.Status == 22 || len(allProcs) > 1 {
 		fmt.Println("[MEMORY] Operating in tournament mode!")
@@ -88,7 +103,6 @@ func initBase() error {
 			if err != nil {
 				return err
 			}
-			menuData.PreSongSelectData.SongsFolder = tourneyMenuData[i].SongsFolder
 			fmt.Println(fmt.Sprintf("[MEMORY] Got osu!status addr for client #%d...", i))
 			fmt.Println(fmt.Sprintf("[MEMORY] Resolving patterns for client #%d...", i))
 			err = mem.ResolvePatterns(proc, &tourneyPatterns[i])
@@ -99,14 +113,6 @@ func initBase() error {
 		}
 
 	}
-
-	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
-		SongsFolderPath, err = resolveSongsFolder()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-	fmt.Println("[MEMORY] Songs folder:", SongsFolderPath)
 
 	fmt.Println("[MEMORY] Resolving patterns...")
 	err = mem.ResolvePatterns(process, &patterns)
