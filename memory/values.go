@@ -26,9 +26,12 @@ type TourneyClient struct {
 }
 
 type tourneyManager struct {
-	BO         int32 `json:"BO"`
-	StarsLeft  int32 `json:"starsLeftTeam"`
-	StarsRight int32 `json:"starsRightTeam"`
+	IPCState     int32 `json:"ipcState"`
+	BO           int32 `json:"BO"`
+	StarsLeft    int32 `json:"starsLeftTeam"`
+	StarsRight   int32 `json:"starsRightTeam"`
+	ScoreVisible bool  `json:"scoreVisible"`
+	StarsVisible bool  `json:"starsVisible"`
 }
 
 type gGrade struct {

@@ -17,6 +17,7 @@ var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
 var patterns staticAddresses
 var tourneyPatterns []staticAddresses
 var tourneyMenuData []menuD
+var tourneyManagerData tourneyD
 var tourneyGameplayData []gameplayD
 var tourneyAlwaysData []allTimesD
 

@@ -48,9 +48,9 @@ func Init() {
 		leaderStart = 0x8
 	}
 
+	allProcs, procerr = mem.FindProcess(osuProcessRegex)
 	for {
 		start := time.Now()
-		allProcs, procerr = mem.FindProcess(osuProcessRegex)
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
@@ -69,7 +69,7 @@ func Init() {
 			for err != nil {
 				err = initBase()
 				if err != nil {
-					log.Println("Failure mid getting offsets, retrying")
+					log.Println("Failure mid getting offsets, retrying", err)
 				}
 				time.Sleep(1 * time.Second)
 
@@ -124,6 +124,20 @@ func Init() {
 			}
 		}
 		if isTournamentMode {
+			err := mem.Read(allProcs[0],
+				&patterns,
+				&tourneyManagerData)
+			if err != nil {
+				DynamicAddresses.IsReady = false
+				log.Println("It appears that we lost the precess, retrying", err)
+				continue
+			}
+			TourneyData.Manager.BO = tourneyManagerData.BO
+			TourneyData.Manager.IPCState = tourneyManagerData.IPCState
+			TourneyData.Manager.ScoreVisible = cast.ToBool(int(tourneyManagerData.ScoreVisible))
+			TourneyData.Manager.StarsVisible = cast.ToBool(int(tourneyManagerData.StarsVisible))
+			TourneyData.Manager.StarsLeft = tourneyManagerData.LeftStars
+			TourneyData.Manager.StarsRight = tourneyManagerData.RightStars
 			for i, proc := range tourneyProcs {
 				err := mem.Read(proc,
 					&tourneyPatterns[i].PreSongSelectAddresses,
@@ -135,8 +149,9 @@ func Init() {
 				}
 				if tourneyMenuData[i].PreSongSelectData.Status == 2 {
 					//fmt.Println(fmt.Sprintf("Client #%d is in play mode!", i))
-					getTourneyGamplayData(proc, i)
+					getTourneyGameplayData(proc, i)
 				}
+
 			}
 
 		}

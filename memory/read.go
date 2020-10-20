@@ -19,6 +19,20 @@ type staticAddresses struct {
 	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
 	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
 	SkinData          int64 `sig:"75 21 8B 1D"`
+	Tournament        int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
+}
+
+func (staticAddresses) Tourney() string {
+	return "[Tournament - 0xB] + 0x4"
+}
+
+type tourneyD struct {
+	IPCState     int32 `mem:"[Tourney] + 0x54"`
+	LeftStars    int32 `mem:"[[Tourney] + 0x1C] + 0x2C"`
+	RightStars   int32 `mem:"[[Tourney] + 0x20] + 0x2C"`
+	BO           int32 `mem:"[[Tourney] + 0x20] + 0x30"`
+	StarsVisible int8  `mem:"[[Tourney] + 0x20] + 0x38"`
+	ScoreVisible int8  `mem:"[[Tourney] + 0x20] + 0x39"`
 }
 
 func (staticAddresses) Beatmap() string {

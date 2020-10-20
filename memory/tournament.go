@@ -79,7 +79,7 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 	return tourneyClients, nil
 }
 
-func getTourneyGamplayData(proc mem.Process, iterator int) {
+func getTourneyGameplayData(proc mem.Process, iterator int) {
 	mem.Read(proc, &tourneyPatterns[iterator], &tourneyGameplayData[iterator])
 	TourneyData.Clients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
 	TourneyData.Clients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
