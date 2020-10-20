@@ -24,6 +24,9 @@ var UpdateTime int
 
 //UnderWine?
 var UnderWine bool
+var isTournamentMode bool
+var tourneyProcs []mem.Process
+var tourneyErr error
 
 //var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
@@ -32,8 +35,9 @@ var hasLeaderboard = false
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
 
-var process, procerr = mem.FindProcess(osuProcessRegex)
-
+var allProcs []mem.Process
+var process mem.Process
+var procerr error
 var tempRetries int32
 
 //Init the whole thing and get osu! memory values to start working with it.
@@ -46,14 +50,13 @@ func Init() {
 
 	for {
 		start := time.Now()
-		process, procerr = mem.FindProcess(osuProcessRegex)
+		allProcs, procerr = mem.FindProcess(osuProcessRegex)
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
-				process, procerr = mem.FindProcess(osuProcessRegex)
+				allProcs, procerr = mem.FindProcess(osuProcessRegex)
 				log.Println("It seems that we lost the process, retrying!")
 				time.Sleep(1 * time.Second)
-
 			}
 			err := initBase()
 			for err != nil {
@@ -119,10 +122,28 @@ func Init() {
 				}
 
 			}
-			elapsed := time.Since(start)
-			log.Printf("Cycle took %s", elapsed)
-			time.Sleep(time.Duration(UpdateTime) * time.Millisecond)
 		}
+		if isTournamentMode {
+			for i, proc := range tourneyProcs {
+				err := mem.Read(proc,
+					&tourneyPatterns[i].PreSongSelectAddresses,
+					&tourneyMenuData[i].PreSongSelectData)
+				if err != nil {
+					DynamicAddresses.IsReady = false
+					log.Println("It appears that we lost the precess, retrying", err)
+					continue
+				}
+				if tourneyMenuData[i].PreSongSelectData.Status == 2 {
+					//fmt.Println(fmt.Sprintf("Client #%d is in play mode!", i))
+					getTourneyGamplayData(proc, i)
+				}
+			}
+
+		}
+		elapsed := time.Since(start)
+		log.Printf("Cycle took %s", elapsed)
+		time.Sleep(time.Duration(UpdateTime-int(elapsed.Milliseconds())) * time.Millisecond)
+
 	}
 
 }

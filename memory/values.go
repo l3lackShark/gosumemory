@@ -16,6 +16,21 @@ type InSettingsValues struct {
 	ShowInterface bool `json:"showInterface"` //dynamic in gameplay
 }
 
+type TourneyValues struct {
+	Manager tourneyManager  `json:"manager"`
+	Clients []TourneyClient `json:"clients"` //should be ordered by name
+}
+
+type TourneyClient struct {
+	Gameplay GameplayValues `json:"gameplay"`
+}
+
+type tourneyManager struct {
+	BO         int32 `json:"BO"`
+	StarsLeft  int32 `json:"starsLeftTeam"`
+	StarsRight int32 `json:"starsRightTeam"`
+}
+
 type gGrade struct {
 	Current  string `json:"current"`
 	Expected string `json:"maxThisPlay"`
@@ -174,6 +189,9 @@ var GameplayData = GameplayValues{}
 
 //SettingsData contains raw values taken from osu! memory
 var SettingsData = InSettingsValues{}
+
+//SettingsData contains raw values taken from osu! memory
+var TourneyData = TourneyValues{}
 
 //DynamicAddresses are in-between pointers that lead to values
 var DynamicAddresses = dynamicAddresses{}

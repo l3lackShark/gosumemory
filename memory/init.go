@@ -15,6 +15,10 @@ import (
 
 var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
 var patterns staticAddresses
+var tourneyPatterns []staticAddresses
+var tourneyMenuData []menuD
+var tourneyGameplayData []gameplayD
+var tourneyAlwaysData []allTimesD
 
 var menuData menuD
 var gameplayData gameplayD
@@ -40,10 +44,12 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() error {
-	process, err := mem.FindProcess(osuProcessRegex)
+	isTournamentMode = false
+	allProcs, err := mem.FindProcess(osuProcessRegex)
 	if err != nil {
 		return err
 	}
+	process = allProcs[0]
 
 	err = mem.ResolvePatterns(process, &patterns.PreSongSelectAddresses)
 	if err != nil {
@@ -57,6 +63,42 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
+
+	if menuData.PreSongSelectData.Status == 22 || len(allProcs) > 1 {
+		fmt.Println("[MEMORY] Operating in tournament mode!")
+		tourneyProcs, tourneyErr = resolveTourneyClients(allProcs)
+		if tourneyErr != nil {
+			return err
+		}
+		isTournamentMode = true
+		tourneyPatterns = make([]staticAddresses, len(tourneyProcs))
+		TourneyData.Clients = make([]TourneyClient, len(tourneyProcs))
+		tourneyMenuData = make([]menuD, len(tourneyProcs))
+		tourneyGameplayData = make([]gameplayD, len(tourneyProcs))
+		tourneyAlwaysData = make([]allTimesD, len(tourneyProcs))
+		for i, proc := range tourneyProcs {
+			err = mem.ResolvePatterns(proc, &tourneyPatterns[i].PreSongSelectAddresses)
+			if err != nil {
+				return err
+			}
+			err = mem.Read(proc,
+				&tourneyPatterns[i].PreSongSelectAddresses,
+				&tourneyMenuData[i].PreSongSelectData)
+			if err != nil {
+				return err
+			}
+			menuData.PreSongSelectData.SongsFolder = tourneyMenuData[i].SongsFolder
+			fmt.Println(fmt.Sprintf("[MEMORY] Got osu!status addr for client #%d...", i))
+			fmt.Println(fmt.Sprintf("[MEMORY] Resolving patterns for client #%d...", i))
+			err = mem.ResolvePatterns(proc, &tourneyPatterns[i])
+			if err != nil {
+				return err
+			}
+
+		}
+
+	}
+
 	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
 		SongsFolderPath, err = resolveSongsFolder()
 		if err != nil {
@@ -65,18 +107,6 @@ func initBase() error {
 	}
 	fmt.Println("[MEMORY] Songs folder:", SongsFolderPath)
 
-	if menuData.Status == 0 {
-		log.Println("Please go to song select to proceed!")
-		for menuData.Status == 0 {
-			time.Sleep(100 * time.Millisecond)
-			err := mem.Read(process,
-				&patterns.PreSongSelectAddresses,
-				&menuData.PreSongSelectData)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	fmt.Println("[MEMORY] Resolving patterns...")
 	err = mem.ResolvePatterns(process, &patterns)
 	if err != nil {
