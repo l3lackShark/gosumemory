@@ -5,7 +5,6 @@ package mem
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,7 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -54,14 +52,6 @@ func FindProcess(re *regexp.Regexp) ([]Process, error) {
 		return nil, ErrNoProcess
 	}
 	return procs, nil
-}
-
-func FindWindow(title string) (syscall.Handle, error) {
-	return nil, errors.New("Not implemented!")
-}
-
-func GetWindowThreadProcessID(hwnd syscall.Handle) int32 {
-	return //not implemented
 }
 
 type process struct {
