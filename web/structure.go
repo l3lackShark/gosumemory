@@ -15,12 +15,14 @@ func SetupStructure() {
 		A memory.InSettingsValues `json:"settings"`
 		B memory.InMenuValues     `json:"menu"`
 		C memory.GameplayValues   `json:"gameplay"`
+		D memory.TourneyValues    `json:"tourney"`
 	}
 	for {
 		group := wsStruct{
 			A: memory.SettingsData,
 			B: memory.MenuData,
 			C: memory.GameplayData,
+			D: memory.TourneyData,
 		}
 
 		JSONByte, err = json.Marshal(group)

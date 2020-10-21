@@ -15,8 +15,14 @@ import (
 
 var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
 var patterns staticAddresses
+var tourneyPatterns []staticAddresses
+var tourneyMenuData []menuD
+var tourneyManagerData tourneyD
+var tourneyGameplayData []gameplayD
+var tourneyAlwaysData []allTimesD
 
 var menuData menuD
+var songsFolderData songsFolderD
 var gameplayData gameplayD
 var alwaysData allTimesD
 
@@ -33,17 +39,19 @@ func resolveSongsFolder() (string, error) {
 	}
 	rootFolder := strings.TrimSuffix(osuExecutablePath, "osu!.exe")
 	songsFolder := filepath.Join(rootFolder, "Songs")
-	if menuData.PreSongSelectData.SongsFolder == "Songs" {
+	if songsFolderData.SongsFolder == "Songs" {
 		return songsFolder, nil
 	}
-	return menuData.PreSongSelectData.SongsFolder, nil
+	return songsFolderData.SongsFolder, nil
 }
 
 func initBase() error {
-	process, err := mem.FindProcess(osuProcessRegex)
+	isTournamentMode = false
+	allProcs, err := mem.FindProcess(osuProcessRegex)
 	if err != nil {
 		return err
 	}
+	process = allProcs[0]
 
 	err = mem.ResolvePatterns(process, &patterns.PreSongSelectAddresses)
 	if err != nil {
@@ -57,7 +65,15 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
-	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
+
+	if runtime.GOOS == "windows" || SongsFolderPath == "auto" {
+		SongsFolderPath = "auto" //reset in case of a switch from tournament client
+		err = mem.Read(process,
+			&patterns.PreSongSelectAddresses,
+			&songsFolderData)
+		if err != nil {
+			return err
+		}
 		SongsFolderPath, err = resolveSongsFolder()
 		if err != nil {
 			log.Fatalln(err)
@@ -65,18 +81,40 @@ func initBase() error {
 	}
 	fmt.Println("[MEMORY] Songs folder:", SongsFolderPath)
 
-	if menuData.Status == 0 {
-		log.Println("Please go to song select to proceed!")
-		for menuData.Status == 0 {
-			time.Sleep(100 * time.Millisecond)
-			err := mem.Read(process,
-				&patterns.PreSongSelectAddresses,
-				&menuData.PreSongSelectData)
+	if menuData.PreSongSelectData.Status == 22 || len(allProcs) > 1 {
+		fmt.Println("[MEMORY] Operating in tournament mode!")
+		tourneyProcs, tourneyErr = resolveTourneyClients(allProcs)
+		if tourneyErr != nil {
+			return err
+		}
+		isTournamentMode = true
+		tourneyPatterns = make([]staticAddresses, len(tourneyProcs))
+		TourneyData.Clients = make([]TourneyClient, len(tourneyProcs))
+		tourneyMenuData = make([]menuD, len(tourneyProcs))
+		tourneyGameplayData = make([]gameplayD, len(tourneyProcs))
+		tourneyAlwaysData = make([]allTimesD, len(tourneyProcs))
+		for i, proc := range tourneyProcs {
+			err = mem.ResolvePatterns(proc, &tourneyPatterns[i].PreSongSelectAddresses)
 			if err != nil {
 				return err
 			}
+			err = mem.Read(proc,
+				&tourneyPatterns[i].PreSongSelectAddresses,
+				&tourneyMenuData[i].PreSongSelectData)
+			if err != nil {
+				return err
+			}
+			fmt.Println(fmt.Sprintf("[MEMORY] Got osu!status addr for client #%d...", i))
+			fmt.Println(fmt.Sprintf("[MEMORY] Resolving patterns for client #%d...", i))
+			err = mem.ResolvePatterns(proc, &tourneyPatterns[i])
+			if err != nil {
+				return err
+			}
+
 		}
+
 	}
+
 	fmt.Println("[MEMORY] Resolving patterns...")
 	err = mem.ResolvePatterns(process, &patterns)
 	if err != nil {

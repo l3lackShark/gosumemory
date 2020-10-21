@@ -3,7 +3,9 @@
 package mem
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -13,9 +15,67 @@ import (
 
 var (
 	modkernel32                = xsyscall.NewLazySystemDLL("kernel32.dll")
+	user32                     = xsyscall.NewLazySystemDLL("user32.dll")
+	procEnumWindows            = user32.NewProc("EnumWindows")
+	procGetWindowTextW         = user32.NewProc("GetWindowTextW")
+	getWindowThreadProcessID   = user32.NewProc("GetWindowThreadProcessId")
 	procVirtualQueryEx         = modkernel32.NewProc("VirtualQueryEx")
 	queryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 )
+
+func enumWindows(enumFunc uintptr, lparam uintptr) (err error) {
+	r1, _, e1 := syscall.Syscall(procEnumWindows.Addr(), 2, uintptr(enumFunc), uintptr(lparam), 0)
+	if r1 == 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func getWindowText(hwnd syscall.Handle, str *uint16, maxCount int32) (len int32, err error) {
+	r0, _, e1 := syscall.Syscall(procGetWindowTextW.Addr(), 3, uintptr(hwnd), uintptr(unsafe.Pointer(str)), uintptr(maxCount))
+	len = int32(r0)
+	if len == 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func GetWindowThreadProcessID(hwnd syscall.Handle) int32 {
+	var processID int32
+	getWindowThreadProcessID.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&processID)))
+	return processID
+}
+
+func FindWindow(title string) (syscall.Handle, error) {
+	var hwnd syscall.Handle
+	cb := syscall.NewCallback(func(h syscall.Handle, p uintptr) uintptr {
+		b := make([]uint16, 200)
+		_, err := getWindowText(h, &b[0], int32(len(b)))
+		if err != nil {
+			// ignore the error
+			return 1 // continue enumeration
+		}
+		if strings.Contains(syscall.UTF16ToString(b), title) {
+			// note the window
+			hwnd = h
+			return 0 // stop enumeration
+		}
+		return 1 // continue enumeration
+	})
+	enumWindows(cb, 0)
+	if hwnd == 0 {
+		return 0, fmt.Errorf("No window with title '%s' found", title)
+	}
+	return hwnd, nil
+}
 
 func virtualQueryEx(handle syscall.Handle, off int64) (region, error) {
 	var reg region
@@ -57,7 +117,8 @@ func queryFullProcessImageName(hProcess syscall.Handle) (string, error) {
 
 }
 
-func FindProcess(re *regexp.Regexp) (Process, error) {
+func FindProcess(re *regexp.Regexp) ([]Process, error) {
+	var procs []Process
 	pids, err := windows.EnumProcesses()
 	if err != nil {
 		return nil, err
@@ -75,15 +136,22 @@ func FindProcess(re *regexp.Regexp) (Process, error) {
 			continue
 		}
 		if re.MatchString(name) {
-			return process{pid, handle}, nil
+			procs = append(procs, process{pid, handle})
 		}
 	}
-	return process{}, ErrNoProcess
+	if len(procs) < 1 {
+		return nil, ErrNoProcess
+	}
+	return procs, nil
 }
 
 type process struct {
 	pid uint32
 	h   syscall.Handle
+}
+
+func (p process) HandleFromTitle() (string, error) {
+	return queryFullProcessImageName(p.h)
 }
 
 func (p process) ExecutablePath() (string, error) {
