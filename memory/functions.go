@@ -25,6 +25,9 @@ var UpdateTime int
 
 //UnderWine?
 var UnderWine bool
+
+//MemCycle test
+var MemCycle bool
 var isTournamentMode bool
 var tourneyProcs []mem.Process
 var tourneyErr error
@@ -160,7 +163,9 @@ func Init() {
 
 		}
 		elapsed := time.Since(start)
-		//log.Printf("Cycle took %s", elapsed)
+		if MemCycle {
+			log.Printf("Cycle took %s", elapsed)
+		}
 		time.Sleep(time.Duration(UpdateTime-int(elapsed.Milliseconds())) * time.Millisecond)
 
 	}

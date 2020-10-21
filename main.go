@@ -22,8 +22,12 @@ func main() {
 	isRunningInWINE := flag.Bool("wine", false, "Running under WINE?")
 	songsFolderFlag := flag.String("path", "auto", `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	memDebugFlag := flag.Bool("memdebug", false, `Enable verbose memory debugging?`)
+	memCycleTestFlag := flag.Bool("memcycletest", false, `Enable memory cycle time measure?`)
+	disablecgo := flag.Bool("cgodisable", false, `Disable everything non memory-reader related? (pp counters)`)
+	cgo := *disablecgo
 	flag.Parse()
 	mem.Debug = *memDebugFlag
+	memory.MemCycle = *memCycleTestFlag
 	memory.UpdateTime = *updateTimeFlag
 	memory.SongsFolderPath = *songsFolderFlag
 	memory.UnderWine = *isRunningInWINE
@@ -42,13 +46,15 @@ func main() {
 		os.Exit(1)
 	}
 	go web.SetupStructure()
-	go web.HTTPServer()
 	go web.SetupRoutes()
-	go pp.GetData()
-	go pp.GetFCData()
-	go pp.GetMaxData()
+	if !cgo {
+		go pp.GetData()
+		go pp.GetFCData()
+		go pp.GetMaxData()
+		go pp.GetEditorData()
+	}
 	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
 	fmt.Println("Initialization complete, you can now visit http://localhost:24050 or add it as a browser source in OBS")
-	pp.GetEditorData()
+	web.HTTPServer()
 
 }
