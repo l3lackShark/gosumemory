@@ -137,6 +137,12 @@ func Init() {
 			TourneyData.Manager.StarsVisible = cast.ToBool(int(tourneyManagerData.StarsVisible))
 			TourneyData.Manager.StarsLeft = tourneyManagerData.LeftStars
 			TourneyData.Manager.StarsRight = tourneyManagerData.RightStars
+			if TourneyData.Manager.IPCState != 3 && TourneyData.Manager.IPCState != 4 { //Playing, Ranking
+				for i := range tourneyGameplayData {
+					TourneyData.Clients[i].Gameplay = GameplayValues{}
+				}
+			}
+
 			for i, proc := range tourneyProcs {
 				err := mem.Read(proc,
 					&tourneyPatterns[i].PreSongSelectAddresses,
