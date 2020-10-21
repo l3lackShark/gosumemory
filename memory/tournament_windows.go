@@ -109,23 +109,22 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 	}
 	TourneyData.Clients[iterator].Gameplay.Hits.H0Temp = TourneyData.Clients[iterator].Gameplay.Hits.H0
 	TourneyData.Clients[iterator].Gameplay.Combo.Temp = TourneyData.Clients[iterator].Gameplay.Combo.Current
-	MenuData.Mods.AppliedMods = int32(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor1)
 	TourneyData.Clients[iterator].Gameplay.Accuracy = tourneyGameplayData[iterator].Accuracy
 	TourneyData.Clients[iterator].Gameplay.Hp.Normal = tourneyGameplayData[iterator].PlayerHP
 	TourneyData.Clients[iterator].Gameplay.Hp.Smooth = tourneyGameplayData[iterator].PlayerHPSmooth
 	TourneyData.Clients[iterator].Gameplay.Name = tourneyGameplayData[iterator].PlayerName
-	MenuData.Mods.AppliedMods = int32(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2)
-	if MenuData.Mods.AppliedMods == 0 {
-		MenuData.Mods.PpMods = "NM"
+	TourneyData.Clients[iterator].Mods.AppliedMods = int32(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2)
+	if TourneyData.Clients[iterator].Mods.AppliedMods == 0 {
+		TourneyData.Clients[iterator].Mods.PpMods = "NM"
 	} else {
-		MenuData.Mods.PpMods = Mods(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2).String()
+		TourneyData.Clients[iterator].Mods.PpMods = Mods(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2).String()
 	}
 	if TourneyData.Clients[iterator].Gameplay.Combo.Max > 0 {
 		TourneyData.Clients[iterator].Gameplay.Hits.HitErrorArray = tourneyGameplayData[iterator].HitErrors
 		baseUR, _ := calculateUR(TourneyData.Clients[iterator].Gameplay.Hits.HitErrorArray)
-		if strings.Contains(MenuData.Mods.PpMods, "DT") || strings.Contains(MenuData.Mods.PpMods, "NC") {
+		if strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "DT") || strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "NC") {
 			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR / 1.5
-		} else if strings.Contains(MenuData.Mods.PpMods, "HT") {
+		} else if strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "HT") {
 			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR * 1.33
 		} else {
 			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR

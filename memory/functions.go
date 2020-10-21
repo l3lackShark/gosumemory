@@ -237,7 +237,6 @@ func getGamplayData() {
 	}
 	GameplayData.Hits.H0Temp = GameplayData.Hits.H0
 	GameplayData.Combo.Temp = GameplayData.Combo.Current
-	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor1)
 	GameplayData.Accuracy = cast.ToFloat64(fmt.Sprintf("%.2f", gameplayData.Accuracy))
 	GameplayData.Hp.Normal = gameplayData.PlayerHP
 	GameplayData.Hp.Smooth = gameplayData.PlayerHPSmooth

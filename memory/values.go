@@ -23,6 +23,7 @@ type TourneyValues struct {
 
 type TourneyClient struct {
 	Gameplay GameplayValues `json:"gameplay"`
+	Mods     modsM          `json:"mods"`
 }
 
 type tourneyManager struct {
