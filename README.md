@@ -137,6 +137,10 @@ https://www.youtube.com/watch?v=8ApXBEO5bes
 
 Head over to [static](https://github.com/l3lackShark/static) and create a pull request there. If it's good quality, then it will get approved and included in the next release.
 
+#Tournament Client
+
+When operating in tourney mode, real-time pp counters for each client, leaderboard and grades don't work. Each gameplay object is sorted by tournament client "id", "menu" object is a tournament manager (state 22).    
+
 # Linux
 
 You have two options. Either run native, but with sudo privileges, or through WINE.
