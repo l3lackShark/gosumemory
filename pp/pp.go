@@ -89,10 +89,10 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			StarRating: C.ezpp_stars(ez),
 		}
 		memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.StarRating)))
-		memory.MenuData.Bm.Stats.BeatmapAR = float32(data.AR)
-		memory.MenuData.Bm.Stats.BeatmapCS = float32(data.CS)
-		memory.MenuData.Bm.Stats.BeatmapOD = float32(data.OD)
-		memory.MenuData.Bm.Stats.BeatmapHP = float32(data.HP)
+		memory.MenuData.Bm.Stats.BeatmapAR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.AR)))
+		memory.MenuData.Bm.Stats.BeatmapCS = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.CS)))
+		memory.MenuData.Bm.Stats.BeatmapOD = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.OD)))
+		memory.MenuData.Bm.Stats.BeatmapHP = cast.ToFloat32(fmt.Sprintf("%.2f", float32(data.HP)))
 
 		if needStrain == true {
 			C.ezpp_set_end_time(ez, 0)

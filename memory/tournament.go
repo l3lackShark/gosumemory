@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/l3lackShark/gosumemory/mem"
 )
@@ -66,8 +67,16 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 			break
 		}
 		client, err := mem.FindWindow(fmt.Sprintf("Tournament Client %d", i))
-		if err != nil {
-			return nil, fmt.Errorf("Error getting clients, '%s'", err)
+		counter := 0
+		for err != nil {
+			if counter >= 30 {
+				fmt.Println("Time's up! exiting tournament mode, failed after 30 attempts")
+				return nil, errors.New("Tournament client timeout")
+			}
+			fmt.Println(fmt.Sprintf("[TOURNAMENT] %s, waiting for it...", err))
+			time.Sleep(1 * time.Second)
+			counter++
+			client, err = mem.FindWindow(fmt.Sprintf("Tournament Client %d", i))
 		}
 		for _, proc := range procs {
 			if int32(proc.Pid()) == mem.GetWindowThreadProcessID(client) {

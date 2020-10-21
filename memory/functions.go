@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"path/filepath"
@@ -55,11 +56,12 @@ func Init() {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
 				allProcs, procerr = mem.FindProcess(osuProcessRegex)
-				log.Println("It seems that we lost the process, retrying!", procerr)
+				log.Println("It seems that we lost the process, retrying! ERROR:", procerr)
 				time.Sleep(1 * time.Second)
 			}
 			err := initBase()
 			for err != nil {
+				log.Println("Failure mid getting offsets, retrying! ERROR:", err)
 				err = initBase()
 				time.Sleep(1 * time.Second)
 			}
@@ -67,12 +69,9 @@ func Init() {
 		if DynamicAddresses.IsReady == false {
 			err := initBase()
 			for err != nil {
+				log.Println("Failure mid getting offsets, retrying! ERROR:", err)
 				err = initBase()
-				if err != nil {
-					log.Println("Failure mid getting offsets, retrying", err)
-				}
 				time.Sleep(1 * time.Second)
-
 			}
 		} else {
 			err := mem.Read(process,
@@ -80,7 +79,7 @@ func Init() {
 				&menuData.PreSongSelectData)
 			if err != nil {
 				DynamicAddresses.IsReady = false
-				log.Println("It appears that we lost the precess, retrying", err)
+				log.Println("It appears that we lost the precess, retrying! ERROR:", err)
 				continue
 			}
 			MenuData.OsuStatus = menuData.Status
@@ -124,7 +123,7 @@ func Init() {
 			}
 		}
 		if isTournamentMode {
-			err := mem.Read(allProcs[0],
+			err := mem.Read(process,
 				&patterns,
 				&tourneyManagerData)
 			if err != nil {
@@ -148,7 +147,6 @@ func Init() {
 					continue
 				}
 				if tourneyMenuData[i].PreSongSelectData.Status == 2 {
-					//fmt.Println(fmt.Sprintf("Client #%d is in play mode!", i))
 					getTourneyGameplayData(proc, i)
 				}
 
@@ -156,7 +154,7 @@ func Init() {
 
 		}
 		elapsed := time.Since(start)
-		log.Printf("Cycle took %s", elapsed)
+		//log.Printf("Cycle took %s", elapsed)
 		time.Sleep(time.Duration(UpdateTime-int(elapsed.Milliseconds())) * time.Millisecond)
 
 	}
@@ -234,7 +232,7 @@ func getGamplayData() {
 	GameplayData.Hits.H0Temp = GameplayData.Hits.H0
 	GameplayData.Combo.Temp = GameplayData.Combo.Current
 	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor1)
-	GameplayData.Accuracy = gameplayData.Accuracy
+	GameplayData.Accuracy = cast.ToFloat64(fmt.Sprintf("%.2f", gameplayData.Accuracy))
 	GameplayData.Hp.Normal = gameplayData.PlayerHP
 	GameplayData.Hp.Smooth = gameplayData.PlayerHPSmooth
 	GameplayData.Name = gameplayData.PlayerName
