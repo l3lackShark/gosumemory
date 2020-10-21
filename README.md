@@ -139,7 +139,7 @@ Head over to [static](https://github.com/l3lackShark/static) and create a pull r
 
 # Tournament Client
 
-When operating in tourney mode, real-time pp counters for each client, leaderboard and grades don't work. Each gameplay object is sorted by tournament client "id", "menu" object is a tournament manager (state 22).    
+When operating in tourney mode, real-time pp counters for each client, leaderboard and grades don't work. Each gameplay object is sorted by tournament client "id", "menu" object is a tournament manager (state 22). **Tournament mode is not supported on Linux.**
 
 # Linux
 
