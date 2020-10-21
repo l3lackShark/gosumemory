@@ -46,7 +46,6 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() error {
-	SongsFolderPath = "auto" //reset in case of a switch from tournament client
 	isTournamentMode = false
 	allProcs, err := mem.FindProcess(osuProcessRegex)
 	if err != nil {
@@ -67,7 +66,8 @@ func initBase() error {
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
 
-	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
+	if runtime.GOOS == "windows" || SongsFolderPath == "auto" {
+		SongsFolderPath = "auto" //reset in case of a switch from tournament client
 		err = mem.Read(process,
 			&patterns.PreSongSelectAddresses,
 			&songsFolderData)
