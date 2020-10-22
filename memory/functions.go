@@ -284,7 +284,7 @@ func getLeaderboard() {
 	}
 	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
 	board.Slots = make([]leaderPlayer, amOfSlots)
-	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
+	for i, j := leaderStart, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
 		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
 		board.Slots[j], _ = readLeaderPlayerStruct(int64(slot))
 	}
