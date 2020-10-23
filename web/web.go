@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/l3lackShark/gosumemory/config"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -40,7 +41,9 @@ func reader(conn *websocket.Conn) {
 }
 
 func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-
+	if cast.ToBool(config.Config["cors"]) {
+		enableCors(&w)
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -60,6 +63,10 @@ func SetupRoutes() {
 	http.HandleFunc("/ws", wsEndpoint)
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 //HTTPServer handles json and static files output
 func HTTPServer() {
 
@@ -75,7 +82,7 @@ func HTTPServer() {
 	http.Handle("/", fs)
 	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath))))
 	http.HandleFunc("/json", handler)
-	err = http.ListenAndServe("127.0.0.1:24050", nil)
+	err = http.ListenAndServe(config.Config["serverip"], nil)
 	if err != nil {
 		fmt.Println(err)
 		time.Sleep(5 * time.Second)
