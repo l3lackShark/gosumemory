@@ -89,7 +89,7 @@ func initBase() error {
 		}
 		isTournamentMode = true
 		tourneyPatterns = make([]staticAddresses, len(tourneyProcs))
-		TourneyData.Clients = make([]TourneyClient, len(tourneyProcs))
+		TourneyData.IPCClients = make([]ipcClient, len(tourneyProcs))
 		tourneyMenuData = make([]menuD, len(tourneyProcs))
 		tourneyGameplayData = make([]gameplayD, len(tourneyProcs))
 		tourneyAlwaysData = make([]allTimesD, len(tourneyProcs))

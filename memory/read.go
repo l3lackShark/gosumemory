@@ -30,12 +30,18 @@ func (staticAddresses) Tourney() string {
 }
 
 type tourneyD struct {
-	IPCState     int32 `mem:"[Tourney] + 0x54"`
-	LeftStars    int32 `mem:"[[Tourney] + 0x1C] + 0x2C"`
-	RightStars   int32 `mem:"[[Tourney] + 0x20] + 0x2C"`
-	BO           int32 `mem:"[[Tourney] + 0x20] + 0x30"`
-	StarsVisible int8  `mem:"[[Tourney] + 0x20] + 0x38"`
-	ScoreVisible int8  `mem:"[[Tourney] + 0x20] + 0x39"`
+	IPCState         int32  `mem:"[Tourney] + 0x54"`
+	LeftStars        int32  `mem:"[[Tourney] + 0x1C] + 0x2C"`
+	RightStars       int32  `mem:"[[Tourney] + 0x20] + 0x2C"`
+	BO               int32  `mem:"[[Tourney] + 0x20] + 0x30"`
+	StarsVisible     int8   `mem:"[[Tourney] + 0x20] + 0x38"`
+	ScoreVisible     int8   `mem:"[[Tourney] + 0x20] + 0x39"`
+	TeamOneName      string `mem:"[[[[Tourney] + 0x1C] + 0x20] + 0x144]"`
+	TeamTwoName      string `mem:"[[[[Tourney] + 0x20] + 0x20] + 0x144]"`
+	TeamOneScore     int32  `mem:"[[Tourney] + 0x1C] + 0x28"`
+	TeamTwoScore     int32  `mem:"[[Tourney] + 0x20] + 0x28"`
+	TotalAmOfClients int32  `mem:"[[[[Tourney] + 0x34] + 0x4] + 0x4] + 0x4"`
+	IPCBaseAddr      uint32 `mem:"[[[Tourney] + 0x34] + 0x4] + 0x4"`
 }
 
 func (staticAddresses) Beatmap() string {

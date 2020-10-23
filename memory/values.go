@@ -17,22 +17,47 @@ type InSettingsValues struct {
 }
 
 type TourneyValues struct {
-	Manager tourneyManager  `json:"manager"`
-	Clients []TourneyClient `json:"clients"` //should be ordered by name
-}
-
-type TourneyClient struct {
-	Gameplay GameplayValues `json:"gameplay"`
-	Mods     modsM          `json:"mods"`
+	Manager    tourneyManager `json:"manager"`
+	IPCClients []ipcClient    `json:"ipcClients"`
 }
 
 type tourneyManager struct {
-	IPCState     int32 `json:"ipcState"`
-	BO           int32 `json:"bestOF"`
-	StarsLeft    int32 `json:"starsLeftTeam"`
-	StarsRight   int32 `json:"starsRightTeam"`
-	ScoreVisible bool  `json:"scoreVisible"`
-	StarsVisible bool  `json:"starsVisible"`
+	IPCState int32 `json:"ipcState"`
+	BO       int32 `json:"bestOF"`
+	NameLeft string
+	Name     tName  `json:"teamName"`
+	Stars    tStars `json:"stars"`
+	Bools    tBools `json:"bools"`
+}
+
+type tBools struct {
+	ScoreVisible bool `json:"scoreVisible"`
+	StarsVisible bool `json:"starsVisible"`
+}
+
+type tName struct {
+	Left  string `json:"left"`
+	Right string `json:"right"`
+}
+type tStars struct {
+	Left  int32 `json:"left"`
+	Right int32 `json:"right"`
+}
+
+type ipcClient struct {
+	SpectatingID int32           `json:"spectatingID"`
+	Gameplay     tourneyGameplay `json:"gameplay"`
+}
+
+type tourneyGameplay struct {
+	GameMode int32       `json:"gameMode"`
+	Score    int32       `json:"score"`
+	Name     string      `json:"name"`
+	Accuracy float64     `json:"accuracy"`
+	Hits     tourneyHits `json:"hits"`
+	Combo    combo       `json:"combo"`
+	Mods     modsM       `json:"mods"`
+	Hp       hp          `json:"hp"`
 }
 
 type gGrade struct {
@@ -149,6 +174,20 @@ type hits struct {
 	H0Temp        int16   `json:"-"`
 	HSB           int16   `json:"sliderBreaks"`
 	Grade         gGrade  `json:"grade"`
+	UnstableRate  float64 `json:"unstableRate"`
+	HitErrorArray []int32 `json:"hitErrorArray"`
+}
+
+type tourneyHits struct {
+	H300          int16   `json:"300"`
+	H200M         int16   `json:"200"`
+	HGeki         int16   `json:"geki"`
+	H100          int16   `json:"100"`
+	HKatu         int16   `json:"katu"`
+	H50           int16   `json:"50"`
+	H0            int16   `json:"0"`
+	H0Temp        int16   `json:"-"`
+	HSB           int16   `json:"sliderBreaks"`
 	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
 }

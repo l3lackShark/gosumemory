@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/l3lackShark/gosumemory/mem"
+	"github.com/spf13/cast"
 )
 
 func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
@@ -90,44 +91,97 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 
 func getTourneyGameplayData(proc mem.Process, iterator int) {
 	mem.Read(proc, &tourneyPatterns[iterator], &tourneyGameplayData[iterator])
-	TourneyData.Clients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
-	TourneyData.Clients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
-	TourneyData.Clients[iterator].Gameplay.GameMode = tourneyGameplayData[iterator].Mode
-	TourneyData.Clients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
-	TourneyData.Clients[iterator].Gameplay.Hits.H100 = tourneyGameplayData[iterator].Hit100
-	TourneyData.Clients[iterator].Gameplay.Hits.HKatu = tourneyGameplayData[iterator].HitKatu
-	TourneyData.Clients[iterator].Gameplay.Hits.H200M = tourneyGameplayData[iterator].Hit200M
-	TourneyData.Clients[iterator].Gameplay.Hits.H300 = tourneyGameplayData[iterator].Hit300
-	TourneyData.Clients[iterator].Gameplay.Hits.HGeki = tourneyGameplayData[iterator].HitGeki
-	TourneyData.Clients[iterator].Gameplay.Hits.H50 = tourneyGameplayData[iterator].Hit50
-	TourneyData.Clients[iterator].Gameplay.Hits.H0 = tourneyGameplayData[iterator].HitMiss
-	if TourneyData.Clients[iterator].Gameplay.Combo.Temp > TourneyData.Clients[iterator].Gameplay.Combo.Max {
-		TourneyData.Clients[iterator].Gameplay.Combo.Temp = 0
+	TourneyData.IPCClients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
+	TourneyData.IPCClients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
+	TourneyData.IPCClients[iterator].Gameplay.GameMode = tourneyGameplayData[iterator].Mode
+	TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H100 = tourneyGameplayData[iterator].Hit100
+	TourneyData.IPCClients[iterator].Gameplay.Hits.HKatu = tourneyGameplayData[iterator].HitKatu
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H200M = tourneyGameplayData[iterator].Hit200M
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H300 = tourneyGameplayData[iterator].Hit300
+	TourneyData.IPCClients[iterator].Gameplay.Hits.HGeki = tourneyGameplayData[iterator].HitGeki
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H50 = tourneyGameplayData[iterator].Hit50
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H0 = tourneyGameplayData[iterator].HitMiss
+	if TourneyData.IPCClients[iterator].Gameplay.Combo.Temp > TourneyData.IPCClients[iterator].Gameplay.Combo.Max {
+		TourneyData.IPCClients[iterator].Gameplay.Combo.Temp = 0
 	}
-	if TourneyData.Clients[iterator].Gameplay.Combo.Current < TourneyData.Clients[iterator].Gameplay.Combo.Temp && TourneyData.Clients[iterator].Gameplay.Hits.H0Temp == TourneyData.Clients[iterator].Gameplay.Hits.H0 {
-		TourneyData.Clients[iterator].Gameplay.Hits.HSB++
+	if TourneyData.IPCClients[iterator].Gameplay.Combo.Current < TourneyData.IPCClients[iterator].Gameplay.Combo.Temp && TourneyData.IPCClients[iterator].Gameplay.Hits.H0Temp == TourneyData.IPCClients[iterator].Gameplay.Hits.H0 {
+		TourneyData.IPCClients[iterator].Gameplay.Hits.HSB++
 	}
-	TourneyData.Clients[iterator].Gameplay.Hits.H0Temp = TourneyData.Clients[iterator].Gameplay.Hits.H0
-	TourneyData.Clients[iterator].Gameplay.Combo.Temp = TourneyData.Clients[iterator].Gameplay.Combo.Current
-	TourneyData.Clients[iterator].Gameplay.Accuracy = tourneyGameplayData[iterator].Accuracy
-	TourneyData.Clients[iterator].Gameplay.Hp.Normal = tourneyGameplayData[iterator].PlayerHP
-	TourneyData.Clients[iterator].Gameplay.Hp.Smooth = tourneyGameplayData[iterator].PlayerHPSmooth
-	TourneyData.Clients[iterator].Gameplay.Name = tourneyGameplayData[iterator].PlayerName
-	TourneyData.Clients[iterator].Mods.AppliedMods = int32(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2)
-	if TourneyData.Clients[iterator].Mods.AppliedMods == 0 {
-		TourneyData.Clients[iterator].Mods.PpMods = "NM"
+	TourneyData.IPCClients[iterator].Gameplay.Hits.H0Temp = TourneyData.IPCClients[iterator].Gameplay.Hits.H0
+	TourneyData.IPCClients[iterator].Gameplay.Combo.Temp = TourneyData.IPCClients[iterator].Gameplay.Combo.Current
+	TourneyData.IPCClients[iterator].Gameplay.Accuracy = tourneyGameplayData[iterator].Accuracy
+	TourneyData.IPCClients[iterator].Gameplay.Hp.Normal = tourneyGameplayData[iterator].PlayerHP
+	TourneyData.IPCClients[iterator].Gameplay.Hp.Smooth = tourneyGameplayData[iterator].PlayerHPSmooth
+	TourneyData.IPCClients[iterator].Gameplay.Name = tourneyGameplayData[iterator].PlayerName
+	TourneyData.IPCClients[iterator].Gameplay.Mods.AppliedMods = int32(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2)
+	if TourneyData.IPCClients[iterator].Gameplay.Mods.AppliedMods == 0 {
+		TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods = "NM"
 	} else {
-		TourneyData.Clients[iterator].Mods.PpMods = Mods(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2).String()
+		TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods = Mods(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2).String()
 	}
-	if TourneyData.Clients[iterator].Gameplay.Combo.Max > 0 {
-		TourneyData.Clients[iterator].Gameplay.Hits.HitErrorArray = tourneyGameplayData[iterator].HitErrors
-		baseUR, _ := calculateUR(TourneyData.Clients[iterator].Gameplay.Hits.HitErrorArray)
-		if strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "DT") || strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "NC") {
-			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR / 1.5
-		} else if strings.Contains(TourneyData.Clients[iterator].Mods.PpMods, "HT") {
-			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR * 1.33
+	if TourneyData.IPCClients[iterator].Gameplay.Combo.Max > 0 {
+		TourneyData.IPCClients[iterator].Gameplay.Hits.HitErrorArray = tourneyGameplayData[iterator].HitErrors
+		baseUR, _ := calculateUR(TourneyData.IPCClients[iterator].Gameplay.Hits.HitErrorArray)
+		if strings.Contains(TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods, "DT") || strings.Contains(TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods, "NC") {
+			TourneyData.IPCClients[iterator].Gameplay.Hits.UnstableRate = baseUR / 1.5
+		} else if strings.Contains(TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods, "HT") {
+			TourneyData.IPCClients[iterator].Gameplay.Hits.UnstableRate = baseUR * 1.33
 		} else {
-			TourneyData.Clients[iterator].Gameplay.Hits.UnstableRate = baseUR
+			TourneyData.IPCClients[iterator].Gameplay.Hits.UnstableRate = baseUR
 		}
 	}
+}
+
+func readTourneyIPCStruct(base int64) (int32, int32) {
+	addresses := struct{ Base int64 }{base}
+	var data struct {
+		SpectatingID int32 `mem:"Base + 0x14"`
+		Score        int32 `mem:"Base + 0x18"`
+	}
+	mem.Read(process, &addresses, &data)
+	return data.SpectatingID, data.Score
+}
+
+func getTourneyIPC() error {
+	err := mem.Read(process,
+		&patterns,
+		&tourneyManagerData)
+	if err != nil {
+		return err
+	}
+	TourneyData.Manager.BO = tourneyManagerData.BO
+	TourneyData.Manager.IPCState = tourneyManagerData.IPCState
+	TourneyData.Manager.Bools.ScoreVisible = cast.ToBool(int(tourneyManagerData.ScoreVisible))
+	TourneyData.Manager.Bools.StarsVisible = cast.ToBool(int(tourneyManagerData.StarsVisible))
+	TourneyData.Manager.Stars.Left = tourneyManagerData.LeftStars
+	TourneyData.Manager.Stars.Right = tourneyManagerData.RightStars
+	TourneyData.Manager.Name.Left = tourneyManagerData.TeamOneName
+	TourneyData.Manager.Name.Right = tourneyManagerData.TeamTwoName
+	if TourneyData.Manager.IPCState != 3 && TourneyData.Manager.IPCState != 4 { //Playing, Ranking
+		for i := range tourneyGameplayData {
+			TourneyData.IPCClients[i].Gameplay = tourneyGameplay{}
+		}
+	}
+
+	for i, proc := range tourneyProcs {
+		err := mem.Read(proc,
+			&tourneyPatterns[i].PreSongSelectAddresses,
+			&tourneyMenuData[i].PreSongSelectData)
+		if err != nil {
+			DynamicAddresses.IsReady = false
+			log.Println("It appears that we lost the precess, retrying", err)
+			continue
+		}
+		if tourneyMenuData[i].PreSongSelectData.Status == 2 {
+			getTourneyGameplayData(proc, i)
+		}
+
+	}
+
+	for i, j := leaderStart, 0; j < int(tourneyManagerData.TotalAmOfClients); i, j = i+0x4, j+1 {
+		slot, _ := mem.ReadUint32(process, int64(tourneyManagerData.IPCBaseAddr), int64(i))
+		TourneyData.IPCClients[j].SpectatingID, TourneyData.IPCClients[j].Gameplay.Score = readTourneyIPCStruct(int64(slot))
+	}
+	return nil
 }

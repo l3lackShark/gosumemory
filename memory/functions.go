@@ -126,42 +126,14 @@ func Init() {
 			}
 		}
 		if isTournamentMode {
-			err := mem.Read(process,
-				&patterns,
-				&tourneyManagerData)
-			if err != nil {
+
+			if err := getTourneyIPC(); err != nil {
 				DynamicAddresses.IsReady = false
 				log.Println("It appears that we lost the precess, retrying", err)
 				continue
 			}
-			TourneyData.Manager.BO = tourneyManagerData.BO
-			TourneyData.Manager.IPCState = tourneyManagerData.IPCState
-			TourneyData.Manager.ScoreVisible = cast.ToBool(int(tourneyManagerData.ScoreVisible))
-			TourneyData.Manager.StarsVisible = cast.ToBool(int(tourneyManagerData.StarsVisible))
-			TourneyData.Manager.StarsLeft = tourneyManagerData.LeftStars
-			TourneyData.Manager.StarsRight = tourneyManagerData.RightStars
-			if TourneyData.Manager.IPCState != 3 && TourneyData.Manager.IPCState != 4 { //Playing, Ranking
-				for i := range tourneyGameplayData {
-					TourneyData.Clients[i].Gameplay = GameplayValues{}
-				}
-			}
-
-			for i, proc := range tourneyProcs {
-				err := mem.Read(proc,
-					&tourneyPatterns[i].PreSongSelectAddresses,
-					&tourneyMenuData[i].PreSongSelectData)
-				if err != nil {
-					DynamicAddresses.IsReady = false
-					log.Println("It appears that we lost the precess, retrying", err)
-					continue
-				}
-				if tourneyMenuData[i].PreSongSelectData.Status == 2 {
-					getTourneyGameplayData(proc, i)
-				}
-
-			}
-
 		}
+
 		elapsed := time.Since(start)
 		if MemCycle {
 			log.Printf("Cycle took %s", elapsed)
