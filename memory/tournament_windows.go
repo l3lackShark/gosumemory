@@ -158,7 +158,10 @@ func getTourneyIPC() error {
 	TourneyData.Manager.Stars.Right = tourneyManagerData.RightStars
 	TourneyData.Manager.Name.Left = tourneyManagerData.TeamOneName
 	TourneyData.Manager.Name.Right = tourneyManagerData.TeamTwoName
+	TourneyData.Manager.Gameplay.Score.Left = tourneyManagerData.TeamOneScore
+	TourneyData.Manager.Gameplay.Score.Right = tourneyManagerData.TeamTwoScore
 	if TourneyData.Manager.IPCState != 3 && TourneyData.Manager.IPCState != 4 { //Playing, Ranking
+		TourneyData.Manager.Gameplay = tmGameplay{}
 		for i := range tourneyGameplayData {
 			TourneyData.IPCClients[i].Gameplay = tourneyGameplay{}
 		}
