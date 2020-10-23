@@ -15,3 +15,7 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 func getTourneyGameplayData(proc mem.Process, iterator int) {
 	return
 }
+
+func getTourneyIPC() error {
+	return errors.New("Not implemented!")
+}
