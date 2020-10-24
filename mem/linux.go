@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func FindProcess(re *regexp.Regexp) ([]Process, error) {
+func FindProcess(re *regexp.Regexp, blacklistedTitles ...string) ([]Process, error) { //blacklistedTitles not implemented yet
 	dirs, err := ioutil.ReadDir("/proc")
 	if err != nil {
 		return nil, err

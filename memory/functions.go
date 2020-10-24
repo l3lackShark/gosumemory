@@ -52,13 +52,13 @@ func Init() {
 		leaderStart = 0x8
 	}
 
-	allProcs, procerr = mem.FindProcess(osuProcessRegex)
+	allProcs, procerr = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 	for {
 		start := time.Now()
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
-				allProcs, procerr = mem.FindProcess(osuProcessRegex)
+				allProcs, procerr = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 				log.Println("It seems that we lost the process, retrying! ERROR:", procerr)
 				time.Sleep(1 * time.Second)
 			}

@@ -46,8 +46,9 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() error {
+	var err error
 	isTournamentMode = false
-	allProcs, err := mem.FindProcess(osuProcessRegex)
+	allProcs, err = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 	if err != nil {
 		return err
 	}
