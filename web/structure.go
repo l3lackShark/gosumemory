@@ -27,7 +27,7 @@ func SetupStructure() {
 
 		JSONByte, err = json.Marshal(group)
 		if err != nil {
-			log.Println("error:", err)
+			log.Println("JSON Marshall error: ", err, group)
 		}
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}

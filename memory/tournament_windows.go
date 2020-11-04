@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -19,9 +18,6 @@ import (
 )
 
 func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
-	if runtime.GOOS != "windows" {
-		panic("Tournament client is not yet implemented on Linux")
-	}
 	//read tournament.cfg to check how many clients we are expecting
 	osuExecutablePath, err := procs[0].ExecutablePath()
 	if err != nil {
