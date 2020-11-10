@@ -44,6 +44,22 @@ type tourneyD struct {
 	IPCBaseAddr      uint32 `mem:"[[[Ruleset] + 0x34] + 0x4] + 0x4"`
 }
 
+type resultsScreenD struct {
+	PlayerName string  `mem:"[[Ruleset + 0x38] + 0x28]"`
+	ModsXor1   int32   `mem:"[[Ruleset + 0x38] + 0x1C] + 0xC"`
+	ModsXor2   int32   `mem:"[[Ruleset + 0x38] + 0x1C] + 0x8"`
+	Mode       int32   `mem:"[Ruleset + 0x38] + 0x64"`
+	MaxCombo   int16   `mem:"[Ruleset + 0x38] + 0x68"`
+	Score      int32   `mem:"[Ruleset + 0x38] + 0x78"`
+	Hit100     int16   `mem:"[Ruleset + 0x38] + 0x88"`
+	Hit300     int16   `mem:"[Ruleset + 0x38] + 0x8A"`
+	Hit50      int16   `mem:"[Ruleset + 0x38] + 0x8C"`
+	HitGeki    int16   `mem:"[Ruleset + 0x38] + 0x8E"`
+	HitKatu    int16   `mem:"[Ruleset + 0x38] + 0x90"`
+	HitMiss    int16   `mem:"[Ruleset + 0x38] + 0x92"`
+	Accuracy   float64 `mem:"[Ruleset + 0x48] + 0xC"`
+}
+
 func (staticAddresses) Ruleset() string {
 	return "[[Rulesets - 0xB] + 0x4]"
 }
@@ -121,7 +137,6 @@ type gameplayD struct {
 	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
 	Hit100         int16   `mem:"[PlayContainer + 0x38] + 0x88"`
 	Hit300         int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
-	Hit200M        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
 	Hit50          int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
 	HitGeki        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
 	HitKatu        int16   `mem:"[PlayContainer + 0x38] + 0x90"`

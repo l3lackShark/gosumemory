@@ -93,7 +93,6 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 	TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H100 = tourneyGameplayData[iterator].Hit100
 	TourneyData.IPCClients[iterator].Gameplay.Hits.HKatu = tourneyGameplayData[iterator].HitKatu
-	TourneyData.IPCClients[iterator].Gameplay.Hits.H200M = tourneyGameplayData[iterator].Hit200M
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H300 = tourneyGameplayData[iterator].Hit300
 	TourneyData.IPCClients[iterator].Gameplay.Hits.HGeki = tourneyGameplayData[iterator].HitGeki
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H50 = tourneyGameplayData[iterator].Hit50

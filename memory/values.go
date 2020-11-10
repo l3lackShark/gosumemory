@@ -12,6 +12,19 @@ type InMenuValues struct {
 	PP             ppM            `json:"pp"`
 }
 
+type ResultsScreenValues struct {
+	Name     string `json:"name"`
+	Score    int32  `json:"score"`
+	MaxCombo int16  `json:"maxCombo"`
+	Mods     modsM  `json:"mods"`
+	H300     int16  `json:"300"`
+	HGeki    int16  `json:"geki"`
+	H100     int16  `json:"100"`
+	HKatu    int16  `json:"katu"`
+	H50      int16  `json:"50"`
+	H0       int16  `json:"0"`
+}
+
 type MainMenuValues struct {
 	BassDensity float64 `json:"bassDensity"`
 }
@@ -178,7 +191,6 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
-	H200M         int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
@@ -193,7 +205,6 @@ type hits struct {
 
 type tourneyHits struct {
 	H300          int16   `json:"300"`
-	H200M         int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
@@ -243,10 +254,13 @@ var MenuData = InMenuValues{}
 //GameplayData contains raw values taken from osu! memory
 var GameplayData = GameplayValues{}
 
+//ResultsScreenData contains raw values taken from osu! memory
+var ResultsScreenData = ResultsScreenValues{}
+
 //SettingsData contains raw values taken from osu! memory
 var SettingsData = InSettingsValues{}
 
-//SettingsData contains raw values taken from osu! memory
+//TourneyData contains raw values taken from osu! memory
 var TourneyData = TourneyValues{}
 
 //DynamicAddresses are in-between pointers that lead to values
