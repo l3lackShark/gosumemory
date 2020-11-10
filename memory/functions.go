@@ -338,6 +338,11 @@ func calculateBassDensity(base uint32) float64 {
 		}
 		bass += 2 * value * (40 - float32(j)) / 40
 	}
+	if math.IsNaN(currentAudioVelocity) || math.IsNaN(float64(bass)) {
+		currentAudioVelocity = 0
+		bass = 0
+		return 0.5
+	}
 	currentAudioVelocity = math.Max(float64(currentAudioVelocity), math.Min(float64(bass)*1.5, 6))
 	currentAudioVelocity *= 0.95
 	return (1 + currentAudioVelocity) * 0.5
