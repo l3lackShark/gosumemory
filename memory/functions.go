@@ -94,6 +94,10 @@ func Init() {
 			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
 			switch menuData.Status {
 			case 0:
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
 				mem.Read(process, &patterns, &mainMenuData)
 				MenuData.MainMenuValues.BassDensity = calculateAudioVelocity(mainMenuData.AudioVelocityBase)
 			case 2:
