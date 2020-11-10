@@ -25,6 +25,7 @@ var menuData menuD
 var songsFolderData songsFolderD
 var gameplayData gameplayD
 var alwaysData allTimesD
+var mainMenuData mainMenuD
 
 func resolveSongsFolder() (string, error) {
 	var err error

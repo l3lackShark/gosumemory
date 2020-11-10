@@ -5,6 +5,10 @@ type PreSongSelectAddresses struct {
 	SettingsClass int64 `sig:"83 E0 20 85 C0 7E 2F"`
 }
 
+func (PreSongSelectAddresses) Ruleset() string {
+	return "[UltimateSignature + 0xB] + 0x4"
+}
+
 type songsFolderD struct {
 	SongsFolder string `mem:"[[Settings + 0xB4] + 0x4]"`
 }
@@ -22,26 +26,26 @@ type staticAddresses struct {
 	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
 	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
 	SkinData          int64 `sig:"75 21 8B 1D"`
-	Tournament        int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
-}
-
-func (staticAddresses) Tourney() string {
-	return "[Tournament - 0xB] + 0x4"
+	Rulesets          int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
 }
 
 type tourneyD struct {
-	IPCState         int32  `mem:"[Tourney] + 0x54"`
-	LeftStars        int32  `mem:"[[Tourney] + 0x1C] + 0x2C"`
-	RightStars       int32  `mem:"[[Tourney] + 0x20] + 0x2C"`
-	BO               int32  `mem:"[[Tourney] + 0x20] + 0x30"`
-	StarsVisible     int8   `mem:"[[Tourney] + 0x20] + 0x38"`
-	ScoreVisible     int8   `mem:"[[Tourney] + 0x20] + 0x39"`
-	TeamOneName      string `mem:"[[[[Tourney] + 0x1C] + 0x20] + 0x144]"`
-	TeamTwoName      string `mem:"[[[[Tourney] + 0x20] + 0x20] + 0x144]"`
-	TeamOneScore     int32  `mem:"[[Tourney] + 0x1C] + 0x28"`
-	TeamTwoScore     int32  `mem:"[[Tourney] + 0x20] + 0x28"`
-	TotalAmOfClients int32  `mem:"[[[[Tourney] + 0x34] + 0x4] + 0x4] + 0x4"`
-	IPCBaseAddr      uint32 `mem:"[[[Tourney] + 0x34] + 0x4] + 0x4"`
+	IPCState         int32  `mem:"[Ruleset] + 0x54"`
+	LeftStars        int32  `mem:"[[Ruleset] + 0x1C] + 0x2C"`
+	RightStars       int32  `mem:"[[Ruleset] + 0x20] + 0x2C"`
+	BO               int32  `mem:"[[Ruleset] + 0x20] + 0x30"`
+	StarsVisible     int8   `mem:"[[Ruleset] + 0x20] + 0x38"`
+	ScoreVisible     int8   `mem:"[[Ruleset] + 0x20] + 0x39"`
+	TeamOneName      string `mem:"[[[[Ruleset] + 0x1C] + 0x20] + 0x144]"`
+	TeamTwoName      string `mem:"[[[[Ruleset] + 0x20] + 0x20] + 0x144]"`
+	TeamOneScore     int32  `mem:"[[Ruleset] + 0x1C] + 0x28"`
+	TeamTwoScore     int32  `mem:"[[Ruleset] + 0x20] + 0x28"`
+	TotalAmOfClients int32  `mem:"[[[[Ruleset] + 0x34] + 0x4] + 0x4] + 0x4"`
+	IPCBaseAddr      uint32 `mem:"[[[Ruleset] + 0x34] + 0x4] + 0x4"`
+}
+
+func (staticAddresses) Ruleset() string {
+	return "[[Rulesets - 0xB] + 0x4]"
 }
 
 func (staticAddresses) Beatmap() string {
@@ -62,6 +66,8 @@ func (staticAddresses) Leaderboard() string {
 
 type menuD struct {
 	PreSongSelectData
+	//SearchText         string  `mem:"[Ruleset + 0xCC]"`
+	//GroupingType       int32   `mem:"Ruleset + 0x104"`
 	MenuGameMode       int32   `mem:"[Base - 0x33]"`
 	Plays              int32   `mem:"[Base - 0x33] + 0xC"`
 	Artist             string  `mem:"[[Beatmap] + 0x18]"`
@@ -90,6 +96,10 @@ type menuD struct {
 	//ObjectCount          int32   `mem:"[Beatmap] + 0xF0"`
 	//ScoreMenu            int32   `mem:"[Beatmap] + 0xFC"` // Local, global, mod, friend, country
 	//PreviewTime  int32 `mem:"[Beatmap] + 0x118"`
+}
+
+type mainMenuD struct {
+	AudioVelocityBase uint32 `mem:"[Ruleset + 0x44] + 0x10"`
 }
 
 type allTimesD struct {

@@ -192,6 +192,7 @@ func GetData() {
 			case 0, 1:
 				var data PP
 				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
+					tempBadJudgments = 0
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					tempMods = memory.MenuData.Mods.PpMods

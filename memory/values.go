@@ -2,13 +2,18 @@ package memory
 
 //InMenuValues inside osu!memory
 type InMenuValues struct {
-	OsuStatus   uint32 `json:"state"`
-	SkinFolder  string `json:"skinFolder"`
-	GameMode    int32  `json:"gameMode"`
-	ChatChecker int8   `json:"isChatEnabled"` //bool (1 byte)
-	Bm          bm     `json:"bm"`
-	Mods        modsM  `json:"mods"`
-	PP          ppM    `json:"pp"`
+	MainMenuValues MainMenuValues `json:"mainMenu"`
+	OsuStatus      uint32         `json:"state"`
+	SkinFolder     string         `json:"skinFolder"`
+	GameMode       int32          `json:"gameMode"`
+	ChatChecker    int8           `json:"isChatEnabled"` //bool (1 byte)
+	Bm             bm             `json:"bm"`
+	Mods           modsM          `json:"mods"`
+	PP             ppM            `json:"pp"`
+}
+
+type MainMenuValues struct {
+	BassDensity float64 `json:"bassDensity"`
 }
 
 //InSettingsValues are values represented inside settings class, could be dynamic

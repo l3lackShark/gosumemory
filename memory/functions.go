@@ -93,6 +93,9 @@ func Init() {
 			MenuData.SkinFolder = alwaysData.SkinFolder
 			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
 			switch menuData.Status {
+			case 0:
+				mem.Read(process, &patterns, &mainMenuData)
+				MenuData.MainMenuValues.BassDensity = calculateAudioVelocity(mainMenuData.AudioVelocityBase)
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
@@ -317,5 +320,19 @@ func calculateUR(HitErrorArray []int32) (float64, error) {
 	}
 	variance = variance / float64(len(HitErrorArray))
 	return math.Sqrt(variance) * 10, nil
+
+}
+
+var currentAudioVelocity float64
+
+func calculateAudioVelocity(base uint32) float64 {
+	var bass float32
+	for i, j := leaderStart, 0; j < 40; i, j = i+0x4, j+1 {
+		value, _ := mem.ReadFloat32(process, int64(base), int64(i))
+		bass += 2 * value * (40 - float32(j)) / 40
+	}
+	currentAudioVelocity = math.Max(float64(currentAudioVelocity), math.Min(float64(bass)*1.5, 6))
+	currentAudioVelocity *= 0.95
+	return (1 + currentAudioVelocity) * 0.5
 
 }
