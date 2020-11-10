@@ -120,6 +120,30 @@ func Init() {
 					pp.Println(err)
 				}
 			case 7:
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
+				mem.Read(process, &patterns, &resultsScreenData)
+				for resultsScreenData.PlayerName == "" {
+					mem.Read(process, &patterns, &resultsScreenData)
+				}
+				ResultsScreenData.H300 = resultsScreenData.Hit300
+				ResultsScreenData.H100 = resultsScreenData.Hit100
+				ResultsScreenData.H50 = resultsScreenData.Hit50
+				ResultsScreenData.H0 = resultsScreenData.HitMiss
+				ResultsScreenData.MaxCombo = resultsScreenData.MaxCombo
+				ResultsScreenData.Name = resultsScreenData.PlayerName
+				ResultsScreenData.Score = resultsScreenData.Score
+				ResultsScreenData.HGeki = resultsScreenData.HitGeki
+				ResultsScreenData.HKatu = resultsScreenData.HitKatu
+
+				ResultsScreenData.Mods.AppliedMods = int32(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2)
+				if ResultsScreenData.Mods.AppliedMods == 0 {
+					ResultsScreenData.Mods.PpMods = "NM"
+				} else {
+					ResultsScreenData.Mods.PpMods = Mods(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2).String()
+				}
 			default:
 				tempRetries = -1
 				GameplayData = GameplayValues{}
@@ -140,7 +164,9 @@ func Init() {
 				continue
 			}
 		}
-
+		if menuData.Status != 7 	{
+			ResultsScreenData = ResultsScreenValues{}
+		}
 		elapsed := time.Since(start)
 		if MemCycle {
 			log.Printf("Cycle took %s", elapsed)
@@ -208,7 +234,6 @@ func getGamplayData() {
 	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
-	GameplayData.Hits.H200M = gameplayData.Hit200M
 	GameplayData.Hits.H300 = gameplayData.Hit300
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50
