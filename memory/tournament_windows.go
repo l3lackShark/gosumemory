@@ -171,6 +171,13 @@ func getTourneyIPC() error {
 			log.Println("It appears that we lost the precess, retrying", err)
 			continue
 		}
+		if i == 0 {
+			if tourneyMenuData[0].PreSongSelectData.Status == 0 {
+				mem.Read(proc, &tourneyPatterns[0], &mainMenuData)
+				MenuData.MainMenuValues.BassDensity = calculateBassDensity(mainMenuData.AudioVelocityBase, &proc)
+			}
+		}
+
 		if tourneyMenuData[i].PreSongSelectData.Status == 2 {
 			getTourneyGameplayData(proc, i)
 		}

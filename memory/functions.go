@@ -99,7 +99,7 @@ func Init() {
 					pp.Println(err)
 				}
 				mem.Read(process, &patterns, &mainMenuData)
-				MenuData.MainMenuValues.BassDensity = calculateBassDensity(mainMenuData.AudioVelocityBase)
+				MenuData.MainMenuValues.BassDensity = calculateBassDensity(mainMenuData.AudioVelocityBase, &process)
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
@@ -354,10 +354,10 @@ func calculateUR(HitErrorArray []int32) (float64, error) {
 
 var currentAudioVelocity float64
 
-func calculateBassDensity(base uint32) float64 {
+func calculateBassDensity(base uint32, proc *mem.Process) float64 {
 	var bass float32
 	for i, j := leaderStart, 0; j < 40; i, j = i+0x4, j+1 {
-		value, err := mem.ReadFloat32(process, int64(base), int64(i))
+		value, err := mem.ReadFloat32(*proc, int64(base), int64(i))
 		if err != nil {
 			return 0.5
 		}
@@ -365,7 +365,6 @@ func calculateBassDensity(base uint32) float64 {
 	}
 	if math.IsNaN(currentAudioVelocity) || math.IsNaN(float64(bass)) {
 		currentAudioVelocity = 0
-		bass = 0
 		return 0.5
 	}
 	currentAudioVelocity = math.Max(float64(currentAudioVelocity), math.Min(float64(bass)*1.5, 6))
