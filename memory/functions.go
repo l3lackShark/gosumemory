@@ -164,7 +164,7 @@ func Init() {
 				continue
 			}
 		}
-		if menuData.Status != 7 	{
+		if menuData.Status != 7 {
 			ResultsScreenData = ResultsScreenValues{}
 		}
 		elapsed := time.Since(start)

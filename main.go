@@ -29,8 +29,8 @@ func main() {
 	memDebugFlag := flag.Bool("memdebug", cast.ToBool(config.Config["memdebug"]), `Enable verbose memory debugging?`)
 	memCycleTestFlag := flag.Bool("memcycletest", cast.ToBool(config.Config["memcycletest"]), `Enable memory cycle time measure?`)
 	disablecgo := flag.Bool("cgodisable", cast.ToBool(config.Config["cgodisable"]), `Disable everything non memory-reader related? (pp counters)`)
-	cgo := *disablecgo
 	flag.Parse()
+	cgo := *disablecgo
 	mem.Debug = *memDebugFlag
 	memory.MemCycle = *memCycleTestFlag
 	memory.UpdateTime = *updateTimeFlag

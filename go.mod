@@ -14,5 +14,5 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cast v1.3.1
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
-	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd
+	golang.org/x/sys v0.0.0-20201110211018-35f3e6cf4a65
 )
