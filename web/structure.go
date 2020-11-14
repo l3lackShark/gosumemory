@@ -2,9 +2,9 @@ package web
 
 import (
 	"encoding/json"
-	"log"
 	"time"
 
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 )
 
@@ -29,7 +29,7 @@ func SetupStructure() {
 
 		JSONByte, err = json.Marshal(group)
 		if err != nil {
-			log.Println("JSON Marshall error: ", err, group)
+			pp.Println("JSON Marshall error: ", err, group)
 		}
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
