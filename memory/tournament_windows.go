@@ -197,12 +197,6 @@ func getTourneyIPC() error {
 	return nil
 }
 
-type tourneyMessage struct {
-	Time        string `json:"time"`
-	Name        string `json:"name"`
-	MessageBody string `json:"messageBody"`
-}
-
 func readChatData(base *int64) (result []tourneyMessage, err error) {
 	addresses := struct{ Base int64 }{*base}
 	var data struct {

@@ -49,6 +49,12 @@ type tourneyManager struct {
 	Gameplay tmGameplay       `json:"gameplay"`
 }
 
+type tourneyMessage struct {
+	Time        string `json:"time"`
+	Name        string `json:"name"`
+	MessageBody string `json:"messageBody"`
+}
+
 type tmGameplay struct {
 	Score tScore `json:"score"`
 }
