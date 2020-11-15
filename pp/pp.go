@@ -101,11 +101,17 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			memory.MenuData.Bm.Stats.BeatmapMaxCombo = int32(C.ezpp_max_combo(ez))
 			memory.MenuData.Bm.Stats.FullSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(C.ezpp_stars(ez))))
 			var bpmChanges []int
+			var bpmMultiplier float64 = 1
+			if strings.Contains(memory.MenuData.Mods.PpMods, "DT") || strings.Contains(memory.MenuData.Mods.PpMods, "NC") {
+				bpmMultiplier = 1.5
+			} else if strings.Contains(memory.MenuData.Mods.PpMods, "HT") {
+				bpmMultiplier = 0.75
+			}
 			for i := 0; i < int(C.ezpp_ntiming_points(ez)); i++ {
 				msPerBeat := float64(C.ezpp_timing_ms_per_beat(ez, C.int(i)))
 				timingChanges := int(C.ezpp_timing_change(ez, C.int(i)))
 				if timingChanges == 1 {
-					bpmFormula := int(math.Round(1 / msPerBeat * 1000 * 60 * 1)) //1 = bmpMultiplier
+					bpmFormula := int(math.Round(1 / msPerBeat * 1000 * 60 * bpmMultiplier))
 					if bpmFormula > 0 {
 						bpmChanges = append(bpmChanges, bpmFormula)
 					}
