@@ -40,12 +40,13 @@ type TourneyValues struct {
 }
 
 type tourneyManager struct {
-	IPCState int32      `json:"ipcState"`
-	BO       int32      `json:"bestOF"`
-	Name     tName      `json:"teamName"`
-	Stars    tStars     `json:"stars"`
-	Bools    tBools     `json:"bools"`
-	Gameplay tmGameplay `json:"gameplay"`
+	IPCState int32            `json:"ipcState"`
+	BO       int32            `json:"bestOF"`
+	Name     tName            `json:"teamName"`
+	Stars    tStars           `json:"stars"`
+	Bools    tBools           `json:"bools"`
+	Chat     []tourneyMessage `json:"chat"`
+	Gameplay tmGameplay       `json:"gameplay"`
 }
 
 type tmGameplay struct {

@@ -21,9 +21,11 @@ type staticAddresses struct {
 	ChatChecker int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
 	SkinData    int64 `sig:"75 21 8B 1D"`
 	Rulesets    int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
+	ChatArea    int64 `sig:"33 47 9D FF 5B 7F FF FF"`
 }
 
 type tourneyD struct {
+	ChatStruct       uint32 `mem:"[ChatArea - 0x44]"`
 	IPCState         int32  `mem:"Ruleset + 0x54"`
 	LeftStars        int32  `mem:"[Ruleset + 0x1C] + 0x2C"`
 	RightStars       int32  `mem:"[Ruleset + 0x20] + 0x2C"`

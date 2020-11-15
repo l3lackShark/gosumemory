@@ -145,6 +145,12 @@ func getTourneyIPC() error {
 	if err != nil {
 		return err
 	}
+	chatClass := patterns.ChatArea - 0x44
+	TourneyData.Manager.Chat, err = readChatData(&chatClass)
+	if err != nil {
+		log.Println(err)
+		DynamicAddresses.IsReady = false
+	}
 	TourneyData.Manager.BO = tourneyManagerData.BO
 	TourneyData.Manager.IPCState = tourneyManagerData.IPCState
 	TourneyData.Manager.Bools.ScoreVisible = cast.ToBool(int(tourneyManagerData.ScoreVisible))
@@ -189,4 +195,69 @@ func getTourneyIPC() error {
 		TourneyData.IPCClients[j].SpectatingID, TourneyData.IPCClients[j].Gameplay.Score = readTourneyIPCStruct(int64(slot))
 	}
 	return nil
+}
+
+type tourneyMessage struct {
+	Time        string `json:"time"`
+	Name        string `json:"name"`
+	MessageBody string `json:"messageBody"`
+}
+
+func readChatData(base *int64) (result []tourneyMessage, err error) {
+	addresses := struct{ Base int64 }{*base}
+	var data struct {
+		Tabs uint32 `mem:"[Base + 0x1C] + 0x4"`
+	}
+	err = mem.Read(process, &addresses, &data)
+	if err != nil {
+		return nil, errors.New("[TOURNEY CHAT] Failed reading the main struct")
+	}
+	length, err := mem.ReadInt32(process, int64(data.Tabs), 4)
+	for i, j := leaderStart, 0; j < int(length); i, j = i+0x4, j+1 {
+		slot, _ := mem.ReadUint32(process, int64(data.Tabs), int64(i))
+		if slot == 0 {
+			continue
+		}
+		addrs := struct{ Base int64 }{int64(slot)}
+		var chatData struct {
+			ChatTag      string `mem:"[[Base + 0xC] + 0x4]"`
+			MessagesAddr uint32 `mem:"[[Base + 0xC] + 0x10] + 0x4"`
+		}
+		err := mem.Read(process, &addrs, &chatData)
+		if err != nil || chatData.ChatTag != "#multiplayer" {
+			continue
+		}
+		msgLength, err := mem.ReadInt32(process, int64(chatData.MessagesAddr), 4)
+		var messages []tourneyMessage
+		for n, k := leaderStart, 0; k < int(msgLength); n, k = n+0x4, k+1 {
+			msgSlot, err := mem.ReadUint32(process, int64(chatData.MessagesAddr), int64(n))
+			if err != nil {
+				return nil, errors.New("[TOURNEY CHAT] Internal error")
+			}
+			msgAddrs := struct{ Base int64 }{int64(msgSlot)}
+			var chatContent struct {
+				TimeName string `mem:"[Base + 0x8]"`
+				Content  string `mem:"[Base + 0x4]"`
+			}
+			err = mem.Read(process, &msgAddrs, &chatContent)
+			if chatContent.Content == "" {
+				continue
+			}
+			spl := strings.SplitAfterN(chatContent.TimeName, " ", 2)
+			if len(spl) < 2 {
+				return nil, errors.New("[TOURNEY CHAT] Internal error, could not split")
+			}
+			var msg tourneyMessage
+			msg.Time = strings.TrimSpace(spl[0])
+			msg.Name = strings.TrimSuffix(spl[1], ":")
+			msg.MessageBody = chatContent.Content
+			messages = append(messages, msg)
+
+		}
+		if len(messages) > 0 {
+			return messages, nil
+		}
+		return nil, nil
+	}
+	return nil, nil
 }
