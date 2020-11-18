@@ -281,7 +281,7 @@ func readChatData(base *int64) (result []tourneyMessage, err error) {
 				Content  string `mem:"[Base + 0x4]"`
 			}
 			err = mem.Read(process, &msgAddrs, &chatContent)
-			if chatContent.Content == "" {
+			if chatContent.Content == "" || strings.HasPrefix(chatContent.Content, "!mp") {
 				continue
 			}
 			spl := strings.SplitAfterN(chatContent.TimeName, " ", 2)
