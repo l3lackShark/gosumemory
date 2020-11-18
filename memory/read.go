@@ -22,6 +22,7 @@ type staticAddresses struct {
 	SkinData    int64 `sig:"75 21 8B 1D"`
 	Rulesets    int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
 	ChatArea    int64 `sig:"33 47 9D FF 5B 7F FF FF"`
+	UserInfo    int64 `sig:"89 45 C0 85 C0 75 07 8B CF"`
 }
 
 type tourneyD struct {

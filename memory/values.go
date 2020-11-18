@@ -50,6 +50,7 @@ type tourneyManager struct {
 }
 
 type tourneyMessage struct {
+	Team        string `json:"team"`
 	Time        string `json:"time"`
 	Name        string `json:"name"`
 	MessageBody string `json:"messageBody"`
@@ -78,8 +79,20 @@ type tScore struct {
 }
 
 type ipcClient struct {
-	SpectatingID int32           `json:"spectatingID"`
-	Gameplay     tourneyGameplay `json:"gameplay"`
+	ID         int32           `json:"-"`
+	Team       string          `json:"team"`
+	Spectating ipcSpec         `json:"spectating"`
+	Gameplay   tourneyGameplay `json:"gameplay"`
+}
+
+type ipcSpec struct {
+	Name        string  `json:"name"`
+	ID          int32   `json:"userID"`
+	Accuracy    float64 `json:"accuracy"`
+	RankedScore int32   `json:"rankedScore"`
+	PlayCount   int32   `json:"playCount"`
+	GlobalRank  int32   `json:"globalRank"`
+	GlobalPP    int32   `json:"totalPP"`
 }
 
 type tourneyGameplay struct {
@@ -220,7 +233,7 @@ type tourneyHits struct {
 	H0Temp        int16   `json:"-"`
 	HSB           int16   `json:"sliderBreaks"`
 	UnstableRate  float64 `json:"unstableRate"`
-	HitErrorArray []int32 `json:"hitErrorArray"`
+	HitErrorArray []int32 `json:"-"`
 }
 
 type ppG struct {

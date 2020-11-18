@@ -94,7 +94,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, cast.ToString(JSONByte))
 
 	} else {
-		fmt.Fprintf(w, "osu! is not fully loaded!")
+		fmt.Fprintf(w, `{"error": "osu! is not fully loaded!"}`)
 	}
 
 }

@@ -129,13 +129,46 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 }
 
 func readTourneyIPCStruct(base int64) (int32, int32) {
-	addresses := struct{ Base int64 }{base}
+	addresses := struct {
+		Base int64
+	}{base}
 	var data struct {
 		SpectatingID int32 `mem:"Base + 0x14"`
 		Score        int32 `mem:"Base + 0x18"`
 	}
+
 	mem.Read(process, &addresses, &data)
+
 	return data.SpectatingID, data.Score
+}
+
+func readSpectatingUser(user int64, proc *mem.Process) (ipcSpec, error) {
+	userAddr := struct {
+		UserInfo int64
+	}{user}
+	var userData struct {
+		Accuracy    float64 `mem:"[[UserInfo - 0x4] + 0x4C] + 0x4"`
+		RankedScore int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0xC"`
+		PlayCount   int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x7C"`
+		GlobalRank  int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x84"`
+		PP          int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x9C"`
+		Name        string  `mem:"[[[UserInfo - 0x4] + 0x4C] + 0x30]"`
+		UserID      int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x70"`
+	}
+	err := mem.Read(*proc, &userAddr, &userData)
+	if err != nil {
+		return ipcSpec{}, errors.New("[TOURNAMENT] Could not read userData")
+	}
+
+	return ipcSpec{
+		Accuracy:    userData.Accuracy,
+		GlobalPP:    userData.PP,
+		GlobalRank:  userData.GlobalRank,
+		Name:        userData.Name,
+		ID:          userData.UserID,
+		PlayCount:   userData.PlayCount,
+		RankedScore: userData.RankedScore,
+	}, nil
 }
 
 func getTourneyIPC() error {
@@ -168,6 +201,13 @@ func getTourneyIPC() error {
 		}
 	}
 
+	for i, j := leaderStart, 0; j < int(tourneyManagerData.TotalAmOfClients); i, j = i+0x4, j+1 {
+		slot, _ := mem.ReadUint32(process, int64(tourneyManagerData.IPCBaseAddr), int64(i))
+
+		TourneyData.IPCClients[j].ID, TourneyData.IPCClients[j].Gameplay.Score = readTourneyIPCStruct(int64(slot))
+
+	}
+
 	for i, proc := range tourneyProcs {
 		err := mem.Read(proc,
 			&tourneyPatterns[i].PreSongSelectAddresses,
@@ -183,16 +223,21 @@ func getTourneyIPC() error {
 				MenuData.MainMenuValues.BassDensity = calculateBassDensity(mainMenuData.AudioVelocityBase, &proc)
 			}
 		}
-
-		if tourneyMenuData[i].PreSongSelectData.Status == 2 {
+		switch tourneyMenuData[i].PreSongSelectData.Status {
+		case 2:
 			getTourneyGameplayData(proc, i)
 		}
-
-	}
-
-	for i, j := leaderStart, 0; j < int(tourneyManagerData.TotalAmOfClients); i, j = i+0x4, j+1 {
-		slot, _ := mem.ReadUint32(process, int64(tourneyManagerData.IPCBaseAddr), int64(i))
-		TourneyData.IPCClients[j].SpectatingID, TourneyData.IPCClients[j].Gameplay.Score = readTourneyIPCStruct(int64(slot))
+		if TourneyData.IPCClients[i].ID > 0 {
+			totalClients := len(TourneyData.IPCClients)
+			if i < totalClients/2 {
+				TourneyData.IPCClients[i].Team = "left"
+			} else {
+				TourneyData.IPCClients[i].Team = "right"
+			}
+			TourneyData.IPCClients[i].Spectating, _ = readSpectatingUser(tourneyPatterns[i].UserInfo, &proc)
+		} else {
+			TourneyData.IPCClients[i] = ipcClient{}
+		}
 	}
 	return nil
 }
@@ -245,6 +290,15 @@ func readChatData(base *int64) (result []tourneyMessage, err error) {
 			msg.Time = strings.TrimSpace(spl[0])
 			msg.Name = strings.TrimSuffix(spl[1], ":")
 			msg.MessageBody = chatContent.Content
+			for _, client := range TourneyData.IPCClients {
+				if client.Spectating.Name == msg.Name {
+					msg.Team = client.Team
+				}
+			}
+			if msg.Team == "" {
+				msg.Team = "unknown"
+			}
+
 			messages = append(messages, msg)
 
 		}
