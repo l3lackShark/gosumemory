@@ -147,13 +147,14 @@ func readSpectatingUser(user int64, proc *mem.Process) (ipcSpec, error) {
 		UserInfo int64
 	}{user}
 	var userData struct {
-		Accuracy    float64 `mem:"[[UserInfo - 0x4] + 0x4C] + 0x4"`
-		RankedScore int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0xC"`
-		PlayCount   int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x7C"`
-		GlobalRank  int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x84"`
-		PP          int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x9C"`
-		Name        string  `mem:"[[[UserInfo - 0x4] + 0x4C] + 0x30]"`
-		UserID      int32   `mem:"[[UserInfo - 0x4] + 0x4C] + 0x70"`
+		Accuracy    float64 `mem:"[[UserInfo - 0x5]] + 0x4"`
+		RankedScore int64   `mem:"[[UserInfo - 0x5]] + 0xC"`
+		PlayCount   int32   `mem:"[[UserInfo - 0x5]] + 0x7C"`
+		GlobalRank  int32   `mem:"[[UserInfo - 0x5]] + 0x84"`
+		PP          int32   `mem:"[[UserInfo - 0x5]] + 0x9C"`
+		Name        string  `mem:"[[[UserInfo - 0x5]] + 0x30]"`
+		Country     string  `mem:"[[[UserInfo - 0x5]] + 0x2C]"`
+		UserID      int32   `mem:"[[UserInfo - 0x5]] + 0x70"`
 	}
 	err := mem.Read(*proc, &userAddr, &userData)
 	if err != nil {
@@ -165,6 +166,7 @@ func readSpectatingUser(user int64, proc *mem.Process) (ipcSpec, error) {
 		GlobalPP:    userData.PP,
 		GlobalRank:  userData.GlobalRank,
 		Name:        userData.Name,
+		Country:     userData.Country,
 		ID:          userData.UserID,
 		PlayCount:   userData.PlayCount,
 		RankedScore: userData.RankedScore,
@@ -296,7 +298,11 @@ func readChatData(base *int64) (result []tourneyMessage, err error) {
 				}
 			}
 			if msg.Team == "" {
-				msg.Team = "unknown"
+				if msg.Name == "BanchoBot" {
+					msg.Team = "bot"
+				} else {
+					msg.Team = "unknown"
+				}
 			}
 
 			messages = append(messages, msg)

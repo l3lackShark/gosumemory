@@ -87,9 +87,10 @@ type ipcClient struct {
 
 type ipcSpec struct {
 	Name        string  `json:"name"`
+	Country     string  `json:"country"`
 	ID          int32   `json:"userID"`
 	Accuracy    float64 `json:"accuracy"`
-	RankedScore int32   `json:"rankedScore"`
+	RankedScore int64   `json:"rankedScore"`
 	PlayCount   int32   `json:"playCount"`
 	GlobalRank  int32   `json:"globalRank"`
 	GlobalPP    int32   `json:"totalPP"`
