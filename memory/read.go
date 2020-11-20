@@ -26,19 +26,17 @@ type staticAddresses struct {
 }
 
 type tourneyD struct {
-	ChatStruct       uint32 `mem:"[ChatArea - 0x44]"`
-	IPCState         int32  `mem:"Ruleset + 0x54"`
-	LeftStars        int32  `mem:"[Ruleset + 0x1C] + 0x2C"`
-	RightStars       int32  `mem:"[Ruleset + 0x20] + 0x2C"`
-	BO               int32  `mem:"[Ruleset + 0x20] + 0x30"`
-	StarsVisible     int8   `mem:"[Ruleset + 0x20] + 0x38"`
-	ScoreVisible     int8   `mem:"[Ruleset + 0x20] + 0x39"`
-	TeamOneName      string `mem:"[[[Ruleset + 0x1C] + 0x20] + 0x144]"`
-	TeamTwoName      string `mem:"[[[Ruleset + 0x20] + 0x20] + 0x144]"`
-	TeamOneScore     int32  `mem:"[Ruleset + 0x1C] + 0x28"`
-	TeamTwoScore     int32  `mem:"[Ruleset + 0x20] + 0x28"`
-	TotalAmOfClients int32  `mem:"[[[Ruleset + 0x34] + 0x4] + 0x4] + 0x4"`
-	IPCBaseAddr      uint32 `mem:"[[Ruleset + 0x34] + 0x4] + 0x4"`
+	IPCState     int32  `mem:"Ruleset + 0x54"`
+	LeftStars    int32  `mem:"[Ruleset + 0x1C] + 0x2C"`
+	RightStars   int32  `mem:"[Ruleset + 0x20] + 0x2C"`
+	BO           int32  `mem:"[Ruleset + 0x20] + 0x30"`
+	StarsVisible int8   `mem:"[Ruleset + 0x20] + 0x38"`
+	ScoreVisible int8   `mem:"[Ruleset + 0x20] + 0x39"`
+	TeamOneName  string `mem:"[[[Ruleset + 0x1C] + 0x20] + 0x144]"`
+	TeamTwoName  string `mem:"[[[Ruleset + 0x20] + 0x20] + 0x144]"`
+	TeamOneScore int32  `mem:"[Ruleset + 0x1C] + 0x28"`
+	TeamTwoScore int32  `mem:"[Ruleset + 0x20] + 0x28"`
+	IPCBaseAddr  uint32 `mem:"[[Ruleset + 0x34] + 0x4] + 0x4"`
 }
 
 type resultsScreenD struct {

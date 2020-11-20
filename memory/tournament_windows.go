@@ -203,7 +203,7 @@ func getTourneyIPC() error {
 		}
 	}
 
-	for i, j := leaderStart, 0; j < int(tourneyManagerData.TotalAmOfClients); i, j = i+0x4, j+1 {
+	for i, j := leaderStart, 0; j < len(tourneyProcs); i, j = i+0x4, j+1 {
 		slot, _ := mem.ReadUint32(process, int64(tourneyManagerData.IPCBaseAddr), int64(i))
 
 		TourneyData.IPCClients[j].ID, TourneyData.IPCClients[j].Gameplay.Score = readTourneyIPCStruct(int64(slot))
