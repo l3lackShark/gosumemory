@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/l3lackShark/gosumemory/config"
 	"github.com/l3lackShark/gosumemory/mem"
 )
 
@@ -124,7 +125,8 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got all patterns...")
-
+	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
+	fmt.Println(fmt.Sprintf("Initialization complete, you can now visit http://%s or add it as a browser source in OBS", config.Config["serverip"]))
 	DynamicAddresses.IsReady = true
 
 	return nil

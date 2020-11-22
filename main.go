@@ -2,17 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"os"
 	"runtime"
-	"time"
 
 	"github.com/spf13/cast"
 
 	"github.com/l3lackShark/gosumemory/config"
 
-	"github.com/l3lackShark/gosumemory/db"
 	"github.com/l3lackShark/gosumemory/mem"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/pp"
@@ -44,12 +40,12 @@ func main() {
 	}
 
 	go memory.Init()
-	err := db.InitDB()
-	if err != nil {
-		log.Println(err)
-		time.Sleep(5 * time.Second)
-		os.Exit(1)
-	}
+	// err := db.InitDB()
+	// if err != nil {
+	// 	log.Println(err)
+	// 	time.Sleep(5 * time.Second)
+	// 	os.Exit(1)
+	// }
 	go web.SetupStructure()
 	go web.SetupRoutes()
 	if !cgo {
@@ -58,8 +54,6 @@ func main() {
 		go pp.GetMaxData()
 		go pp.GetEditorData()
 	}
-	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
-	fmt.Println(fmt.Sprintf("Initialization complete, you can now visit http://%s or add it as a browser source in OBS", config.Config["serverip"]))
 	web.HTTPServer()
 
 }

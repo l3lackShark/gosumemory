@@ -167,6 +167,7 @@ type stats struct {
 	MemoryCS        float32 `json:"memoryCS"`
 	MemoryOD        float32 `json:"memoryOD"`
 	MemoryHP        float32 `json:"memoryHP"`
+	TotalHitObjects int32   `json:"-"`
 }
 
 type bpm struct {

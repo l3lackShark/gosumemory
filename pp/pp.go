@@ -9,7 +9,6 @@ import (
 	"unsafe"
 
 	"github.com/k0kubun/pp"
-	"github.com/l3lackShark/gosumemory/db"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
 )
@@ -59,6 +58,7 @@ type PP struct {
 
 var strainArray []float64
 var tempBeatmapFile string
+var tempGameMode int32 = 4
 var currMaxCombo C.int
 
 func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
@@ -197,11 +197,13 @@ func GetData() {
 			switch memory.MenuData.GameMode {
 			case 0, 1:
 				var data PP
-				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods || memory.MenuData.GameMode != tempGameMode { //On map/mods change
+					tempGameMode = memory.MenuData.GameMode // looks very ugly but will rewrite everything in 1.4.0
 					tempBadJudgments = 0
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					tempMods = memory.MenuData.Mods.PpMods
+					tempGameMode = memory.MenuData.GameMode
 					mp3Time, err := calculateMP3Time()
 					if err == nil {
 						memory.MenuData.Bm.Time.Mp3Time = mp3Time
@@ -225,7 +227,13 @@ func GetData() {
 
 			case 3:
 
-				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods { //On map/mods change
+				if tempBeatmapFile != memory.MenuData.Bm.Path.BeatmapOsuFileString || memory.MenuData.Mods.PpMods != tempMods || memory.MenuData.GameMode != tempGameMode { //On map/mods/mode change
+					tempGameMode = memory.MenuData.GameMode // looks very ugly but will rewrite everything in 1.4.0
+					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
+					tempMods = memory.MenuData.Mods.PpMods
+					tempGameMode = memory.MenuData.GameMode
+
+					maniaSR = 0.0
 					memory.MenuData.Bm.Time.FullTime = 0        //Not implemented for mania yet
 					memory.MenuData.Bm.Stats.BeatmapAR = 0      //Not implemented for mania yet
 					memory.MenuData.Bm.Stats.BeatmapCS = 0      //Not implemented for mania yet
@@ -233,51 +241,43 @@ func GetData() {
 					memory.MenuData.Bm.Stats.BeatmapHP = 0      //Not implemented for mania yet
 					memory.MenuData.PP.PpStrains = []float64{0} //Not implemented for mania yet
 
-					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
-					tempMods = memory.MenuData.Mods.PpMods
-					maniaSR = 0.0
-					maniaMods = 0
-					maniaHitObjects = 0.0
-					for i := 0; i < len(db.OsuDB.BmInfo); i++ {
-						if tempBeatmapFile == db.OsuDB.BmInfo[i].Filename {
-							if strings.Contains(memory.MenuData.Mods.PpMods, "DT") {
-								maniaMods = 64
-							} else if strings.Contains(memory.MenuData.Mods.PpMods, "HT") {
-								maniaMods = 256
-							} else {
-								maniaMods = 0 //assuming NM
+					maniaStars, err := memory.ReadManiaStars()
+					if err != nil {
+						pp.Println(err)
+					}
+					if maniaStars.NoMod == 0 { //diff calc in progress
+						for i := 0; i < 50; i++ {
+							maniaStars, _ = memory.ReadManiaStars()
+							if maniaStars.NoMod > 0 {
+								break
 							}
-							for j := 0; j < len(db.OsuDB.BmInfo[i].StarRatingMania); j++ {
-								if maniaMods == db.OsuDB.BmInfo[i].StarRatingMania[j].BitMods {
-									maniaSR = db.OsuDB.BmInfo[i].StarRatingMania[j].StarRating
-									maniaHitObjects = float64(db.OsuDB.BmInfo[i].NumHitCircles) + float64(db.OsuDB.BmInfo[i].NumSliders) + float64(db.OsuDB.BmInfo[i].NumSpinners)
-									memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(maniaSR)))
-									// memory.MenuData.Bm.Metadata.Artist = db.OsuDB.BmInfo[i].Artist
-									// memory.MenuData.Bm.Metadata.Title = db.OsuDB.BmInfo[i].Title
-									// memory.MenuData.Bm.Metadata.Mapper = db.OsuDB.BmInfo[i].Creator
-									// memory.MenuData.Bm.Metadata.Version = db.OsuDB.BmInfo[i].Difficulty //Now sets through memory.
-									memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
-									break
-								}
-							}
-							if maniaSR == 0.0 {
-								pp.Println("Could not find mania star rating in the database. PP output will be unavailable for this beatmap!")
-							}
-							break
+							time.Sleep(100 * time.Millisecond)
 						}
 					}
+
+					maniaHitObjects = float64(memory.MenuData.Bm.Stats.TotalHitObjects)
+
+					if strings.Contains(memory.MenuData.Mods.PpMods, "DT") {
+						maniaSR = maniaStars.DT
+					} else if strings.Contains(memory.MenuData.Mods.PpMods, "HT") {
+						maniaSR = maniaStars.HT
+					} else {
+						maniaSR = maniaStars.NoMod //assuming NM
+					}
+					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(maniaSR)))
+					memory.MenuData.Bm.Stats.FullSR = memory.MenuData.Bm.Stats.BeatmapSR                                                                     // LiveSR not implemented yet
+					memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
 				}
-				if maniaSR >= 0.01 {
+			}
+			if memory.GameplayData.GameMode == 3 {
+				if maniaSR > 0 {
 					if memory.GameplayData.Score >= 500000 {
 						memory.GameplayData.PP.Pp = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, float64(memory.GameplayData.Score)))
 					} else {
 						memory.GameplayData.PP.Pp = 0
 					}
-
 				}
-
 			}
-
 		}
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)

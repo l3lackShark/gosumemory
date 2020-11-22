@@ -178,12 +178,13 @@ func Init() {
 }
 
 var tempBeatmapString string = ""
+var tempGameMode int32 = 5
 
 func bmUpdateData() error {
 	mem.Read(process, &patterns, &menuData)
 
 	bmString := menuData.Path
-	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
+	if (strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString) || (strings.HasSuffix(bmString, ".osu") && tempGameMode != menuData.MenuGameMode) { //On map/mode change
 		for i := 0; i < 50; i++ {
 			if menuData.BackgroundFilename != "" {
 				break
@@ -191,9 +192,22 @@ func bmUpdateData() error {
 			time.Sleep(25 * time.Millisecond)
 			mem.Read(process, &patterns, &menuData)
 		}
+		tempGameMode = menuData.MenuGameMode
 		tempBeatmapString = bmString
 		MenuData.Bm.BeatmapID = menuData.MapID
 		MenuData.Bm.BeatmapSetID = menuData.SetID
+		MenuData.Bm.Stats.MemoryAR = menuData.AR
+		MenuData.Bm.Stats.MemoryCS = menuData.CS
+		MenuData.Bm.Stats.MemoryHP = menuData.HP
+		MenuData.Bm.Stats.MemoryOD = menuData.OD
+		MenuData.Bm.Stats.TotalHitObjects = menuData.ObjectCount
+		MenuData.Bm.Metadata.Artist = menuData.Artist
+		MenuData.Bm.Metadata.Title = menuData.Title
+		MenuData.Bm.Metadata.Mapper = menuData.Creator
+		MenuData.Bm.Metadata.Version = menuData.Difficulty
+		MenuData.GameMode = menuData.MenuGameMode
+		MenuData.Bm.RandkedStatus = menuData.RankedStatus
+		MenuData.Bm.BeatmapMD5 = menuData.MD5
 		MenuData.Bm.Path = path{
 			AudioPath:            menuData.AudioFilename,
 			BGPath:               menuData.BackgroundFilename,
@@ -203,17 +217,6 @@ func bmUpdateData() error {
 			FullDotOsu:           filepath.Join(SongsFolderPath, menuData.Folder, bmString),
 			InnerBGPath:          filepath.Join(menuData.Folder, menuData.BackgroundFilename),
 		}
-		MenuData.Bm.Stats.MemoryAR = menuData.AR
-		MenuData.Bm.Stats.MemoryCS = menuData.CS
-		MenuData.Bm.Stats.MemoryHP = menuData.HP
-		MenuData.Bm.Stats.MemoryOD = menuData.OD
-		MenuData.Bm.Metadata.Artist = menuData.Artist
-		MenuData.Bm.Metadata.Title = menuData.Title
-		MenuData.Bm.Metadata.Mapper = menuData.Creator
-		MenuData.Bm.Metadata.Version = menuData.Difficulty
-		MenuData.GameMode = menuData.MenuGameMode
-		MenuData.Bm.RandkedStatus = menuData.RankedStatus
-		MenuData.Bm.BeatmapMD5 = menuData.MD5
 	}
 	if alwaysData.MenuMods == 0 {
 		MenuData.Mods.PpMods = "NM"
@@ -226,7 +229,10 @@ func bmUpdateData() error {
 	return nil
 }
 func getGamplayData() {
-	mem.Read(process, &patterns, &gameplayData)
+	err := mem.Read(process, &patterns, &gameplayData)
+	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") {
+		return //struct not initialized yet
+	}
 	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
@@ -293,6 +299,34 @@ func getLeaderboard() {
 		board.Slots[j], _ = readLeaderPlayerStruct(int64(slot))
 	}
 	GameplayData.Leaderboard = board
+}
+
+type ManiaStars struct {
+	NoMod float64
+	DT    float64
+	HT    float64
+}
+
+func ReadManiaStars() (ManiaStars, error) {
+	addresses := struct{ Base int64 }{int64(menuData.StarRatingStruct)} //Beatmap + 0x88
+	var entries struct {
+		Data uint32 `mem:"[Base + 0x14] + 0x8"`
+	}
+	err := mem.Read(process, &addresses, &entries)
+	if err != nil || entries.Data == 0 {
+		return ManiaStars{}, errors.New("[MEMORY] Could not find star rating for this map (internal) This probably means that difficulty calculation is in progress")
+	}
+	starRating := struct{ Base int64 }{int64(entries.Data)}
+	var stars struct {
+		NoMod float64 `mem:"Base + 0x18"`
+		DT    float64 `mem:"Base + 0x30"`
+		HT    float64 `mem:"Base + 0x48"`
+	}
+	err = mem.Read(process, &starRating, &stars)
+	if err != nil {
+		return ManiaStars{}, errors.New("[MEMORY] Empty star rating (internal)")
+	}
+	return ManiaStars{stars.NoMod, stars.DT, stars.HT}, nil
 }
 
 func readLeaderPlayerStruct(base int64) (leaderPlayer, bool) {

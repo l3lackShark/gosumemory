@@ -86,7 +86,10 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 }
 
 func getTourneyGameplayData(proc mem.Process, iterator int) {
-	mem.Read(proc, &tourneyPatterns[iterator], &tourneyGameplayData[iterator])
+	err := mem.Read(proc, &tourneyPatterns[iterator], &tourneyGameplayData[iterator])
+	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") {
+		return //struct not initialized yet
+	}
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
 	TourneyData.IPCClients[iterator].Gameplay.GameMode = tourneyGameplayData[iterator].Mode
