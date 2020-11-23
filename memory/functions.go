@@ -265,7 +265,7 @@ func getGamplayData() {
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
 		baseUR, _ := calculateUR(GameplayData.Hits.HitErrorArray)
-z		if strings.Contains(MenuData.Mods.PpMods, "DT") || strings.Contains(MenuData.Mods.PpMods, "NC") {
+		if strings.Contains(MenuData.Mods.PpMods, "DT") || strings.Contains(MenuData.Mods.PpMods, "NC") {
 			GameplayData.Hits.UnstableRate = baseUR / 1.5
 		} else if strings.Contains(MenuData.Mods.PpMods, "HT") {
 			GameplayData.Hits.UnstableRate = baseUR * 1.33
@@ -406,4 +406,3 @@ func calculateBassDensity(base uint32, proc *mem.Process) float64 {
 	return (1 + currentAudioVelocity) * 0.5
 
 }
-
