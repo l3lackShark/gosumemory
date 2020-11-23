@@ -43,6 +43,17 @@ You can contact us here: https://discord.gg/8enr4qD
 <img src="https://i.imgur.com/FpHkdLg.png" width="500">\
 By: Xynogen<br>
 
+### WaveTournament
+
+> Size: 1920x1080\
+> *Chat + Warmup (Team score disabled) view*\
+<img src="https://user-images.githubusercontent.com/23419562/97575468-59554180-1a1f-11eb-8f63-c6db9dd621fa.png" width="500">\
+> *Chat + Warmup (Team score disabled) view*\
+<img src="https://user-images.githubusercontent.com/23419562/97575499-61ad7c80-1a1f-11eb-850d-9e8754a5cc93.png" width="500">\
+> *Gameplay*\
+<img src="https://user-images.githubusercontent.com/23419562/97575572-81dd3b80-1a1f-11eb-8e92-e0fb67fadeac.png" width="500">\
+By: [VictimCrasher][4]<br>
+
 ### Classic
 
 > Size: 550x300\
