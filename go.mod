@@ -3,6 +3,7 @@ module github.com/l3lackShark/gosumemory
 go 1.15
 
 require (
+	github.com/akavel/rsrc v0.9.0 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/elastic/go-windows v1.0.1
 	github.com/gorilla/websocket v1.4.2
