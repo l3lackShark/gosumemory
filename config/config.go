@@ -24,6 +24,7 @@ func Init() {
 	if err == config.ErrDoesNotExist {
 		d := []byte(`[Main]
 update = 100
+path = auto
 cgodisable = false
 memdebug = false
 memcycletest = false

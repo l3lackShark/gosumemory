@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"runtime"
 
 	"github.com/spf13/cast"
@@ -34,6 +35,11 @@ func main() {
 	memory.UnderWine = *isRunningInWINE
 	if runtime.GOOS != "windows" && memory.SongsFolderPath == "auto" {
 		log.Fatalln("Please specify path to osu!Songs (see --help)")
+	}
+	if memory.SongsFolderPath != "auto" {
+		if _, err := os.Stat(memory.SongsFolderPath); os.IsNotExist(err) {
+			log.Fatalln(`Specified Songs directory does not exist on the system! (try setting to "auto" if you are on Windows or make sure that the path is correct)`)
+		}
 	}
 	if *shouldWeUpdate == true {
 		updater.DoSelfUpdate()
