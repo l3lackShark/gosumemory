@@ -3,3 +3,9 @@ gosumemory
 gosumemory.exe
 static
 osu!.db
+config.ini
+__debug_bin
+gosumemory.exe.manifest
+icon.ico
+gosumemory.syso
+res.ico

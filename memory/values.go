@@ -2,13 +2,31 @@ package memory
 
 //InMenuValues inside osu!memory
 type InMenuValues struct {
-	OsuStatus   uint32 `json:"state"`
-	SkinFolder  string `json:"skinFolder"`
-	GameMode    int32  `json:"gameMode"`
-	ChatChecker int8   `json:"isChatEnabled"` //bool (1 byte)
-	Bm          bm     `json:"bm"`
-	Mods        modsM  `json:"mods"`
-	PP          ppM    `json:"pp"`
+	MainMenuValues MainMenuValues `json:"mainMenu"`
+	OsuStatus      uint32         `json:"state"`
+	SkinFolder     string         `json:"skinFolder"`
+	GameMode       int32          `json:"gameMode"`
+	ChatChecker    int8           `json:"isChatEnabled"` //bool (1 byte)
+	Bm             bm             `json:"bm"`
+	Mods           modsM          `json:"mods"`
+	PP             ppM            `json:"pp"`
+}
+
+type ResultsScreenValues struct {
+	Name     string `json:"name"`
+	Score    int32  `json:"score"`
+	MaxCombo int16  `json:"maxCombo"`
+	Mods     modsM  `json:"mods"`
+	H300     int16  `json:"300"`
+	HGeki    int16  `json:"geki"`
+	H100     int16  `json:"100"`
+	HKatu    int16  `json:"katu"`
+	H50      int16  `json:"50"`
+	H0       int16  `json:"0"`
+}
+
+type MainMenuValues struct {
+	BassDensity float64 `json:"bassDensity"`
 }
 
 //InSettingsValues are values represented inside settings class, could be dynamic
@@ -17,22 +35,76 @@ type InSettingsValues struct {
 }
 
 type TourneyValues struct {
-	Manager tourneyManager  `json:"manager"`
-	Clients []TourneyClient `json:"clients"` //should be ordered by name
-}
-
-type TourneyClient struct {
-	Gameplay GameplayValues `json:"gameplay"`
-	Mods     modsM          `json:"mods"`
+	Manager    tourneyManager `json:"manager"`
+	IPCClients []ipcClient    `json:"ipcClients"`
 }
 
 type tourneyManager struct {
-	IPCState     int32 `json:"ipcState"`
-	BO           int32 `json:"bestOF"`
-	StarsLeft    int32 `json:"starsLeftTeam"`
-	StarsRight   int32 `json:"starsRightTeam"`
-	ScoreVisible bool  `json:"scoreVisible"`
-	StarsVisible bool  `json:"starsVisible"`
+	IPCState int32            `json:"ipcState"`
+	BO       int32            `json:"bestOF"`
+	Name     tName            `json:"teamName"`
+	Stars    tStars           `json:"stars"`
+	Bools    tBools           `json:"bools"`
+	Chat     []tourneyMessage `json:"chat"`
+	Gameplay tmGameplay       `json:"gameplay"`
+}
+
+type tourneyMessage struct {
+	Team        string `json:"team"`
+	Time        string `json:"time"`
+	Name        string `json:"name"`
+	MessageBody string `json:"messageBody"`
+}
+
+type tmGameplay struct {
+	Score tScore `json:"score"`
+}
+
+type tBools struct {
+	ScoreVisible bool `json:"scoreVisible"`
+	StarsVisible bool `json:"starsVisible"`
+}
+
+type tName struct {
+	Left  string `json:"left"`
+	Right string `json:"right"`
+}
+type tStars struct {
+	Left  int32 `json:"left"`
+	Right int32 `json:"right"`
+}
+type tScore struct {
+	Left  int32 `json:"left"`
+	Right int32 `json:"right"`
+}
+
+type ipcClient struct {
+	ID         int32           `json:"-"`
+	Team       string          `json:"team"`
+	Spectating ipcSpec         `json:"spectating"`
+	Gameplay   tourneyGameplay `json:"gameplay"`
+}
+
+type ipcSpec struct {
+	Name        string  `json:"name"`
+	Country     string  `json:"country"`
+	ID          int32   `json:"userID"`
+	Accuracy    float64 `json:"accuracy"`
+	RankedScore int64   `json:"rankedScore"`
+	PlayCount   int32   `json:"playCount"`
+	GlobalRank  int32   `json:"globalRank"`
+	GlobalPP    int32   `json:"totalPP"`
+}
+
+type tourneyGameplay struct {
+	GameMode int32       `json:"gameMode"`
+	Score    int32       `json:"score"`
+	Name     string      `json:"name"`
+	Accuracy float64     `json:"accuracy"`
+	Hits     tourneyHits `json:"hits"`
+	Combo    combo       `json:"combo"`
+	Mods     modsM       `json:"mods"`
+	Hp       hp          `json:"hp"`
 }
 
 type gGrade struct {
@@ -95,6 +167,7 @@ type stats struct {
 	MemoryCS        float32 `json:"memoryCS"`
 	MemoryOD        float32 `json:"memoryOD"`
 	MemoryHP        float32 `json:"memoryHP"`
+	TotalHitObjects int32   `json:"-"`
 }
 
 type bpm struct {
@@ -140,7 +213,6 @@ type hp struct {
 
 type hits struct {
 	H300          int16   `json:"300"`
-	H200M         int16   `json:"200"`
 	HGeki         int16   `json:"geki"`
 	H100          int16   `json:"100"`
 	HKatu         int16   `json:"katu"`
@@ -151,6 +223,19 @@ type hits struct {
 	Grade         gGrade  `json:"grade"`
 	UnstableRate  float64 `json:"unstableRate"`
 	HitErrorArray []int32 `json:"hitErrorArray"`
+}
+
+type tourneyHits struct {
+	H300          int16   `json:"300"`
+	HGeki         int16   `json:"geki"`
+	H100          int16   `json:"100"`
+	HKatu         int16   `json:"katu"`
+	H50           int16   `json:"50"`
+	H0            int16   `json:"0"`
+	H0Temp        int16   `json:"-"`
+	HSB           int16   `json:"sliderBreaks"`
+	UnstableRate  float64 `json:"unstableRate"`
+	HitErrorArray []int32 `json:"-"`
 }
 
 type ppG struct {
@@ -191,10 +276,13 @@ var MenuData = InMenuValues{}
 //GameplayData contains raw values taken from osu! memory
 var GameplayData = GameplayValues{}
 
+//ResultsScreenData contains raw values taken from osu! memory
+var ResultsScreenData = ResultsScreenValues{}
+
 //SettingsData contains raw values taken from osu! memory
 var SettingsData = InSettingsValues{}
 
-//SettingsData contains raw values taken from osu! memory
+//TourneyData contains raw values taken from osu! memory
 var TourneyData = TourneyValues{}
 
 //DynamicAddresses are in-between pointers that lead to values

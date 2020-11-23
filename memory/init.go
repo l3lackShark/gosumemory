@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/l3lackShark/gosumemory/config"
 	"github.com/l3lackShark/gosumemory/mem"
 )
 
@@ -25,6 +26,8 @@ var menuData menuD
 var songsFolderData songsFolderD
 var gameplayData gameplayD
 var alwaysData allTimesD
+var mainMenuData mainMenuD
+var resultsScreenData resultsScreenD
 
 func resolveSongsFolder() (string, error) {
 	var err error
@@ -46,8 +49,9 @@ func resolveSongsFolder() (string, error) {
 }
 
 func initBase() error {
+	var err error
 	isTournamentMode = false
-	allProcs, err := mem.FindProcess(osuProcessRegex)
+	allProcs, err = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 	if err != nil {
 		return err
 	}
@@ -89,7 +93,7 @@ func initBase() error {
 		}
 		isTournamentMode = true
 		tourneyPatterns = make([]staticAddresses, len(tourneyProcs))
-		TourneyData.Clients = make([]TourneyClient, len(tourneyProcs))
+		TourneyData.IPCClients = make([]ipcClient, len(tourneyProcs))
 		tourneyMenuData = make([]menuD, len(tourneyProcs))
 		tourneyGameplayData = make([]gameplayD, len(tourneyProcs))
 		tourneyAlwaysData = make([]allTimesD, len(tourneyProcs))
@@ -121,7 +125,8 @@ func initBase() error {
 		return err
 	}
 	fmt.Println("[MEMORY] Got all patterns...")
-
+	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
+	fmt.Println(fmt.Sprintf("Initialization complete, you can now visit http://%s or add it as a browser source in OBS", config.Config["serverip"]))
 	DynamicAddresses.IsReady = true
 
 	return nil

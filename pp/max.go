@@ -19,6 +19,8 @@ import (
 )
 
 var ezmax C.ezpp_t
+var tempBadJudgments int16
+var possibleMax float64
 
 type PPmax struct {
 	MaxThisPlay C.float
@@ -47,10 +49,14 @@ func readMaxData(data *PPmax, ezmax C.ezpp_t) error {
 		C.ezpp_set_accuracy_percent(ezmax, C.float(ifRestSSACC))
 
 		//Get Possible max combo in the current play
-		var possibleMax float64
 		//var lessThanMaxCombo bool
-		if memory.GameplayData.Hits.H0+memory.GameplayData.Hits.HSB > 0 {
-			possibleMax = math.Max(float64(totalCombo-currMaxCombo), float64(memory.GameplayData.Combo.Max))
+
+		combinedBadJudgments := memory.GameplayData.Hits.H0 + memory.GameplayData.Hits.HSB
+		if combinedBadJudgments > 0 {
+			if tempBadJudgments != combinedBadJudgments {
+				tempBadJudgments = combinedBadJudgments
+				possibleMax = math.Max(float64(totalCombo-currMaxCombo), float64(memory.GameplayData.Combo.Max))
+			}
 			//lessThanMaxCombo = true
 		} else {
 			possibleMax = float64(totalCombo)
@@ -73,9 +79,10 @@ func readMaxData(data *PPmax, ezmax C.ezpp_t) error {
 		// 	maxPossibleCombo int32
 		// 	maxThisPlayPP    int32
 		// 	currentPP        int32
+		// 	ifFC             int32
 		// }
-		//testing := test{ifRestSSACC, remaining, lessThanMaxCombo, int32(possibleMax), int32(maxThisPlay), memory.GameplayData.PP.Pp}
-		//pp.Println(testing)
+		// testing := test{ifRestSSACC, remaining, lessThanMaxCombo, int32(possibleMax), int32(maxThisPlay), memory.GameplayData.PP.Pp, memory.GameplayData.PP.PPifFC}
+		// pp.Println(testing)
 
 	}
 

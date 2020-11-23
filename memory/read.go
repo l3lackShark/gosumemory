@@ -15,27 +15,48 @@ type PreSongSelectData struct {
 
 type staticAddresses struct {
 	PreSongSelectAddresses
-	Base              int64 `sig:"F8 01 74 04 83 65"`
-	MenuMods          int64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
-	PlayTime          int64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"`
-	PlayContainerBase int64 `sig:"89 46 08 EB 2A 8B 35"`
-	LeaderboardBase   int64 `sig:"A1 ?? ?? ?? ?? 8B 50 04 8B 0D"`
-	ChatChecker       int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
-	SkinData          int64 `sig:"75 21 8B 1D"`
-	Tournament        int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
-}
-
-func (staticAddresses) Tourney() string {
-	return "[Tournament - 0xB] + 0x4"
+	Base        int64 `sig:"F8 01 74 04 83 65"`
+	MenuMods    int64 `sig:"C8 FF ?? ?? ?? ?? ?? 81 0D ?? ?? ?? ?? 00 08 00 00"`
+	PlayTime    int64 `sig:"5E 5F 5D C3 A1 ?? ?? ?? ?? 89 ?? 04"`
+	ChatChecker int64 `sig:"0A D7 23 3C 00 00 ?? 01"`
+	SkinData    int64 `sig:"75 21 8B 1D"`
+	Rulesets    int64 `sig:"7D 15 A1 ?? ?? ?? ?? 85 C0"`
+	ChatArea    int64 `sig:"33 47 9D FF 5B 7F FF FF"`
+	UserInfo    int64 `sig:"52 30 8B C8 E8 ?? ?? ?? ?? 8B C8 8D"`
 }
 
 type tourneyD struct {
-	IPCState     int32 `mem:"[Tourney] + 0x54"`
-	LeftStars    int32 `mem:"[[Tourney] + 0x1C] + 0x2C"`
-	RightStars   int32 `mem:"[[Tourney] + 0x20] + 0x2C"`
-	BO           int32 `mem:"[[Tourney] + 0x20] + 0x30"`
-	StarsVisible int8  `mem:"[[Tourney] + 0x20] + 0x38"`
-	ScoreVisible int8  `mem:"[[Tourney] + 0x20] + 0x39"`
+	IPCState     int32  `mem:"Ruleset + 0x54"`
+	LeftStars    int32  `mem:"[Ruleset + 0x1C] + 0x2C"`
+	RightStars   int32  `mem:"[Ruleset + 0x20] + 0x2C"`
+	BO           int32  `mem:"[Ruleset + 0x20] + 0x30"`
+	StarsVisible int8   `mem:"[Ruleset + 0x20] + 0x38"`
+	ScoreVisible int8   `mem:"[Ruleset + 0x20] + 0x39"`
+	TeamOneName  string `mem:"[[[Ruleset + 0x1C] + 0x20] + 0x144]"`
+	TeamTwoName  string `mem:"[[[Ruleset + 0x20] + 0x20] + 0x144]"`
+	TeamOneScore int32  `mem:"[Ruleset + 0x1C] + 0x28"`
+	TeamTwoScore int32  `mem:"[Ruleset + 0x20] + 0x28"`
+	IPCBaseAddr  uint32 `mem:"[[Ruleset + 0x34] + 0x4] + 0x4"`
+}
+
+type resultsScreenD struct {
+	PlayerName string  `mem:"[[Ruleset + 0x38] + 0x28]"`
+	ModsXor1   int32   `mem:"[[Ruleset + 0x38] + 0x1C] + 0xC"`
+	ModsXor2   int32   `mem:"[[Ruleset + 0x38] + 0x1C] + 0x8"`
+	Mode       int32   `mem:"[Ruleset + 0x38] + 0x64"`
+	MaxCombo   int16   `mem:"[Ruleset + 0x38] + 0x68"`
+	Score      int32   `mem:"[Ruleset + 0x38] + 0x78"`
+	Hit100     int16   `mem:"[Ruleset + 0x38] + 0x88"`
+	Hit300     int16   `mem:"[Ruleset + 0x38] + 0x8A"`
+	Hit50      int16   `mem:"[Ruleset + 0x38] + 0x8C"`
+	HitGeki    int16   `mem:"[Ruleset + 0x38] + 0x8E"`
+	HitKatu    int16   `mem:"[Ruleset + 0x38] + 0x90"`
+	HitMiss    int16   `mem:"[Ruleset + 0x38] + 0x92"`
+	Accuracy   float64 `mem:"[Ruleset + 0x48] + 0xC"`
+}
+
+func (staticAddresses) Ruleset() string {
+	return "[[Rulesets - 0xB] + 0x4]"
 }
 
 func (staticAddresses) Beatmap() string {
@@ -56,6 +77,8 @@ func (staticAddresses) Leaderboard() string {
 
 type menuD struct {
 	PreSongSelectData
+	//SearchText         string  `mem:"[Ruleset + 0xCC]"`
+	//GroupingType       int32   `mem:"Ruleset + 0x104"`
 	MenuGameMode       int32   `mem:"[Base - 0x33]"`
 	Plays              int32   `mem:"[Base - 0x33] + 0xC"`
 	Artist             string  `mem:"[[Beatmap] + 0x18]"`
@@ -64,6 +87,7 @@ type menuD struct {
 	CS                 float32 `mem:"[Beatmap] + 0x30"`
 	HP                 float32 `mem:"[Beatmap] + 0x34"`
 	OD                 float32 `mem:"[Beatmap] + 0x38"`
+	StarRatingStruct   uint32  `mem:"[Beatmap] + 0x88"`
 	AudioFilename      string  `mem:"[[Beatmap] + 0x64]"`
 	BackgroundFilename string  `mem:"[[Beatmap] + 0x68]"`
 	Folder             string  `mem:"[[Beatmap] + 0x74]"`
@@ -76,14 +100,18 @@ type menuD struct {
 	BeatmapMode        int32   `mem:"[Beatmap] + 0x114"`
 	RankedStatus       int32   `mem:"[Beatmap] + 0x124"` // unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
 	MD5                string  `mem:"[[Beatmap] + 0x6C]"`
+	ObjectCount        int32   `mem:"[Beatmap] + 0xF0"`
 	//Tags               string  `mem:"[[Beatmap] + 0x20]"`
 	//Length       int32 `mem:"[Beatmap] + 0x12C"`
 	//AudioLeadIn          int32   `mem:"[Beatmap] + 0xC0"`
 	//DrainTime            int32   `mem:"[Beatmap] + 0xE8"`
 	//DrainTime2           int32   `mem:"[Beatmap] + 0xEC"`
-	//ObjectCount          int32   `mem:"[Beatmap] + 0xF0"`
 	//ScoreMenu            int32   `mem:"[Beatmap] + 0xFC"` // Local, global, mod, friend, country
 	//PreviewTime  int32 `mem:"[Beatmap] + 0x118"`
+}
+
+type mainMenuD struct {
+	AudioVelocityBase uint32 `mem:"[Ruleset + 0x44] + 0x10"`
 }
 
 type allTimesD struct {
@@ -95,24 +123,23 @@ type allTimesD struct {
 }
 type gameplayD struct {
 	Retries    int32  `mem:"[Base - 0x33] + 0x8"`
-	PlayerName string `mem:"[[PlayContainer + 0x38] + 0x28]"`
-	ModsXor1   int32  `mem:"[[PlayContainer + 0x38] + 0x1C] + 0xC"`
-	ModsXor2   int32  `mem:"[[PlayContainer + 0x38] + 0x1C] + 0x8"`
+	PlayerName string `mem:"[[[Ruleset + 0x60] + 0x38] + 0x28]"`
+	ModsXor1   int32  `mem:"[[[Ruleset + 0x60] + 0x38] + 0x1C] + 0xC"`
+	ModsXor2   int32  `mem:"[[[Ruleset + 0x60] + 0x38] + 0x1C] + 0x8"`
 	//BitwiseKeypress int8    `mem:"[Status - 0x4] - 0x268"`
-	HitErrors      []int32 `mem:"[[PlayContainer + 0x38] + 0x38]"`
-	Mode           int32   `mem:"[PlayContainer + 0x38] + 0x64"`
-	MaxCombo       int16   `mem:"[PlayContainer + 0x38] + 0x68"`
-	Score          int32   `mem:"[PlayContainer + 0x38] + 0x78"`
-	Hit100         int16   `mem:"[PlayContainer + 0x38] + 0x88"`
-	Hit300         int16   `mem:"[PlayContainer + 0x38] + 0x8A"`
-	Hit200M        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
-	Hit50          int16   `mem:"[PlayContainer + 0x38] + 0x8C"`
-	HitGeki        int16   `mem:"[PlayContainer + 0x38] + 0x8E"`
-	HitKatu        int16   `mem:"[PlayContainer + 0x38] + 0x90"`
-	HitMiss        int16   `mem:"[PlayContainer + 0x38] + 0x92"`
-	Combo          int16   `mem:"[PlayContainer + 0x38] + 0x94"`
-	PlayerHPSmooth float64 `mem:"[PlayContainer + 0x40] + 0x14"`
-	PlayerHP       float64 `mem:"[PlayContainer + 0x40] + 0x1C"`
-	Accuracy       float64 `mem:"[PlayContainer + 0x48] + 0xC"`
-	LeaderBoard    uint32  `mem:"Leaderboard"`
+	HitErrors      []int32 `mem:"[[[Ruleset + 0x60] + 0x38] + 0x38]"`
+	Mode           int32   `mem:"[[Ruleset + 0x60] + 0x38] + 0x64"`
+	MaxCombo       int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x68"`
+	Score          int32   `mem:"[[Ruleset + 0x60] + 0x38] + 0x78"`
+	Hit100         int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x88"`
+	Hit300         int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x8A"`
+	Hit50          int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x8C"`
+	HitGeki        int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x8E"`
+	HitKatu        int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x90"`
+	HitMiss        int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x92"`
+	Combo          int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x94"`
+	PlayerHPSmooth float64 `mem:"[[Ruleset + 0x60] + 0x40] + 0x14"`
+	PlayerHP       float64 `mem:"[[Ruleset + 0x60] + 0x40] + 0x1C"`
+	Accuracy       float64 `mem:"[[Ruleset + 0x60] + 0x48] + 0xC"`
+	LeaderBoard    uint32  `mem:"[Ruleset + 0x74] + 0x24"`
 }

@@ -25,6 +25,9 @@ var UpdateTime int
 
 //UnderWine?
 var UnderWine bool
+
+//MemCycle test
+var MemCycle bool
 var isTournamentMode bool
 var tourneyProcs []mem.Process
 var tourneyErr error
@@ -49,13 +52,13 @@ func Init() {
 		leaderStart = 0x8
 	}
 
-	allProcs, procerr = mem.FindProcess(osuProcessRegex)
+	allProcs, procerr = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 	for {
 		start := time.Now()
 		if procerr != nil {
 			DynamicAddresses.IsReady = false
 			for procerr != nil {
-				allProcs, procerr = mem.FindProcess(osuProcessRegex)
+				allProcs, procerr = mem.FindProcess(osuProcessRegex, "osu!lazer", "osu!framework")
 				log.Println("It seems that we lost the process, retrying! ERROR:", procerr)
 				time.Sleep(1 * time.Second)
 			}
@@ -90,6 +93,13 @@ func Init() {
 			MenuData.SkinFolder = alwaysData.SkinFolder
 			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
 			switch menuData.Status {
+			case 0:
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
+				mem.Read(process, &patterns, &mainMenuData)
+				MenuData.MainMenuValues.BassDensity = calculateBassDensity(mainMenuData.AudioVelocityBase, &process)
 			case 2:
 				if MenuData.Bm.Time.PlayTime < 150 || menuData.Path == "" { //To catch up with the F2-->Enter
 					err := bmUpdateData()
@@ -110,6 +120,30 @@ func Init() {
 					pp.Println(err)
 				}
 			case 7:
+				err = bmUpdateData()
+				if err != nil {
+					pp.Println(err)
+				}
+				mem.Read(process, &patterns, &resultsScreenData)
+				for resultsScreenData.PlayerName == "" {
+					mem.Read(process, &patterns, &resultsScreenData)
+				}
+				ResultsScreenData.H300 = resultsScreenData.Hit300
+				ResultsScreenData.H100 = resultsScreenData.Hit100
+				ResultsScreenData.H50 = resultsScreenData.Hit50
+				ResultsScreenData.H0 = resultsScreenData.HitMiss
+				ResultsScreenData.MaxCombo = resultsScreenData.MaxCombo
+				ResultsScreenData.Name = resultsScreenData.PlayerName
+				ResultsScreenData.Score = resultsScreenData.Score
+				ResultsScreenData.HGeki = resultsScreenData.HitGeki
+				ResultsScreenData.HKatu = resultsScreenData.HitKatu
+
+				ResultsScreenData.Mods.AppliedMods = int32(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2)
+				if ResultsScreenData.Mods.AppliedMods == 0 {
+					ResultsScreenData.Mods.PpMods = "NM"
+				} else {
+					ResultsScreenData.Mods.PpMods = Mods(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2).String()
+				}
 			default:
 				tempRetries = -1
 				GameplayData = GameplayValues{}
@@ -123,44 +157,20 @@ func Init() {
 			}
 		}
 		if isTournamentMode {
-			err := mem.Read(process,
-				&patterns,
-				&tourneyManagerData)
-			if err != nil {
+
+			if err := getTourneyIPC(); err != nil {
 				DynamicAddresses.IsReady = false
 				log.Println("It appears that we lost the precess, retrying", err)
 				continue
 			}
-			TourneyData.Manager.BO = tourneyManagerData.BO
-			TourneyData.Manager.IPCState = tourneyManagerData.IPCState
-			TourneyData.Manager.ScoreVisible = cast.ToBool(int(tourneyManagerData.ScoreVisible))
-			TourneyData.Manager.StarsVisible = cast.ToBool(int(tourneyManagerData.StarsVisible))
-			TourneyData.Manager.StarsLeft = tourneyManagerData.LeftStars
-			TourneyData.Manager.StarsRight = tourneyManagerData.RightStars
-			if TourneyData.Manager.IPCState != 3 && TourneyData.Manager.IPCState != 4 { //Playing, Ranking
-				for i := range tourneyGameplayData {
-					TourneyData.Clients[i].Gameplay = GameplayValues{}
-				}
-			}
-
-			for i, proc := range tourneyProcs {
-				err := mem.Read(proc,
-					&tourneyPatterns[i].PreSongSelectAddresses,
-					&tourneyMenuData[i].PreSongSelectData)
-				if err != nil {
-					DynamicAddresses.IsReady = false
-					log.Println("It appears that we lost the precess, retrying", err)
-					continue
-				}
-				if tourneyMenuData[i].PreSongSelectData.Status == 2 {
-					getTourneyGameplayData(proc, i)
-				}
-
-			}
-
+		}
+		if menuData.Status != 7 {
+			ResultsScreenData = ResultsScreenValues{}
 		}
 		elapsed := time.Since(start)
-		//log.Printf("Cycle took %s", elapsed)
+		if MemCycle {
+			log.Printf("Cycle took %s", elapsed)
+		}
 		time.Sleep(time.Duration(UpdateTime-int(elapsed.Milliseconds())) * time.Millisecond)
 
 	}
@@ -168,12 +178,13 @@ func Init() {
 }
 
 var tempBeatmapString string = ""
+var tempGameMode int32 = 5
 
 func bmUpdateData() error {
 	mem.Read(process, &patterns, &menuData)
 
 	bmString := menuData.Path
-	if strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString { //On map change
+	if (strings.HasSuffix(bmString, ".osu") && tempBeatmapString != bmString) || (strings.HasSuffix(bmString, ".osu") && tempGameMode != menuData.MenuGameMode) { //On map/mode change
 		for i := 0; i < 50; i++ {
 			if menuData.BackgroundFilename != "" {
 				break
@@ -181,9 +192,22 @@ func bmUpdateData() error {
 			time.Sleep(25 * time.Millisecond)
 			mem.Read(process, &patterns, &menuData)
 		}
+		tempGameMode = menuData.MenuGameMode
 		tempBeatmapString = bmString
 		MenuData.Bm.BeatmapID = menuData.MapID
 		MenuData.Bm.BeatmapSetID = menuData.SetID
+		MenuData.Bm.Stats.MemoryAR = menuData.AR
+		MenuData.Bm.Stats.MemoryCS = menuData.CS
+		MenuData.Bm.Stats.MemoryHP = menuData.HP
+		MenuData.Bm.Stats.MemoryOD = menuData.OD
+		MenuData.Bm.Stats.TotalHitObjects = menuData.ObjectCount
+		MenuData.Bm.Metadata.Artist = menuData.Artist
+		MenuData.Bm.Metadata.Title = menuData.Title
+		MenuData.Bm.Metadata.Mapper = menuData.Creator
+		MenuData.Bm.Metadata.Version = menuData.Difficulty
+		MenuData.GameMode = menuData.MenuGameMode
+		MenuData.Bm.RandkedStatus = menuData.RankedStatus
+		MenuData.Bm.BeatmapMD5 = menuData.MD5
 		MenuData.Bm.Path = path{
 			AudioPath:            menuData.AudioFilename,
 			BGPath:               menuData.BackgroundFilename,
@@ -193,17 +217,6 @@ func bmUpdateData() error {
 			FullDotOsu:           filepath.Join(SongsFolderPath, menuData.Folder, bmString),
 			InnerBGPath:          filepath.Join(menuData.Folder, menuData.BackgroundFilename),
 		}
-		MenuData.Bm.Stats.MemoryAR = menuData.AR
-		MenuData.Bm.Stats.MemoryCS = menuData.CS
-		MenuData.Bm.Stats.MemoryHP = menuData.HP
-		MenuData.Bm.Stats.MemoryOD = menuData.OD
-		MenuData.Bm.Metadata.Artist = menuData.Artist
-		MenuData.Bm.Metadata.Title = menuData.Title
-		MenuData.Bm.Metadata.Mapper = menuData.Creator
-		MenuData.Bm.Metadata.Version = menuData.Difficulty
-		MenuData.GameMode = menuData.MenuGameMode
-		MenuData.Bm.RandkedStatus = menuData.RankedStatus
-		MenuData.Bm.BeatmapMD5 = menuData.MD5
 	}
 	if alwaysData.MenuMods == 0 {
 		MenuData.Mods.PpMods = "NM"
@@ -216,7 +229,10 @@ func bmUpdateData() error {
 	return nil
 }
 func getGamplayData() {
-	mem.Read(process, &patterns, &gameplayData)
+	err := mem.Read(process, &patterns, &gameplayData)
+	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") {
+		return //struct not initialized yet
+	}
 	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
@@ -224,7 +240,6 @@ func getGamplayData() {
 	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
-	GameplayData.Hits.H200M = gameplayData.Hit200M
 	GameplayData.Hits.H300 = gameplayData.Hit300
 	GameplayData.Hits.HGeki = gameplayData.HitGeki
 	GameplayData.Hits.H50 = gameplayData.Hit50
@@ -279,11 +294,39 @@ func getLeaderboard() {
 	}
 	items, _ := mem.ReadInt32(process, int64(playersArray+0x4))
 	board.Slots = make([]leaderPlayer, amOfSlots)
-	for i, j := 0x8, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
+	for i, j := leaderStart, 0; j < int(amOfSlots); i, j = i+0x4, j+1 {
 		slot, _ := mem.ReadUint32(process, int64(items), int64(i))
 		board.Slots[j], _ = readLeaderPlayerStruct(int64(slot))
 	}
 	GameplayData.Leaderboard = board
+}
+
+type ManiaStars struct {
+	NoMod float64
+	DT    float64
+	HT    float64
+}
+
+func ReadManiaStars() (ManiaStars, error) {
+	addresses := struct{ Base int64 }{int64(menuData.StarRatingStruct)} //Beatmap + 0x88
+	var entries struct {
+		Data uint32 `mem:"[Base + 0x14] + 0x8"`
+	}
+	err := mem.Read(process, &addresses, &entries)
+	if err != nil || entries.Data == 0 {
+		return ManiaStars{}, errors.New("[MEMORY] Could not find star rating for this map (internal) This probably means that difficulty calculation is in progress")
+	}
+	starRating := struct{ Base int64 }{int64(entries.Data)}
+	var stars struct {
+		NoMod float64 `mem:"Base + 0x18"`
+		DT    float64 `mem:"Base + 0x30"`
+		HT    float64 `mem:"Base + 0x48"`
+	}
+	err = mem.Read(process, &starRating, &stars)
+	if err != nil {
+		return ManiaStars{}, errors.New("[MEMORY] Empty star rating (internal)")
+	}
+	return ManiaStars{stars.NoMod, stars.DT, stars.HT}, nil
 }
 
 func readLeaderPlayerStruct(base int64) (leaderPlayer, bool) {
@@ -340,5 +383,26 @@ func calculateUR(HitErrorArray []int32) (float64, error) {
 	}
 	variance = variance / float64(len(HitErrorArray))
 	return math.Sqrt(variance) * 10, nil
+
+}
+
+var currentAudioVelocity float64
+
+func calculateBassDensity(base uint32, proc *mem.Process) float64 {
+	var bass float32
+	for i, j := leaderStart, 0; j < 40; i, j = i+0x4, j+1 {
+		value, err := mem.ReadFloat32(*proc, int64(base), int64(i))
+		if err != nil {
+			return 0.5
+		}
+		bass += 2 * value * (40 - float32(j)) / 40
+	}
+	if math.IsNaN(currentAudioVelocity) || math.IsNaN(float64(bass)) {
+		currentAudioVelocity = 0
+		return 0.5
+	}
+	currentAudioVelocity = math.Max(float64(currentAudioVelocity), math.Min(float64(bass)*1.5, 6))
+	currentAudioVelocity *= 0.95
+	return (1 + currentAudioVelocity) * 0.5
 
 }

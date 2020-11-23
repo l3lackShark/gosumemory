@@ -2,9 +2,9 @@ package web
 
 import (
 	"encoding/json"
-	"log"
 	"time"
 
+	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 )
 
@@ -12,22 +12,24 @@ import (
 func SetupStructure() {
 	var err error
 	type wsStruct struct { //order sets here
-		A memory.InSettingsValues `json:"settings"`
-		B memory.InMenuValues     `json:"menu"`
-		C memory.GameplayValues   `json:"gameplay"`
-		D memory.TourneyValues    `json:"tourney"`
+		A memory.InSettingsValues    `json:"settings"`
+		B memory.InMenuValues        `json:"menu"`
+		C memory.GameplayValues      `json:"gameplay"`
+		D memory.ResultsScreenValues `json:"resultsScreen"`
+		E memory.TourneyValues       `json:"tourney"`
 	}
 	for {
 		group := wsStruct{
 			A: memory.SettingsData,
 			B: memory.MenuData,
 			C: memory.GameplayData,
-			D: memory.TourneyData,
+			D: memory.ResultsScreenData,
+			E: memory.TourneyData,
 		}
 
 		JSONByte, err = json.Marshal(group)
 		if err != nil {
-			log.Println("error:", err)
+			pp.Println("JSON Marshall error: ", err, group)
 		}
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}

@@ -117,7 +117,7 @@ func queryFullProcessImageName(hProcess syscall.Handle) (string, error) {
 
 }
 
-func FindProcess(re *regexp.Regexp) ([]Process, error) {
+func FindProcess(re *regexp.Regexp, blacklistedTitles ...string) ([]Process, error) {
 	var procs []Process
 	pids, err := windows.EnumProcesses()
 	if err != nil {
@@ -136,7 +136,23 @@ func FindProcess(re *regexp.Regexp) ([]Process, error) {
 			continue
 		}
 		if re.MatchString(name) {
-			procs = append(procs, process{pid, handle})
+			var bannedHandles []syscall.Handle
+			for _, title := range blacklistedTitles {
+				h, _ := FindWindow(title)
+				if h != 0 {
+					bannedHandles = append(bannedHandles, h)
+				}
+			}
+			isBanned := false
+			for _, bHandle := range bannedHandles {
+				if int32(pid) == GetWindowThreadProcessID(bHandle) {
+					isBanned = true
+					break
+				}
+			}
+			if !isBanned {
+				procs = append(procs, process{pid, handle})
+			}
 		}
 	}
 	if len(procs) < 1 {

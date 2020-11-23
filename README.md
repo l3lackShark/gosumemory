@@ -1,4 +1,4 @@
-# gosumemory
+<img src="https://i.imgur.com/SiRniTb.png" width="1000">
 
 Yet another memory reader for osu! Supports both Linux and Windows. (**requires sudo on Linux** though since only root can read /proc)
 
