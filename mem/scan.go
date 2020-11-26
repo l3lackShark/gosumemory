@@ -134,7 +134,7 @@ func Scan(p Process, pattern string) (int64, error) {
 		}
 	}
 
-	return 0, ErrPatternNotFound
+	return 0, fmt.Errorf("no memory matched the pattern: %s", pattern)
 }
 
 func ResolvePatterns(p Process, offsets interface{}) error {
