@@ -239,7 +239,7 @@ func getTourneyIPC() error {
 			} else {
 				TourneyData.IPCClients[i].Team = "right"
 			}
-			TourneyData.IPCClients[i].Spectating, _ = readSpectatingUser(tourneyPatterns[i].UserInfo, &proc)
+			TourneyData.IPCClients[i].Spectating, _ = readSpectatingUser(tourneySpecificPatterns[i].UserInfo, &proc)
 		} else {
 			TourneyData.IPCClients[i] = ipcClient{}
 		}

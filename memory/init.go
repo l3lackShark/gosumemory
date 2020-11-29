@@ -17,6 +17,7 @@ import (
 var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
 var patterns staticAddresses
 var tourneyPatterns []staticAddresses
+var tourneySpecificPatterns []tourneyStaticAddresses
 var tourneyMenuData []menuD
 var tourneyManagerData tourneyD
 var tourneyGameplayData []gameplayD
@@ -93,6 +94,7 @@ func initBase() error {
 		}
 		isTournamentMode = true
 		tourneyPatterns = make([]staticAddresses, len(tourneyProcs))
+		tourneySpecificPatterns = make([]tourneyStaticAddresses, len(tourneyProcs))
 		TourneyData.IPCClients = make([]ipcClient, len(tourneyProcs))
 		tourneyMenuData = make([]menuD, len(tourneyProcs))
 		tourneyGameplayData = make([]gameplayD, len(tourneyProcs))
@@ -114,7 +116,10 @@ func initBase() error {
 			if err != nil {
 				return err
 			}
-
+			err = mem.ResolvePatterns(proc, &tourneySpecificPatterns[i])
+			if err != nil {
+				return err
+			}
 		}
 
 	}
