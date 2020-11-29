@@ -138,5 +138,13 @@ func (m Mods) String() string {
 		}
 	}
 
-	return s.String()
+	out := s.String()
+	if strings.Contains(out, "NC") { // ex. DTNCATCN (4196928)
+		out = strings.Replace(out, "DT", "", 1)
+	}
+	if strings.Contains(out, "CN") {
+		out = strings.Replace(out, "AT", "", 1)
+	}
+
+	return out
 }

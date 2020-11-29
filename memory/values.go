@@ -4,12 +4,16 @@ package memory
 type InMenuValues struct {
 	MainMenuValues MainMenuValues `json:"mainMenu"`
 	OsuStatus      uint32         `json:"state"`
-	SkinFolder     string         `json:"skinFolder"`
 	GameMode       int32          `json:"gameMode"`
 	ChatChecker    int8           `json:"isChatEnabled"` //bool (1 byte)
 	Bm             bm             `json:"bm"`
 	Mods           modsM          `json:"mods"`
 	PP             ppM            `json:"pp"`
+}
+
+type folders struct {
+	Skin  string `json:"skin"`
+	Songs string `json:"songs"`
 }
 
 type ResultsScreenValues struct {
@@ -31,7 +35,8 @@ type MainMenuValues struct {
 
 //InSettingsValues are values represented inside settings class, could be dynamic
 type InSettingsValues struct {
-	ShowInterface bool `json:"showInterface"` //dynamic in gameplay
+	ShowInterface bool    `json:"showInterface"` //dynamic in gameplay
+	Folders       folders `json:"folders"`
 }
 
 type TourneyValues struct {

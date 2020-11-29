@@ -90,7 +90,8 @@ func Init() {
 			mem.Read(process, &patterns, &alwaysData)
 			MenuData.ChatChecker = alwaysData.ChatStatus
 			MenuData.Bm.Time.PlayTime = alwaysData.PlayTime
-			MenuData.SkinFolder = alwaysData.SkinFolder
+			SettingsData.Folders.Skin = alwaysData.SkinFolder
+
 			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
 			switch menuData.Status {
 			case 0:
