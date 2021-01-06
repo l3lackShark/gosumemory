@@ -119,8 +119,7 @@ type gGrade struct {
 
 //GameplayValues inside osu!memory
 type GameplayValues struct {
-	GameMode int32 `json:"gameMode"`
-	//BitwiseKeypress int8        `json:"bitwiseKeypress"`
+	GameMode    int32       `json:"gameMode"`
 	Name        string      `json:"name"`
 	Score       int32       `json:"score"`
 	Accuracy    float64     `json:"accuracy"`
@@ -128,7 +127,20 @@ type GameplayValues struct {
 	Hp          hp          `json:"hp"`
 	Hits        hits        `json:"hits"`
 	PP          ppG         `json:"pp"`
+	KeyOverlay  keyOverlay  `json:"keyOverlay"`
 	Leaderboard leaderboard `json:"leaderboard"`
+}
+
+type keyOverlay struct {
+	K1 keyOverlayButton `json:"k1"`
+	K2 keyOverlayButton `json:"k2"`
+	M1 keyOverlayButton `json:"m1"`
+	M2 keyOverlayButton `json:"m2"`
+}
+
+type keyOverlayButton struct {
+	IsPressed bool  `json:"isPressed"`
+	Count     int32 `json:"count"`
 }
 
 type bm struct {

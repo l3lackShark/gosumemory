@@ -181,7 +181,6 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 }
 
 var maniaSR float64
-var maniaMods int32
 var maniaHitObjects float64
 var tempMods string
 
@@ -215,12 +214,14 @@ func GetData() {
 				}
 
 				switch memory.MenuData.OsuStatus {
-				case 2, 7:
+				case 2:
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					readData(&data, ez, false, path)
 					if memory.GameplayData.Combo.Max > 1 && float64(data.Total) > 0 {
 						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
 					}
+				case 7:
+					//idle
 				case 5:
 					memory.GameplayData.PP.Pp = 0
 				}

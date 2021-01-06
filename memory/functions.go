@@ -34,7 +34,6 @@ var tourneyErr error
 
 //var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
-var hasLeaderboard = false
 
 //SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
@@ -46,7 +45,7 @@ var tempRetries int32
 
 //Init the whole thing and get osu! memory values to start working with it.
 func Init() {
-	if UnderWine == true || runtime.GOOS != "windows" {
+	if UnderWine == true || runtime.GOOS != "windows" { //Arrays start at 0xC in Linux for some reason, has to be wine specific
 		leaderStart = 0xC
 	} else {
 		leaderStart = 0x8
@@ -139,7 +138,7 @@ func Init() {
 				ResultsScreenData.HGeki = resultsScreenData.HitGeki
 				ResultsScreenData.HKatu = resultsScreenData.HitKatu
 
-				ResultsScreenData.Mods.AppliedMods = int32(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2)
+				ResultsScreenData.Mods.AppliedMods = resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2
 				if ResultsScreenData.Mods.AppliedMods == 0 {
 					ResultsScreenData.Mods.PpMods = "NM"
 				} else {
@@ -149,7 +148,6 @@ func Init() {
 				tempRetries = -1
 				GameplayData = GameplayValues{}
 				gameplayData = gameplayD{}
-				hasLeaderboard = false
 				err = bmUpdateData()
 				if err != nil {
 					pp.Println(err)
@@ -178,7 +176,7 @@ func Init() {
 
 }
 
-var tempBeatmapString string = ""
+var tempBeatmapString string
 var tempGameMode int32 = 5
 
 func bmUpdateData() error {
@@ -231,7 +229,7 @@ func bmUpdateData() error {
 }
 func getGamplayData() {
 	err := mem.Read(process, &patterns, &gameplayData)
-	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") {
+	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") && !strings.Contains(err.Error(), "KeyOverlay") { //those could be disabled
 		return //struct not initialized yet
 	}
 	//GameplayData.BitwiseKeypress = gameplayData.BitwiseKeypress
@@ -257,7 +255,7 @@ func getGamplayData() {
 	GameplayData.Hp.Normal = gameplayData.PlayerHP
 	GameplayData.Hp.Smooth = gameplayData.PlayerHPSmooth
 	GameplayData.Name = gameplayData.PlayerName
-	MenuData.Mods.AppliedMods = int32(gameplayData.ModsXor1 ^ gameplayData.ModsXor2)
+	MenuData.Mods.AppliedMods = gameplayData.ModsXor1 ^ gameplayData.ModsXor2
 	if MenuData.Mods.AppliedMods == 0 {
 		MenuData.Mods.PpMods = "NM"
 	} else {
@@ -275,6 +273,7 @@ func getGamplayData() {
 		}
 	}
 	getLeaderboard()
+	getKeyOveraly()
 }
 
 func getLeaderboard() {
@@ -371,13 +370,13 @@ func readLeaderPlayerStruct(base int64) (leaderPlayer, bool) {
 
 func calculateUR(HitErrorArray []int32) (float64, error) {
 	if len(HitErrorArray) < 1 {
-		return 0, errors.New("Empty hit error array")
+		return 0, errors.New("empty hit error array")
 	}
 	var totalAll float32 //double
 	for _, hit := range HitErrorArray {
 		totalAll += float32(hit)
 	}
-	var average float32 = totalAll / float32(len(HitErrorArray))
+	var average = totalAll / float32(len(HitErrorArray))
 	var variance float64 = 0
 	for _, hit := range HitErrorArray {
 		variance += math.Pow(float64(hit)-float64(average), 2)
@@ -402,8 +401,38 @@ func calculateBassDensity(base uint32, proc *mem.Process) float64 {
 		currentAudioVelocity = 0
 		return 0.5
 	}
-	currentAudioVelocity = math.Max(float64(currentAudioVelocity), math.Min(float64(bass)*1.5, 6))
+	currentAudioVelocity = math.Max(currentAudioVelocity, math.Min(float64(bass)*1.5, 6))
 	currentAudioVelocity *= 0.95
 	return (1 + currentAudioVelocity) * 0.5
 
+}
+
+func getKeyOveraly() {
+	addresses := struct{ Base int64 }{int64(gameplayData.KeyOverlayArrayAddr)}
+	var entries struct {
+		K1Pressed int8  `mem:"[Base + 0x8] + 0x1C"` //Pressed usually works with <20 update rate. It's recommended to create a buffer and predict presses by count to save CPU overhead
+		K1Count   int32 `mem:"[Base + 0x8] + 0x14"`
+		K2Pressed int8  `mem:"[Base + 0xC] + 0x1C"`
+		K2Count   int32 `mem:"[Base + 0xC] + 0x14"`
+		M1Pressed int8  `mem:"[Base + 0x10] + 0x1C"`
+		M1Count   int32 `mem:"[Base + 0x10] + 0x14"`
+		M2Pressed int8  `mem:"[Base + 0x14] + 0x1C"`
+		M2Count   int32 `mem:"[Base + 0x14] + 0x14"`
+	}
+	err := mem.Read(process, &addresses, &entries)
+	if err != nil {
+		return
+	}
+
+	var out keyOverlay
+
+	out.K1.IsPressed = cast.ToBool(int(entries.K1Pressed))
+	out.K1.Count = entries.K1Count
+	out.K2.IsPressed = cast.ToBool(int(entries.K2Pressed))
+	out.K2.Count = entries.K2Count
+	out.M1.IsPressed = cast.ToBool(int(entries.M1Pressed))
+	out.M1.Count = entries.M1Count
+	out.M2.IsPressed = cast.ToBool(int(entries.M2Pressed))
+	out.M2.Count = entries.M2Count
+	GameplayData.KeyOverlay = out //needs complete rewrite in 1.4.0
 }
