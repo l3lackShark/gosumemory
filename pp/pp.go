@@ -232,7 +232,6 @@ func GetData() {
 					tempGameMode = memory.MenuData.GameMode // looks very ugly but will rewrite everything in 1.4.0
 					tempBeatmapFile = memory.MenuData.Bm.Path.BeatmapOsuFileString
 					tempMods = memory.MenuData.Mods.PpMods
-					tempGameMode = memory.MenuData.GameMode
 
 					maniaSR = 0.0
 					memory.MenuData.Bm.Time.FullTime = 0        //Not implemented for mania yet
@@ -266,12 +265,13 @@ func GetData() {
 						maniaSR = maniaStars.NoMod //assuming NM
 					}
 					memory.MenuData.Bm.Stats.BeatmapSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(maniaSR)))
-					memory.MenuData.Bm.Stats.FullSR = memory.MenuData.Bm.Stats.BeatmapSR                                                                     // LiveSR not implemented yet
-					memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
+					memory.MenuData.Bm.Stats.FullSR = memory.MenuData.Bm.Stats.BeatmapSR
+					memory.MenuData.PP.PpSS = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) // LiveSR not implemented yet
 				}
 			}
 			if memory.GameplayData.GameMode == 3 {
 				if maniaSR > 0 {
+					memory.GameplayData.PP.PPifFC = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, 1000000.0)) //PP if SS
 					if memory.GameplayData.Score >= 500000 {
 						memory.GameplayData.PP.Pp = int32(calculateManiaPP(float64(memory.MenuData.Bm.Stats.MemoryOD), maniaSR, maniaHitObjects, float64(memory.GameplayData.Score)))
 					} else {

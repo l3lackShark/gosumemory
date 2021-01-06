@@ -125,8 +125,15 @@ func Init() {
 					pp.Println(err)
 				}
 				mem.Read(process, &patterns, &resultsScreenData)
-				for resultsScreenData.PlayerName == "" {
-					mem.Read(process, &patterns, &resultsScreenData)
+
+				if resultsScreenData.ModsXor1 == 0 { //not initialized yet
+					for i := 0; i < 10; i++ {
+						mem.Read(process, &patterns, &resultsScreenData)
+						if resultsScreenData.ModsXor1 != 0 {
+							break
+						}
+						time.Sleep(50 * time.Millisecond)
+					}
 				}
 				ResultsScreenData.H300 = resultsScreenData.Hit300
 				ResultsScreenData.H100 = resultsScreenData.Hit100
