@@ -247,12 +247,12 @@ char* oppai_version_str() {
 /* error utils --------------------------------------------------------- */
 
 int info(char* fmt, ...) {
-  int res;
-  va_list va;
-  va_start(va, fmt);
-  res = vfprintf(stderr, fmt, va);
-  va_end(va);
-  return res;
+  // int res;
+  // va_list va;
+  // va_start(va, fmt);
+  // res = vfprintf(stderr, fmt, va);
+  // va_end(va);
+  return 0;
 }
 
 OPPAIAPI

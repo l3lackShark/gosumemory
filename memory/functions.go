@@ -224,12 +224,14 @@ func bmUpdateData() error {
 			InnerBGPath:          filepath.Join(menuData.Folder, menuData.BackgroundFilename),
 		}
 	}
-	if alwaysData.MenuMods == 0 {
-		MenuData.Mods.PpMods = "NM"
-		MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
-	} else {
-		MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
-		MenuData.Mods.PpMods = Mods(alwaysData.MenuMods).String()
+	if menuData.Status != 7 && menuData.Status != 14 {
+		if alwaysData.MenuMods == 0 {
+			MenuData.Mods.PpMods = "NM"
+			MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
+		} else {
+			MenuData.Mods.AppliedMods = int32(alwaysData.MenuMods)
+			MenuData.Mods.PpMods = Mods(alwaysData.MenuMods).String()
+		}
 	}
 
 	return nil
