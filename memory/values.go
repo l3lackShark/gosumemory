@@ -12,6 +12,7 @@ type InMenuValues struct {
 }
 
 type folders struct {
+	Game  string `json:"game"`
 	Skin  string `json:"skin"`
 	Songs string `json:"songs"`
 }

@@ -85,6 +85,11 @@ func initBase() error {
 		}
 	}
 	fmt.Println("[MEMORY] Songs folder:", SongsFolderPath)
+	pepath, err := process.ExecutablePath()
+	if err != nil {
+		panic(err)
+	}
+	SettingsData.Folders.Game = filepath.Dir(pepath)
 
 	if menuData.PreSongSelectData.Status == 22 || len(allProcs) > 1 {
 		fmt.Println("[MEMORY] Operating in tournament mode!")
