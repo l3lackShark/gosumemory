@@ -66,6 +66,15 @@ By: [Dartandr][1]<br>
 <img  src="https://cdn.discordapp.com/attachments/530940222771560452/732545954468593664/unknown.png"  width="500">\
 By: [Dartandr][1]<br>
   
+### Simplistic
+
+> Size: 700x130\
+> *Song Selection*\
+<img src="https://i.postimg.cc/zvN5nxTZ/download.png">\
+>*Gameplay 1*\
+<img src="https://i.postimg.cc/NMMhcLmV/Screenshot-1.png">\
+By: [jassper0][5]<br>
+
 ### DarkAndWhite
 
 > Size: 840x140\
@@ -132,6 +141,8 @@ By: [cyperdark][2]<br>
 [3]: https://github.com/inix1257
 
 [4]: https://github.com/VictimCrasher
+
+[5]: https://github.com/jassper0
 
 </details>
 
