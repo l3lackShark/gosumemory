@@ -79,8 +79,18 @@ func HTTPServer() {
 	}
 	exPath := filepath.Dir(ex)
 	fs := http.FileServer(http.Dir(filepath.Join(exPath, "static")))
+
 	http.Handle("/", fs)
-	http.Handle("/Songs/", http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath))))
+
+	var songsOrigin = http.StripPrefix("/Songs/", http.FileServer(http.Dir(memory.SongsFolderPath)))
+	var songsWrapped = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cast.ToBool(config.Config["cors"]) {
+			enableCors(&w)
+		}
+		songsOrigin.ServeHTTP(w, r)
+	});
+	http.Handle("/Songs/", songsWrapped)
+
 	http.HandleFunc("/json", handler)
 	err = http.ListenAndServe(config.Config["serverip"], nil)
 	if err != nil {
