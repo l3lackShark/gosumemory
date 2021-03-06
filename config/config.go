@@ -24,27 +24,27 @@ func Init() {
 	cfg, err := config.SetFile(filepath.Join(exPath, "config.ini"))
 	if err == config.ErrDoesNotExist {
 		d := []byte(`[Main]
-		update = 100
-		path = auto
-		cgodisable = false
-		memdebug = false
-		memcycletest = false
-		wine = false
+update = 100
+path = auto
+cgodisable = false
+memdebug = false
+memcycletest = false
+wine = false
 		
-		[Web]
-		serverip = :24050
-		cors = true
+[Web]
+serverip = :24050
+cors = true
 		
-		[GameOverlay] 
-		enabled = false
-		gameWidth = 1920
-		gameHeight = 1080
-		overlayURL = http://localhost:24050/Simplistic
-		overlayWidth = 750
-		overlayHeight = 150
-		overlayOffsetX =0
-		overlayOffsetY =0
-		overlayScale =10
+[GameOverlay] ; https://github.com/l3lackShark/gosumemory/wiki/GameOverlay
+enabled = false
+gameWidth = 1920
+gameHeight = 1080
+overlayURL = http://localhost:24050/InGame2
+overlayWidth = 355
+overlayHeight = 97
+overlayOffsetX = 0
+overlayOffsetY = 0
+overlayScale = 10
 		
 `)
 		if err := ioutil.WriteFile(filepath.Join(exPath, "config.ini"), d, 0644); err != nil {
@@ -66,7 +66,7 @@ func Init() {
 		if err != nil {
 			panic(err)
 		}
-		_, err = file.WriteString(fmt.Sprintf("\n[GameOverlay]\nenabled = false\ngameWidth = 1920\ngameHeight = 1080\noverlayURL = http://localhost:24050/inGame2\noverlayWidth = 355\noverlayHeight = 97\noverlayOffsetX = 0\noverlayOffsetY = 0\noverlayScale = 10"))
+		_, err = file.WriteString(fmt.Sprintf("\n[GameOverlay]; https://github.com/l3lackShark/gosumemory/wiki/GameOverlay\nenabled = false\ngameWidth = 1920\ngameHeight = 1080\noverlayURL = http://localhost:24050/InGame2\noverlayWidth = 355\noverlayHeight = 97\noverlayOffsetX = 0\noverlayOffsetY = 0\noverlayScale = 10"))
 		if err != nil {
 			panic(err)
 		}

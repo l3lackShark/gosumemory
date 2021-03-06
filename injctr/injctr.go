@@ -1,4 +1,4 @@
-package injector
+package injctr
 
 import (
 	"archive/zip"
@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-//Inject dll into osu's process
-func Inject(pid int) error {
+//Injct dll into osu's process
+func Injct(pid int) error {
 	if runtime.GOOS != "windows" {
 		return errors.New("Gameoverlay only works under windows")
 	}
@@ -27,7 +27,7 @@ func Inject(pid int) error {
 	_, err = os.Stat("gameoverlay")
 	if err != nil {
 		fmt.Println("[GAMEOVERLAY] Downloading gameoverlay... (can take a while, filesize is around 60MB)")
-		err = downloadFile("https://ganmue.org/selif/gameoverlay1.zip", "gameoverlay.zip")
+		err = downloadFile("https://omk.pics/12/wVugx", "gameoverlay.zip")
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func Inject(pid int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("[GAMEOVERLAY] Initialized successfully ")
+	fmt.Println("[GAMEOVERLAY] Initialized successfully, see https://github.com/l3lackShark/gosumemory/wiki/GameOverlay for tutorial")
 	return nil
 }
 

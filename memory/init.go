@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/l3lackShark/gosumemory/config"
-	"github.com/l3lackShark/gosumemory/injector"
+	"github.com/l3lackShark/gosumemory/injctr"
 	"github.com/l3lackShark/gosumemory/mem"
 	"github.com/spf13/cast"
 )
@@ -143,10 +143,12 @@ func initBase() error {
 	fmt.Println(fmt.Sprintf("Initialization complete, you can now visit http://%s or add it as a browser source in OBS", config.Config["serverip"]))
 	DynamicAddresses.IsReady = true
 	if cast.ToBool(config.Config["enabled"]) {
-		err = injector.Inject(process.Pid())
+		err = injctr.Injct(process.Pid())
 		if err != nil {
 			log.Printf("Failed to inject into osu's process, in game overlay will be unavailabe. %e\n", err)
 		}
+	} else {
+		fmt.Println("[MEMORY] In-Game overlay is disabled, but could be enabled in config.ini!")
 	}
 
 	return nil
