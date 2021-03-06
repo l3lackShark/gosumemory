@@ -1,6 +1,7 @@
 main
 gosumemory
 gosumemory.exe
+gameoverlay
 static
 osu!.db
 config.ini
@@ -20,3 +21,4 @@ res.ico
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+gameoverlay.zip
