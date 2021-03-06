@@ -32,8 +32,8 @@ memcycletest = false
 wine = false
 		
 [Web]
-serverip = :24050
-cors = true
+serverip = 127.0.0.1:24050
+cors = false
 		
 [GameOverlay] ; https://github.com/l3lackShark/gosumemory/wiki/GameOverlay
 enabled = false
