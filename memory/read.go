@@ -6,7 +6,7 @@ type PreSongSelectAddresses struct {
 }
 
 type songsFolderD struct {
-	SongsFolder string `mem:"[[Settings + 0xB4] + 0x4]"`
+	SongsFolder string `mem:"[[Settings + 0xB8] + 0x4]"`
 }
 
 type PreSongSelectData struct {

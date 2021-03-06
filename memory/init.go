@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/l3lackShark/gosumemory/config"
+	"github.com/l3lackShark/gosumemory/injctr"
 	"github.com/l3lackShark/gosumemory/mem"
+	"github.com/spf13/cast"
 )
 
 var osuProcessRegex = regexp.MustCompile(`.*osu!\.exe.*`)
@@ -43,7 +45,7 @@ func resolveSongsFolder() (string, error) {
 	}
 	rootFolder := strings.TrimSuffix(osuExecutablePath, "osu!.exe")
 	songsFolder := filepath.Join(rootFolder, "Songs")
-	if songsFolderData.SongsFolder == "Songs" {
+	if songsFolderData.SongsFolder == "Songs" || songsFolderData.SongsFolder == "CompatibilityContext" { //dirty hack to fix old stable offset
 		return songsFolder, nil
 	}
 	return songsFolderData.SongsFolder, nil
@@ -72,7 +74,6 @@ func initBase() error {
 	fmt.Println("[MEMORY] Got osu!status addr...")
 
 	if runtime.GOOS == "windows" || SongsFolderPath == "auto" {
-		SongsFolderPath = "auto" //reset in case of a switch from tournament client
 		err = mem.Read(process,
 			&patterns.PreSongSelectAddresses,
 			&songsFolderData)
@@ -141,6 +142,14 @@ func initBase() error {
 	fmt.Println("WARNING: Mania pp calcualtion is experimental and only works if you choose mania gamemode in the SongSelect!")
 	fmt.Println(fmt.Sprintf("Initialization complete, you can now visit http://%s or add it as a browser source in OBS", config.Config["serverip"]))
 	DynamicAddresses.IsReady = true
+	if cast.ToBool(config.Config["enabled"]) {
+		err = injctr.Injct(process.Pid())
+		if err != nil {
+			log.Printf("Failed to inject into osu's process, in game overlay will be unavailabe. %e\n", err)
+		}
+	} else {
+		fmt.Println("[MEMORY] In-Game overlay is disabled, but could be enabled in config.ini!")
+	}
 
 	return nil
 }
