@@ -15,6 +15,7 @@ You can contact us here: https://discord.gg/8enr4qD
 [![Mathi](https://img.shields.io/badge/Mathi%20v1.5---?style=for-the-badge&color=4981CE)](https://mega.nz/file/5dsk1QJD#noUKykU5qJYv53I2DPZ7PY2CIQOftS1ufqzOh4rqOb8)
 [![RyuK](https://img.shields.io/badge/RyuK%20v1.0---?style=for-the-badge&color=f72f4d)](https://mega.nz/file/dY8k1YyZ#1Phdta1CzxXDotjtllUKsZunnCdliYlQ1VrZ_BNaNIs)
 
+
 # Usage
      
 1. [Download the latest Release](https://github.com/l3lackShark/gosumemory/releases/latest)
@@ -28,9 +29,33 @@ You can contact us here: https://discord.gg/8enr4qD
 > **Please note that auto-updates only cover the executable itself, however, if a new counter gets released, we will mention it in the Release Notes.**\
 > If you want to make your own, just create a new directory in the *static* folder.  
 
+# Does this work in-game?
+
+Yes! see [this](https://github.com/l3lackShark/gosumemory/wiki/GameOverlay)
+
+
 # Included counters:
 <details>
   <summary>Click ME</summary>
+
+### InGame1
+
+> Size: 240x133\
+<img  src="https://user-images.githubusercontent.com/20248967/110195364-7337e280-7e5e-11eb-9bbb-8dadddf6e2bd.png"  width="250">\
+By: [Dartandr][1]<br>
+
+### InGame2
+
+> Size: 355x97\
+<img  src="https://user-images.githubusercontent.com/20248967/110195403-bbef9b80-7e5e-11eb-9e21-28360a375d23.png"  width="280">\
+By: [Dartandr][1]<br>
+
+### InGame3
+
+> Size: 150x70\
+<img  src="https://cdn.discordapp.com/attachments/562954897163812865/817866299274559498/unknown.png"  width="150">\
+By: [Dartandr][1]<br>
+
 
 ### MonokaiPane
 
@@ -68,7 +93,7 @@ By: [Dartandr][1]<br>
   
 ### Simplistic
 
-> Size: 700x130\
+> Size: 750x150\
 > *Song Selection*\
 <img src="https://i.postimg.cc/zvN5nxTZ/download.png">\
 >*Gameplay 1*\
