@@ -45,7 +45,7 @@ func resolveSongsFolder() (string, error) {
 	}
 	rootFolder := strings.TrimSuffix(osuExecutablePath, "osu!.exe")
 	songsFolder := filepath.Join(rootFolder, "Songs")
-	if songsFolderData.SongsFolder == "Songs" {
+	if songsFolderData.SongsFolder == "Songs" || songsFolderData.SongsFolder == "CompatibilityContext" { //dirty hack to fix old stable offset
 		return songsFolder, nil
 	}
 	return songsFolderData.SongsFolder, nil
