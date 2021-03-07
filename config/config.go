@@ -40,8 +40,8 @@ enabled = false
 gameWidth = 1920
 gameHeight = 1080
 overlayURL = http://localhost:24050/InGame2
-overlayWidth = 355
-overlayHeight = 97
+overlayWidth = 380
+overlayHeight = 110
 overlayOffsetX = 0
 overlayOffsetY = 0
 overlayScale = 10
@@ -66,7 +66,7 @@ overlayScale = 10
 		if err != nil {
 			panic(err)
 		}
-		_, err = file.WriteString(fmt.Sprintf("\n[GameOverlay]; https://github.com/l3lackShark/gosumemory/wiki/GameOverlay\nenabled = false\ngameWidth = 1920\ngameHeight = 1080\noverlayURL = http://localhost:24050/InGame2\noverlayWidth = 355\noverlayHeight = 97\noverlayOffsetX = 0\noverlayOffsetY = 0\noverlayScale = 10"))
+		_, err = file.WriteString(fmt.Sprintf("\n[GameOverlay]; https://github.com/l3lackShark/gosumemory/wiki/GameOverlay\nenabled = false\ngameWidth = 1920\ngameHeight = 1080\noverlayURL = http://localhost:24050/InGame2\noverlayWidth = 380\noverlayHeight = 110\noverlayOffsetX = 0\noverlayOffsetY = 0\noverlayScale = 10"))
 		if err != nil {
 			panic(err)
 		}

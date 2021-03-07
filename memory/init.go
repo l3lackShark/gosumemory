@@ -73,7 +73,7 @@ func initBase() error {
 	}
 	fmt.Println("[MEMORY] Got osu!status addr...")
 
-	if runtime.GOOS == "windows" || SongsFolderPath == "auto" {
+	if runtime.GOOS == "windows" && SongsFolderPath == "auto" {
 		err = mem.Read(process,
 			&patterns.PreSongSelectAddresses,
 			&songsFolderData)
