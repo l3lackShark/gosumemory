@@ -130,7 +130,7 @@ Remake by: [Dartandr][1]
 
 ### VictimCrasherCompact
 
-> Size: 550x132\
+> Size: 560x150\
 > *Song Selection*\
 <img  src="https://i.imgur.com/1F1GK3Z.png" width="500">\
 >
