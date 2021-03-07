@@ -46,7 +46,7 @@ By: [Dartandr][1]<br>
 
 ### InGame2
 
-> Size: 355x97\
+> Size: 370x120\
 <img  src="https://cdn.discordapp.com/attachments/562954897163812865/817866179619192862/unknown.png"  width="280">\
 By: [Dartandr][1]<br>
 
