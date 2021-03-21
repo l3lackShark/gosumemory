@@ -255,6 +255,9 @@ func getGamplayData() {
 	if GameplayData.Combo.Temp > GameplayData.Combo.Max {
 		GameplayData.Combo.Temp = 0
 	}
+	if GameplayData.Score == 0 {
+		GameplayData.Hits.HSB = 0
+	}
 	if GameplayData.Combo.Current < GameplayData.Combo.Temp && GameplayData.Hits.H0Temp == GameplayData.Hits.H0 {
 		GameplayData.Hits.HSB++
 	}
