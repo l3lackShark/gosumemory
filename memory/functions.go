@@ -32,6 +32,9 @@ var isTournamentMode bool
 var tourneyProcs []mem.Process
 var tourneyErr error
 
+//Were we in the Result Screen?
+var dirtyResults bool = false
+
 //var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
 
@@ -107,7 +110,7 @@ func Init() {
 						pp.Println(err)
 					}
 				}
-				if gameplayData.Retries > tempRetries {
+				if gameplayData.Retries > tempRetries || dirtyResults {
 					tempRetries = gameplayData.Retries
 					GameplayData = GameplayValues{}
 					gameplayData = gameplayD{}
@@ -150,6 +153,9 @@ func Init() {
 					ResultsScreenData.Mods.PpMods = "NM"
 				} else {
 					ResultsScreenData.Mods.PpMods = Mods(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2).String()
+				}
+				if !dirtyResults {
+					dirtyResults=true
 				}
 			default:
 				tempRetries = -1
