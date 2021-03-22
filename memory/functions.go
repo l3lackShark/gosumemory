@@ -114,7 +114,7 @@ func Init() {
 					tempRetries = gameplayData.Retries
 					GameplayData = GameplayValues{}
 					gameplayData = gameplayD{}
-
+					dirtyResults = false
 				}
 				getGamplayData()
 			case 1:
