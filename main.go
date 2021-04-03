@@ -20,7 +20,7 @@ import (
 func main() {
 	config.Init()
 	updateTimeFlag := flag.Int("update", cast.ToInt(config.Config["update"]), "How fast should we update the values? (in milliseconds)")
-	shouldWeUpdate := flag.Bool("autoupdate", true, "Should we auto update the application?")
+	shouldWeUpdate := flag.Bool("autoupdate", cast.ToBool(config.Config["autoupdate"]), "Should we auto update the application?")
 	isRunningInWINE := flag.Bool("wine", cast.ToBool(config.Config["wine"]), "Running under WINE?")
 	songsFolderFlag := flag.String("path", config.Config["path"], `Path to osu! Songs directory ex: /mnt/ps3drive/osu\!/Songs`)
 	memDebugFlag := flag.Bool("memdebug", cast.ToBool(config.Config["memdebug"]), `Enable verbose memory debugging?`)
