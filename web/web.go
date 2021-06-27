@@ -88,7 +88,7 @@ func HTTPServer() {
 			enableCors(&w)
 		}
 		songsOrigin.ServeHTTP(w, r)
-	});
+	})
 	http.Handle("/Songs/", songsWrapped)
 
 	http.HandleFunc("/json", handler)
@@ -101,7 +101,8 @@ func HTTPServer() {
 }
 func handler(w http.ResponseWriter, r *http.Request) {
 	if memory.DynamicAddresses.IsReady == true {
-		fmt.Fprintf(w, cast.ToString(JSONByte))
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, string(JSONByte))
 
 	} else {
 		fmt.Fprintf(w, `{"error": "osu! is not fully loaded!"}`)
