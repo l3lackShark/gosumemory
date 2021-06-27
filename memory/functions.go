@@ -224,10 +224,10 @@ func bmUpdateData() error {
 			AudioPath:            menuData.AudioFilename,
 			BGPath:               menuData.BackgroundFilename,
 			BeatmapOsuFileString: menuData.Path,
-			BeatmapFolderString:  menuData.Folder,
-			FullMP3Path:          filepath.Join(SongsFolderPath, menuData.Folder, menuData.AudioFilename),
-			FullDotOsu:           filepath.Join(SongsFolderPath, menuData.Folder, bmString),
-			InnerBGPath:          filepath.Join(menuData.Folder, menuData.BackgroundFilename),
+			BeatmapFolderString:  strings.TrimSpace(menuData.Folder), //Fix rare occasions of memory reader adding a space at the end (TODO: Fix this mem-side)
+			FullMP3Path:          filepath.Join(SongsFolderPath, strings.TrimSpace(menuData.Folder), menuData.AudioFilename),
+			FullDotOsu:           filepath.Join(SongsFolderPath, strings.TrimSpace(menuData.Folder), bmString),
+			InnerBGPath:          filepath.Join(strings.TrimSpace(menuData.Folder), menuData.BackgroundFilename),
 		}
 	}
 	if menuData.Status != 7 && menuData.Status != 14 {

@@ -4,7 +4,9 @@ package pp
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"runtime"
 	"strings"
 	"time"
 	"unsafe"
@@ -32,11 +34,21 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
-		cpath := C.CString(path)
+		if runtime.GOOS != "windows" {
+			cpath := C.CString(path)
 
-		defer C.free(unsafe.Pointer(cpath))
-		if rc := C.ezpp(ezfc, cpath); rc < 0 {
-			return errors.New(C.GoString(C.errstr(rc)))
+			defer C.free(unsafe.Pointer(cpath))
+			if rc := C.ezpp(ezfc, cpath); rc < 0 {
+				return errors.New(C.GoString(C.errstr(rc)))
+			}
+		} else {
+			osu, err := wCharPtrFromString(path)
+			if err != nil {
+				return fmt.Errorf("%s, %e", "UTF16 wchar_t* convert err", err)
+			}
+			if rc := C.ezpp_win(ezfc, osu); rc < 0 {
+				return errors.New(C.GoString(C.errstr(rc)))
+			}
 		}
 		C.ezpp_set_base_ar(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
 		C.ezpp_set_base_od(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapOD))

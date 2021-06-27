@@ -11,7 +11,19 @@ import (
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/tcolgate/mp3"
+	"golang.org/x/sys/windows"
 )
+
+import "C"
+
+func wCharPtrToString(p *C.wchar_t) string {
+	return windows.UTF16PtrToString((*uint16)(p))
+}
+
+func wCharPtrFromString(s string) (*C.wchar_t, error) {
+	p, err := windows.UTF16PtrFromString(s)
+	return (*C.wchar_t)(p), err
+}
 
 func hashFileMD5(filePath string) (string, error) {
 	var returnMD5String string

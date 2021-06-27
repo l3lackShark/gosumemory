@@ -37,6 +37,13 @@ OPPAIAPI int ezpp(ezpp_t ez, char* map);
 OPPAIAPI float ezpp_pp(ezpp_t ez);
 OPPAIAPI float ezpp_stars(ezpp_t ez);
 
+
+//WIN32 Specifics
+#ifdef _WIN32
+ #include <wchar.h>
+ OPPAIAPI int ezpp_win(ezpp_t ez, wchar_t* map);
+#endif
+
 /*
  * the above is all you need for basic usage. below are some advanced api's
  * and usage examples
@@ -221,8 +228,8 @@ OPPAIAPI char* oppai_version_str(void);
 #include <string.h>
 #include <math.h>
 
-#define OPPAI_VERSION_MAJOR 3
-#define OPPAI_VERSION_MINOR 3
+#define OPPAI_VERSION_MAJOR 4
+#define OPPAI_VERSION_MINOR 1
 #define OPPAI_VERSION_PATCH 0
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
@@ -537,6 +544,9 @@ typedef struct object {
 
 struct ezpp {
   char* map;
+  #ifdef _WIN32
+  wchar_t* winmap;
+  #endif
   char* data;
   int data_size;
   int flags;
@@ -2103,7 +2113,7 @@ int pp_std(ezpp_t ez) {
 
   /* low ar bonus */
   else if (ez->ar < 8.0f) {
-    ar_bonus += 0.1f * (8.0f - ez->ar);
+    ar_bonus += 0.01f * (8.0f - ez->ar);
   }
 
   /* aim pp ---------------------------------------------------------- */
@@ -2277,7 +2287,11 @@ int params_from_map(ezpp_t ez) {
   } else if (!strcmp(ez->map, "-")) {
     res = p_map(ez, stdin);
   } else {
+    #ifdef _WIN32 
+    FILE* f = _wfopen(ez->winmap, L"rb");
+    #else 
     FILE* f = fopen(ez->map, "rb");
+    #endif
     if (!f) {
       perror("fopen");
       res = ERR_IO;
@@ -2406,6 +2420,18 @@ int ezpp(ezpp_t ez, char* mapfile) {
   ez->map = mapfile;
   return calc(ez);
 }
+
+
+//WIN32 Specifics 
+#ifdef _WIN32
+OPPAIAPI
+int ezpp_win(ezpp_t ez, wchar_t* mapfile) {
+  free_owned_map(ez);
+  ez->map = (char*)mapfile; //ugly, needs proper rewrite from someone that knows this project (refresh the char* to reinitialize ezpp)
+  ez->winmap = mapfile;
+  return calc(ez);
+}
+#endif
 
 OPPAIAPI
 int ezpp_data(ezpp_t ez, char* data, int data_size) {
