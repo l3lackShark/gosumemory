@@ -155,7 +155,7 @@ func Init() {
 					ResultsScreenData.Mods.PpMods = Mods(resultsScreenData.ModsXor1 ^ resultsScreenData.ModsXor2).String()
 				}
 				if !dirtyResults {
-					dirtyResults=true
+					dirtyResults = true
 				}
 			default:
 				tempRetries = -1
@@ -251,7 +251,6 @@ func getGamplayData() {
 	GameplayData.Combo.Current = gameplayData.Combo
 	GameplayData.Combo.Max = gameplayData.MaxCombo
 	GameplayData.GameMode = gameplayData.Mode
-	GameplayData.Score = gameplayData.Score
 	GameplayData.Hits.H100 = gameplayData.Hit100
 	GameplayData.Hits.HKatu = gameplayData.HitKatu
 	GameplayData.Hits.H300 = gameplayData.Hit300
@@ -275,6 +274,11 @@ func getGamplayData() {
 		MenuData.Mods.PpMods = "NM"
 	} else {
 		MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
+	}
+	if strings.Contains(MenuData.Mods.PpMods, "V2") {
+		GameplayData.Score = gameplayData.ScoreV2
+	} else {
+		GameplayData.Score = gameplayData.Score
 	}
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors

@@ -133,6 +133,7 @@ type gameplayD struct {
 	Mode                int32   `mem:"[[Ruleset + 0x60] + 0x38] + 0x64"`
 	MaxCombo            int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x68"`
 	Score               int32   `mem:"[[Ruleset + 0x60] + 0x38] + 0x78"`
+	ScoreV2             int32   `mem:"[[[[[Ruleset + 0x60] + 0x4C] + 0xC] + 0x68] + 0x4] + 0xF8"`
 	Hit100              int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x88"`
 	Hit300              int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x8A"`
 	Hit50               int16   `mem:"[[Ruleset + 0x60] + 0x38] + 0x8C"`
