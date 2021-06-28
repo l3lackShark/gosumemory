@@ -1,13 +1,10 @@
 package pp
 
 import (
-	"errors"
 	"fmt"
 	"math"
-	"runtime"
 	"strings"
 	"time"
-	"unsafe"
 
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
@@ -65,21 +62,8 @@ var currMaxCombo C.int
 func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 
 	if strings.HasSuffix(path, ".osu") {
-		if runtime.GOOS != "windows" {
-			cpath := C.CString(path)
-
-			defer C.free(unsafe.Pointer(cpath))
-			if rc := C.ezpp(ez, cpath); rc < 0 {
-				return errors.New(C.GoString(C.errstr(rc)))
-			}
-		} else {
-			osu, err := wCharPtrFromString(path)
-			if err != nil {
-				return fmt.Errorf("%s, %e", "UTF16 wchar_t* convert err", err)
-			}
-			if rc := C.ezpp_win(ez, osu); rc < 0 {
-				return errors.New(C.GoString(C.errstr(rc)))
-			}
+		if err := calcpp(&ez, path); err != nil {
+			return err
 		}
 		C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.MemoryAR))
 		C.ezpp_set_base_od(ez, C.float(memory.MenuData.Bm.Stats.MemoryOD))
