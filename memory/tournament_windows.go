@@ -93,7 +93,6 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
 	TourneyData.IPCClients[iterator].Gameplay.GameMode = tourneyGameplayData[iterator].Mode
-	TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H100 = tourneyGameplayData[iterator].Hit100
 	TourneyData.IPCClients[iterator].Gameplay.Hits.HKatu = tourneyGameplayData[iterator].HitKatu
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H300 = tourneyGameplayData[iterator].Hit300
@@ -118,6 +117,12 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 	} else {
 		TourneyData.IPCClients[iterator].Gameplay.Mods.PpMods = Mods(tourneyGameplayData[iterator].ModsXor1 ^ tourneyGameplayData[iterator].ModsXor2).String()
 	}
+	if tourneyGameplayData[iterator].Score == 0 { //hack to get around the non-Existent `V2` mod in the tourney client (it's a win condition)
+		TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].ScoreV2
+	} else {
+		TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
+	}
+
 	if TourneyData.IPCClients[iterator].Gameplay.Combo.Max > 0 {
 		TourneyData.IPCClients[iterator].Gameplay.Hits.HitErrorArray = tourneyGameplayData[iterator].HitErrors
 		baseUR, _ := calculateUR(TourneyData.IPCClients[iterator].Gameplay.Hits.HitErrorArray)
