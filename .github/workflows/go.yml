@@ -7,11 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up MinGW(x64)
-      uses: egor-tensin/setup-mingw@v2
-      with:
-        platform: x64
-
     - name: Set up MinGW(x86)
       uses: egor-tensin/setup-mingw@v2
       with:
@@ -35,7 +30,7 @@ jobs:
         fi
         go install github.com/akavel/rsrc@latest
     - name: Build
-      run: rsrc -arch=amd64 -ico ./out.ico -o gosumemory.syso && CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -o win64/gosumemory.exe && rm gosumemory.syso && rsrc -arch=386 -ico ./out.ico -o gosumemory.syso && CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o win32/gosumemory.exe && rm gosumemory.syso && CC=gcc go build -v -o lin64/gosumemory && CC=gcc CGO_ENABLED=1 GOARCH=386 go build -v -o lin32/gosumemory
+      run: rsrc -arch=amd64 -ico ./out.ico -o gosumemory.syso && CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o win32/gosumemory.exe && rm gosumemory.syso && CC=gcc CGO_ENABLED=1 GOARCH=386 go build -v -o lin32/gosumemory
 
     - name: Upload win32
       uses: actions/upload-artifact@v1.0.0
@@ -45,14 +40,6 @@ jobs:
        # Directory containing files to upload
         path: ./win32
 
-    - name: Upload win64
-      uses: actions/upload-artifact@v1.0.0
-      with:
-       # Artifact name
-        name: gosumemory_windows_amd64
-       # Directory containing files to upload
-        path: ./win64
-
     - name: Upload lin32
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -61,11 +48,3 @@ jobs:
        # Directory containing files to upload
         path: ./lin32
         
-    - name: Upload lin64
-      uses: actions/upload-artifact@v1.0.0
-      with:
-       # Artifact name
-        name: gosumemory_linux_amd64
-       # Directory containing files to upload
-        path: ./lin64
-
