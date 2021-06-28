@@ -2,7 +2,13 @@
 
 package pp
 
+import (
+	"errors"
+	"unsafe"
+)
+
 /*
+#include <stdlib.h>
 #include "oppai.c"
 */
 import "C"

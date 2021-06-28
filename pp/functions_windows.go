@@ -10,6 +10,7 @@ import (
 )
 
 /*
+#include <stdlib.h>
 #include "oppai.c"
 */
 import "C"
