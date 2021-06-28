@@ -7,10 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up MinGW
+    - name: Set up MinGW(x64)
       uses: egor-tensin/setup-mingw@v2
       with:
-        platform: any
+        platform: x64
+
+    - name: Set up MinGW(x86)
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x86
     
     - name: Set up Go 1.16
       uses: actions/setup-go@v2
