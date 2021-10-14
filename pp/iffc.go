@@ -3,9 +3,11 @@ package pp
 //TODO: I need to figure out how to use only one calc.
 
 import (
+	"errors"
 	"math"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
@@ -30,8 +32,11 @@ func readFCData(data *PPfc, ezfc C.ezpp_t, acc C.float) error {
 	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
-		if err := calcpp(&ezfc, path); err != nil {
-			return err
+		cpath := C.CString(path)
+
+		defer C.free(unsafe.Pointer(cpath))
+		if rc := C.ezpp(ezfc, cpath); rc < 0 {
+			return errors.New(C.GoString(C.errstr(rc)))
 		}
 		C.ezpp_set_base_ar(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
 		C.ezpp_set_base_od(ezfc, C.float(memory.MenuData.Bm.Stats.BeatmapOD))

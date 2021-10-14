@@ -8,9 +8,11 @@ package pp
 //#include "oppai.c"
 import "C"
 import (
+	"errors"
 	"math"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
@@ -28,8 +30,11 @@ func readMaxData(data *PPmax, ezmax C.ezpp_t) error {
 	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
-		if err := calcpp(&ezmax, path); err != nil {
-			return err
+		cpath := C.CString(path)
+
+		defer C.free(unsafe.Pointer(cpath))
+		if rc := C.ezpp(ezmax, cpath); rc < 0 {
+			return errors.New(C.GoString(C.errstr(rc)))
 		}
 		C.ezpp_set_base_ar(ezmax, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
 		C.ezpp_set_base_od(ezmax, C.float(memory.MenuData.Bm.Stats.BeatmapOD))

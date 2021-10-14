@@ -1,10 +1,12 @@
 package pp
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
@@ -22,8 +24,11 @@ func readEditorData(data *PP, ezeditor C.ezpp_t, needStrain bool) error {
 	path := memory.MenuData.Bm.Path.FullDotOsu
 
 	if strings.HasSuffix(path, ".osu") && memory.DynamicAddresses.IsReady == true {
-		if err := calcpp(&ezeditor, path); err != nil {
-			return err
+		cpath := C.CString(path)
+
+		defer C.free(unsafe.Pointer(cpath))
+		if rc := C.ezpp(ezeditor, cpath); rc < 0 {
+			return errors.New(C.GoString(C.errstr(rc)))
 		}
 		C.ezpp_set_base_ar(ezeditor, C.float(memory.MenuData.Bm.Stats.BeatmapAR))
 		C.ezpp_set_base_od(ezeditor, C.float(memory.MenuData.Bm.Stats.BeatmapOD))

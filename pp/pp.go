@@ -1,10 +1,12 @@
 package pp
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
@@ -62,8 +64,12 @@ var currMaxCombo C.int
 func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 
 	if strings.HasSuffix(path, ".osu") {
-		if err := calcpp(&ez, path); err != nil {
-			return err
+		cpath := C.CString(path)
+
+		defer C.free(unsafe.Pointer(cpath))
+		if rc := C.ezpp(ez, cpath); rc < 0 {
+			memory.MenuData.PP.PpStrains = []float64{0}
+			return errors.New(C.GoString(C.errstr(rc)))
 		}
 		C.ezpp_set_base_ar(ez, C.float(memory.MenuData.Bm.Stats.MemoryAR))
 		C.ezpp_set_base_od(ez, C.float(memory.MenuData.Bm.Stats.MemoryOD))
