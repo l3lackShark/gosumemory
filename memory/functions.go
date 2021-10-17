@@ -214,7 +214,9 @@ func bmUpdateData() error {
 		MenuData.Bm.Stats.MemoryOD = menuData.OD
 		MenuData.Bm.Stats.TotalHitObjects = menuData.ObjectCount
 		MenuData.Bm.Metadata.Artist = menuData.Artist
+		MenuData.Bm.Metadata.ArtistOriginal = menuData.ArtistOriginal
 		MenuData.Bm.Metadata.Title = menuData.Title
+		MenuData.Bm.Metadata.TitleOriginal = menuData.TitleOriginal
 		MenuData.Bm.Metadata.Mapper = menuData.Creator
 		MenuData.Bm.Metadata.Version = menuData.Difficulty
 		MenuData.GameMode = menuData.MenuGameMode

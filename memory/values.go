@@ -166,10 +166,12 @@ type tim struct {
 
 // Metadata Map data
 type Metadata struct {
-	Artist  string `json:"artist"`
-	Title   string `json:"title"`
-	Mapper  string `json:"mapper"`
-	Version string `json:"difficulty"`
+	Artist         string `json:"artist"`
+	ArtistOriginal string `json:"artistOriginal"`
+	Title          string `json:"title"`
+	TitleOriginal  string `json:"titleOriginal"`
+	Mapper         string `json:"mapper"`
+	Version        string `json:"difficulty"`
 }
 
 type stats struct {

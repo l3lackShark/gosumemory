@@ -85,12 +85,14 @@ type menuD struct {
 	MenuGameMode       int32   `mem:"[Base - 0x33]"`
 	Plays              int32   `mem:"[Base - 0x33] + 0xC"`
 	Artist             string  `mem:"[[Beatmap] + 0x18]"`
+	ArtistOriginal     string  `mem:"[[Beatmap] + 0x1C]"`
 	Title              string  `mem:"[[Beatmap] + 0x24]"`
+	TitleOriginal      string  `mem:"[[Beatmap] + 0x28]"`
 	AR                 float32 `mem:"[Beatmap] + 0x2C"`
 	CS                 float32 `mem:"[Beatmap] + 0x30"`
 	HP                 float32 `mem:"[Beatmap] + 0x34"`
 	OD                 float32 `mem:"[Beatmap] + 0x38"`
-	StarRatingStruct   uint32  `mem:"[Beatmap] + 0x88"`
+	StarRatingStruct   uint32  `mem:"[Beatmap] + 0x8C"`
 	AudioFilename      string  `mem:"[[Beatmap] + 0x64]"`
 	BackgroundFilename string  `mem:"[[Beatmap] + 0x68]"`
 	Folder             string  `mem:"[[Beatmap] + 0x74]"`
