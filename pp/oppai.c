@@ -2620,7 +2620,7 @@ int params_from_map(ezpp_t ez)
       FILE *f = _wfopen(path, L"rb");
       if (!f)
       {
-        perror("fopen");
+        perror("_wfopen");
         res = ERR_IO;
       }
       else
