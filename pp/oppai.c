@@ -2551,6 +2551,44 @@ int pp_taiko(ezpp_t ez)
   return 0;
 }
 
+int char_to_wchar(char* source, wchar_t* target){
+    int target_index = 0;
+    int index = 0;
+	for(;;){
+      char c1 = source[index];
+      if(c1 != '\0'){
+        if(c1 >=0 && c1<=127){
+          target[target_index] = (wchar_t)c1;
+        }else if((c1 >> 5) == -2){
+			//2bit UTF-8;
+			index++;
+			char c2 = source[index];
+			wchar_t wc1 = (wchar_t)(((c2 << 2) >> 2) & 0x3F);
+			wchar_t wc2 = ((wchar_t)(((c1 << 3) >> 3) & 0x1F)) << 6;
+			target[target_index] = (wc1 | wc2);
+		}else if((c1 >> 4) == -2){
+			//3bit UTF-8;
+			index++;
+			char c2 = source[index];
+			index++;
+			char c3 = source[index];
+			wchar_t wc1 = (wchar_t)(((c3 << 2) >> 2) & 0x3F);
+			wchar_t wc2 = ((wchar_t)(((c2 << 2) >> 2) & 0x3F)) << 6;
+			wchar_t wc3 = ((wchar_t)(((c1 << 3) >> 3) & 0xF)) << 12;
+			target[target_index] = (wc1 | wc2 | wc3);
+		}else{
+			return -1;
+		}
+      }else{
+        target[target_index] = '\0';
+        break;
+      }
+      target_index++;
+      index++;
+    }
+    return 0;
+}
+
 /* main interface ------------------------------------------------------ */
 
 int params_from_map(ezpp_t ez)
@@ -2576,16 +2614,22 @@ int params_from_map(ezpp_t ez)
   }
   else
   {
-    FILE *f = fopen(ez->map, "rb");
-    if (!f)
-    {
-      perror("fopen");
-      res = ERR_IO;
-    }
-    else
-    {
-      res = p_map(ez, f);
-      fclose(f);
+    wchar_t path[strlen(ez->map) + 1];
+    int status = char_to_wchar(ez->map, path);
+    if(status == 0){
+      FILE *f = _wfopen(path, L"rb");
+      if (!f)
+      {
+        perror("fopen");
+        res = ERR_IO;
+      }
+      else
+      {
+        res = p_map(ez, f);
+        fclose(f);
+      }
+    }else{
+      res = ERR_FORMAT;
     }
   }
 
