@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/helpers"
@@ -14,24 +15,30 @@ import (
 )
 
 const (
-	osuStatusMainMenu   = 0
-	osuStatusPlaying    = 2
-	osuStatusSongSelect = 5
+	osuStatusMainMenu          = 0
+	osuStatusPlaying           = 2
+	osuStatusSongSelect        = 5
+	osuStatusResultScreen      = 7
+	osuStatusResultScreenMulti = 14
 )
 
 type agent struct {
 	config
-	clients []struct {
-		instance        mem.Process
-		patterns        memory.StaticAddresses
-		menuData        memory.MenuD
-		songsFolderData memory.SongsFolderD
-	}
+	clients []client
+}
+
+type client struct {
+	instance        mem.Process
+	patterns        memory.StaticAddresses
+	menuData        memory.MenuD
+	allTimesData    memory.AllTimesD
+	songsFolderData memory.SongsFolderD
 }
 
 type config struct {
-	updateTime  int
-	songsFolder string
+	updateTime   int
+	songsFolder  string
+	memcycletest bool
 }
 
 func main() {
@@ -42,7 +49,6 @@ func main() {
 		},
 	}
 	a.runMainLoop()
-	// a.patterns.hello
 }
 
 func (a *agent) runMainLoop() {
@@ -59,29 +65,24 @@ StartOver:
 		fmt.Println("Operating in tourney mode") //TODO: Add tourney support
 	}
 
-	a.clients = make([]struct {
-		instance        mem.Process
-		patterns        memory.StaticAddresses
-		menuData        memory.MenuD
-		songsFolderData memory.SongsFolderD
-	}, instanceCount)
+	a.clients = make([]client, instanceCount)
 
 	for i := 0; i < instanceCount; i++ {
 		a.clients[i].instance = (*instances)[i]
-		err = mem.ResolvePatterns(a.clients[i].instance, &a.clients[i].patterns.PreSongSelectAddresses)
+		err = mem.ResolvePatterns(a.clients[i].instance, &a.getClient(i).patterns.PreSongSelectAddresses)
 		if err != nil {
 			log.Println(err)
 			goto StartOver
 		}
 		err = mem.Read(a.clients[i].instance,
-			&a.clients[i].patterns.PreSongSelectAddresses,
-			&a.clients[i].menuData.PreSongSelectData)
+			&a.getClient(i).patterns.PreSongSelectAddresses,
+			&a.getClient(i).menuData.PreSongSelectData)
 		if err != nil {
 			log.Println(err)
 			goto StartOver
 		}
 		fmt.Println("[MEMORY] Resolving patterns...")
-		err = mem.ResolvePatterns(a.clients[i].instance, &a.clients[i].patterns)
+		err = mem.ResolvePatterns(a.clients[i].instance, &a.getClient(i).patterns)
 		if err != nil {
 			log.Println(err)
 			goto StartOver
@@ -97,21 +98,31 @@ StartOver:
 	}
 	fmt.Println("Songs Folder:", a.config.songsFolder)
 
-	//run the main loop, goto startover if we loose the instance
+	//run the main loop, goto startover if we loose the instance (0 tolerance on losing clients, even for tourney mode)
 	for {
+		cycleStart := time.Now()
 		for i := 0; i < instanceCount; i++ {
-			err := mem.Read(a.clients[i].instance,
-				&a.clients[i].patterns.PreSongSelectAddresses,
-				&a.clients[i].menuData.PreSongSelectData)
+			cl := a.getClient(i)
+			err := mem.Read(cl.instance,
+				&cl.patterns.PreSongSelectAddresses,
+				&cl.menuData.PreSongSelectData)
 			if err != nil {
 				log.Println("It appears that we lost the precess, retrying! ERROR:", err)
 				goto StartOver
 			}
-			switch a.clients[i].menuData.PreSongSelectData.Status {
-			case osuStatusPlaying:
-				fmt.Println("I'm playing :)")
-
+			//read data that always present first.
+			err = mem.Read(cl.instance, &cl.patterns, &cl.allTimesData)
+			if err != nil {
+				log.Println("It appears that we lost the precess, retrying! ERROR:", err)
+				goto StartOver
 			}
+			switch cl.menuData.PreSongSelectData.Status {
+			case osuStatusSongSelect:
+				cl.updateBeatmap()
+			}
+		}
+		if a.config.memcycletest {
+			fmt.Println("Cycle took: ", time.Since(cycleStart))
 		}
 		helpers.Sleep(a.updateTime)
 	}
@@ -138,10 +149,21 @@ func (a *agent) resolveSongsFolder() (string, error) {
 		}
 		rootFolder := strings.TrimSuffix(osuExecutablePath, "osu!.exe")
 		songsFolder := filepath.Join(rootFolder, "Songs")
+
+		//default, return exec trimmed path
 		if a.clients[0].songsFolderData.SongsFolder == "Songs" {
 			return songsFolder, nil
 		}
+		//otherwise mem data has abs location of the songs path
 		return a.clients[0].songsFolderData.SongsFolder, nil
 	}
 	return "", fmt.Errorf("unsupported OS") //TODO: add Linux
+}
+
+func (a *agent) getClient(index int) *client {
+	return &a.clients[index]
+}
+
+func (c *client) updateBeatmap() {
+	mem.Read(c.instance, &c.patterns, &c.menuData)
 }

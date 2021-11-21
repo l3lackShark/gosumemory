@@ -119,7 +119,7 @@ type mainMenuD struct {
 	AudioVelocityBase uint32 `mem:"[Ruleset + 0x44] + 0x10"`
 }
 
-type allTimesD struct {
+type AllTimesD struct {
 	PlayTime      int32  `mem:"[PlayTime + 0x5]"`
 	MenuMods      uint32 `mem:"[MenuMods + 0x9]"`
 	ChatStatus    int8   `mem:"ChatChecker - 0x20"`
