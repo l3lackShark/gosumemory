@@ -1,4 +1,5 @@
-//+build windows
+//go:build windows
+// +build windows
 
 package memory
 
@@ -93,7 +94,11 @@ func getTourneyGameplayData(proc mem.Process, iterator int) {
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Max = tourneyGameplayData[iterator].MaxCombo
 	TourneyData.IPCClients[iterator].Gameplay.GameMode = tourneyGameplayData[iterator].Mode
-	TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
+	if tourneyGameplayData[iterator].Score == 0 {
+		TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].ScoreV2
+	} else {
+		TourneyData.IPCClients[iterator].Gameplay.Score = tourneyGameplayData[iterator].Score
+	}
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H100 = tourneyGameplayData[iterator].Hit100
 	TourneyData.IPCClients[iterator].Gameplay.Hits.HKatu = tourneyGameplayData[iterator].HitKatu
 	TourneyData.IPCClients[iterator].Gameplay.Hits.H300 = tourneyGameplayData[iterator].Hit300
