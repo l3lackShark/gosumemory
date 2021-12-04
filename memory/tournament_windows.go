@@ -88,7 +88,7 @@ func resolveTourneyClients(procs []mem.Process) ([]mem.Process, error) {
 
 func getTourneyGameplayData(proc mem.Process, iterator int) {
 	err := mem.Read(proc, &tourneyPatterns[iterator], &tourneyGameplayData[iterator])
-	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") {
+	if err != nil && !strings.Contains(err.Error(), "LeaderBoard") && !strings.Contains(err.Error(), "KeyOverlay") { //TODO: fix this mem-side
 		return //struct not initialized yet
 	}
 	TourneyData.IPCClients[iterator].Gameplay.Combo.Current = tourneyGameplayData[iterator].Combo
