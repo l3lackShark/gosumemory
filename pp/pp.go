@@ -223,9 +223,9 @@ func GetData() {
 					readData(&data, ez, false, path)
 					if memory.GameplayData.Combo.Max > 1 && float64(data.Total) > 0 {
 						//pre-Wieku rewrite crutch
-						if memory.MenuData.GameMode == 0 {
+						if memory.GameplayData.GameMode == 0 {
 
-							res, err := wiekuCalcCrutch(path, memory.GameplayData.Combo.Current, memory.GameplayData.Hits.H300, memory.GameplayData.Hits.H100, memory.GameplayData.Hits.H50, memory.GameplayData.Hits.H0)
+							res, err := wiekuCalcCrutch(path, memory.GameplayData.Combo.Max, memory.GameplayData.Hits.H300, memory.GameplayData.Hits.H100, memory.GameplayData.Hits.H50, memory.GameplayData.Hits.H0)
 							if err != nil {
 								pp.Println(err)
 								memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
