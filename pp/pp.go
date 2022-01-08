@@ -309,7 +309,7 @@ var (
 )
 
 func wiekuCalcCrutch(path string, combo int16, h300 int16, h100 int16, h50 int16, h0 int16) (int32, error) {
-	if tempWiekuFileName != path && tempWiekuMods != memory.MenuData.Mods.AppliedMods {
+	if tempWiekuFileName != path || tempWiekuMods != memory.MenuData.Mods.AppliedMods {
 		tempWiekuFileName = path
 		tempWiekuMods = memory.MenuData.Mods.AppliedMods
 
@@ -322,8 +322,8 @@ func wiekuCalcCrutch(path string, combo int16, h300 int16, h100 int16, h50 int16
 		beatMap, err = beatmap.ParseFromReader(osuFile)
 		if err != nil {
 			return 0, fmt.Errorf("Failed to calc via wieku calculator, falling back to oppai, ERROR: %w", err)
-
 		}
+
 		beatMap.Difficulty.SetMods(difficulty.Modifier(memory.MenuData.Mods.AppliedMods))
 		stars = osu.CalculateSingle(beatMap.HitObjects, beatMap.Difficulty)
 	}
