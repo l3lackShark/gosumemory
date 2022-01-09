@@ -304,8 +304,8 @@ func GetData() {
 var (
 	tempWiekuFileName string
 	tempWiekuMods     int32
-	stars             osu.Attributes
 	beatMap           *beatmap.BeatMap
+	attribs           []osu.Attributes
 )
 
 func wiekuCalcCrutch(path string, combo int16, h300 int16, h100 int16, h50 int16, h0 int16) (int32, error) {
@@ -325,11 +325,18 @@ func wiekuCalcCrutch(path string, combo int16, h300 int16, h100 int16, h50 int16
 		}
 
 		beatMap.Difficulty.SetMods(difficulty.Modifier(memory.MenuData.Mods.AppliedMods))
-		stars = osu.CalculateSingle(beatMap.HitObjects, beatMap.Difficulty)
+		attribs = osu.CalculateStep(beatMap.HitObjects, beatMap.Difficulty)
 	}
 
 	ppWieku := &osu.PPv2{}
-	ppWieku.PPv2x(stars, int(combo), int(h300), int(h100), int(h50), int(h0), beatMap.Difficulty)
+
+	currAttrib := int(math.Max(0, float64(h300+h100+h50+h0-1)))
+
+	if len(attribs)-1 < currAttrib {
+		return 0, nil //rade condition hell
+	}
+
+	ppWieku.PPv2x(attribs[currAttrib], int(combo), int(h300), int(h100), int(h50), int(h0), beatMap.Difficulty)
 
 	return cast.ToInt32(ppWieku.Results.Total), nil
 }
