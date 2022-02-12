@@ -4,10 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"strings"
 	"time"
 	"unsafe"
 
+	"github.com/Wieku/gosu-pp/beatmap"
+	"github.com/Wieku/gosu-pp/beatmap/difficulty"
+	"github.com/Wieku/gosu-pp/performance/osu"
 	"github.com/k0kubun/pp"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/spf13/cast"
@@ -218,7 +222,19 @@ func GetData() {
 					path := memory.MenuData.Bm.Path.FullDotOsu
 					readData(&data, ez, false, path)
 					if memory.GameplayData.Combo.Max > 1 && float64(data.Total) > 0 {
-						memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+						//pre-Wieku rewrite crutch
+						if memory.GameplayData.GameMode == 0 {
+
+							res, err := wiekuCalcCrutch(path, memory.GameplayData.Combo.Max, memory.GameplayData.Hits.H300, memory.GameplayData.Hits.H100, memory.GameplayData.Hits.H50, memory.GameplayData.Hits.H0)
+							if err != nil {
+								pp.Println(err)
+								memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+							}
+							memory.GameplayData.PP.Pp = cast.ToInt32(res)
+
+						} else {
+							memory.GameplayData.PP.Pp = cast.ToInt32(float64(data.Total))
+						}
 					}
 				case 7:
 					//idle
@@ -283,4 +299,44 @@ func GetData() {
 
 		time.Sleep(time.Duration(memory.UpdateTime) * time.Millisecond)
 	}
+}
+
+var (
+	tempWiekuFileName string
+	tempWiekuMods     int32
+	beatMap           *beatmap.BeatMap
+	attribs           []osu.Attributes
+)
+
+func wiekuCalcCrutch(path string, combo int16, h300 int16, h100 int16, h50 int16, h0 int16) (int32, error) {
+	if tempWiekuFileName != path || tempWiekuMods != memory.MenuData.Mods.AppliedMods {
+		tempWiekuFileName = path
+		tempWiekuMods = memory.MenuData.Mods.AppliedMods
+
+		osuFile, err := os.Open(path)
+		if err != nil {
+			return 0, fmt.Errorf("Failed to calc via wieku calculator, falling back to oppai, ERROR: %w", err)
+		}
+		defer osuFile.Close()
+
+		beatMap, err = beatmap.ParseFromReader(osuFile)
+		if err != nil {
+			return 0, fmt.Errorf("Failed to calc via wieku calculator, falling back to oppai, ERROR: %w", err)
+		}
+
+		beatMap.Difficulty.SetMods(difficulty.Modifier(memory.MenuData.Mods.AppliedMods))
+		attribs = osu.CalculateStep(beatMap.HitObjects, beatMap.Difficulty)
+	}
+
+	ppWieku := &osu.PPv2{}
+
+	currAttrib := int(math.Max(0, float64(h300+h100+h50+h0-1)))
+
+	if len(attribs)-1 < currAttrib {
+		return 0, nil //rade condition hell
+	}
+
+	ppWieku.PPv2x(attribs[currAttrib], int(combo), int(h300), int(h100), int(h50), int(h0), beatMap.Difficulty)
+
+	return cast.ToInt32(ppWieku.Results.Total), nil
 }
