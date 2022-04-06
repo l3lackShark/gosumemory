@@ -25,7 +25,8 @@ jobs:
         fi
     - name: Build
       run: rsrc -arch=amd64 -ico ./out.ico -o gosumemory.syso && CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -o win64/gosumemory.exe && rm gosumemory.syso && rsrc -arch=386 -ico ./out.ico -o gosumemory.syso && CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o win32/gosumemory.exe && rm gosumemory.syso && CC=gcc go build -v -o lin64/gosumemory && CC=gcc CGO_ENABLED=1 GOARCH=386 go build -v -o lin32/gosumemory
-
+	- name: Clone deps
+	  run: git clone https://github.com/l3lackShark/static && find win32 win64 lin32 lin64 dir2 -maxdepth 0 -exec cp -rf static {} \;
     - name: Upload win32
       uses: actions/upload-artifact@v1.0.0
       with:
