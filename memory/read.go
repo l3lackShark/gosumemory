@@ -95,17 +95,17 @@ type menuD struct {
 	StarRatingStruct   uint32  `mem:"[Beatmap] + 0x8C"`
 	AudioFilename      string  `mem:"[[Beatmap] + 0x64]"`
 	BackgroundFilename string  `mem:"[[Beatmap] + 0x68]"`
-	Folder             string  `mem:"[[Beatmap] + 0x74]"`
-	Creator            string  `mem:"[[Beatmap] + 0x78]"`
-	Name               string  `mem:"[[Beatmap] + 0x7C]"`
-	Path               string  `mem:"[[Beatmap] + 0x90]"`
-	Difficulty         string  `mem:"[[Beatmap] + 0xAC]"`
-	MapID              int32   `mem:"[Beatmap] + 0xC8"`
-	SetID              int32   `mem:"[Beatmap] + 0xCC"`
-	BeatmapMode        int32   `mem:"[Beatmap] + 0x118"`
-	RankedStatus       int32   `mem:"[Beatmap] + 0x128"` // unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
+	Folder             string  `mem:"[[Beatmap] + 0x78]"`
+	Creator            string  `mem:"[[Beatmap] + 0x7C]"`
+	Name               string  `mem:"[[Beatmap] + 0x80]"`
+	Path               string  `mem:"[[Beatmap] + 0x94]"`
+	Difficulty         string  `mem:"[[Beatmap] + 0xB0]"`
+	MapID              int32   `mem:"[Beatmap] + 0xCC"`
+	SetID              int32   `mem:"[Beatmap] + 0xD0"`
+	RankedStatus       int32   `mem:"[Beatmap] + 0x130"` // unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
 	MD5                string  `mem:"[[Beatmap] + 0x6C]"`
-	ObjectCount        int32   `mem:"[Beatmap] + 0xF4"`
+	ObjectCount        int32   `mem:"[Beatmap] + 0xFC"`
+	//BeatmapMode        int32   `mem:"[Beatmap] + 0x118"`
 	//Tags               string  `mem:"[[Beatmap] + 0x20]"`
 	//Length       int32 `mem:"[Beatmap] + 0x12C"`
 	//AudioLeadIn          int32   `mem:"[Beatmap] + 0xC0"`
