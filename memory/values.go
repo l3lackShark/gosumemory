@@ -128,20 +128,26 @@ type GameplayValues struct {
 	Hp          hp          `json:"hp"`
 	Hits        hits        `json:"hits"`
 	PP          ppG         `json:"pp"`
-	KeyOverlay  keyOverlay  `json:"keyOverlay"`
+	KeyCount    keyCount    `json:"keyCount"`
+	HitEvent    []hitEvent  `json:"hitEvents"`
 	Leaderboard leaderboard `json:"leaderboard"`
 }
 
-type keyOverlay struct {
-	K1 keyOverlayButton `json:"k1"`
-	K2 keyOverlayButton `json:"k2"`
-	M1 keyOverlayButton `json:"m1"`
-	M2 keyOverlayButton `json:"m2"`
+type hitEvent struct {
+	X         float32 `json:"x"`
+	Y         float32 `json:"y"`
+	TimeStamp int32   `json:"timeStamp"`
+	K1        bool    `json:"k1"`
+	K2        bool    `json:"k2"`
+	M1        bool    `json:"m1"`
+	M2        bool    `json:"m2"`
 }
 
-type keyOverlayButton struct {
-	IsPressed bool  `json:"isPressed"`
-	Count     int32 `json:"count"`
+type keyCount struct {
+	K1 int32 `json:"k1"`
+	K2 int32 `json:"k2"`
+	M1 int32 `json:"m1"`
+	M2 int32 `json:"m2"`
 }
 
 type bm struct {
