@@ -433,14 +433,14 @@ func getGamplayData() {
 				if currHitEventFrameSize == 1 {
 					GameplayData.HitEvent = hitEventFrame
 				} else {
-					GameplayData.HitEvent = hitEventFrame[cast.ToInt(math.Max(cast.ToFloat64(prevHitEventFrameSize-1), 0)):currHitEventFrameSize]
+					GameplayData.HitEvent = hitEventFrame[prevHitEventFrameSize:currHitEventFrameSize]
 				}
 			} else {
 				for i := currentHitEventFrameIndex; i < len(hitEventFrame)-1; i++ {
 					var currHitEventFrame = hitEventFrame[i]
 					if currPlayTime > currHitEventFrame.TimeStamp && currPlayTime <= hitEventFrame[i+1].TimeStamp {
 						GameplayData.HitEvent = hitEventFrame[currentHitEventFrameIndex : i+1]
-						currentHitEventFrameIndex = i
+						currentHitEventFrameIndex = i + 1
 						break
 					}
 				}
