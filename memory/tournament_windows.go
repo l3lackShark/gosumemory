@@ -220,7 +220,7 @@ func getTourneyIPC() error {
 			&tourneyMenuData[i].PreSongSelectData)
 		if err != nil {
 			DynamicAddresses.IsReady = false
-			log.Println("It appears that we lost the precess, retrying", err)
+			log.Println("It appears that we lost the process, retrying", err)
 			continue
 		}
 		if i == 0 {
