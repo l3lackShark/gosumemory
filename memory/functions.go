@@ -222,6 +222,7 @@ func bmUpdateData() error {
 		MenuData.GameMode = menuData.MenuGameMode
 		MenuData.Bm.RandkedStatus = menuData.RankedStatus
 		MenuData.Bm.BeatmapMD5 = menuData.MD5
+		menuData.Folder = strings.TrimSuffix(menuData.Folder, " ")
 		MenuData.Bm.Path = path{
 			AudioPath:            menuData.AudioFilename,
 			BGPath:               menuData.BackgroundFilename,
