@@ -1,13 +1,17 @@
-name: Go
+name:  Go
+          
+
 on: [push]
 jobs:
 
   build:
+
     name: Build
     runs-on: self-hosted 
     steps:
 
     - name: Set up Go 1.17
+
       uses: actions/setup-go@v1
       with:
         go-version: 1.17
