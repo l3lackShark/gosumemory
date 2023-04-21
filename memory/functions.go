@@ -20,25 +20,25 @@ func modsResolver(xor uint32) string {
 	return Mods(xor).String()
 }
 
-//UpdateTime Intervall between value updates
+// UpdateTime Intervall between value updates
 var UpdateTime int
 
-//UnderWine?
+// UnderWine?
 var UnderWine bool
 
-//MemCycle test
+// MemCycle test
 var MemCycle bool
 var isTournamentMode bool
 var tourneyProcs []mem.Process
 var tourneyErr error
 
-//Were we in the Result Screen?
+// Were we in the Result Screen?
 var dirtyResults bool = false
 
-//var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+// var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
 
-//SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
+// SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
 
 var allProcs []mem.Process
@@ -46,7 +46,113 @@ var process mem.Process
 var procerr error
 var tempRetries int32
 
-//Init the whole thing and get osu! memory values to start working with it.
+// Hit events
+var hitEventBaseAddress struct {
+	Playing int32
+	Replay  int32
+}
+
+var hitEventPreOffset [4]int32 = [4]int32{-1, -1, -1, -1}
+var hitEventAddress [5]int32 = [5]int32{0, 0, 0, 0, 0}
+var hitEventIndexIncrement int32 = 0
+var prePlayTime int32 = 2147483647
+var preStatus uint32 = 100
+var hitEventFrame []hitEvent
+var currentHitEventFrameIndex int
+var prevHitEventFrameSize int = 0
+
+func getHitEventOffset(depth int32, index int32) int32 {
+	switch depth {
+	case 0:
+		return 0x34
+	case 1:
+		return 0x4
+	case 2:
+		return 0x8 + index*0x4
+	case 3:
+		return 0
+	default:
+		return -1 // this should not happen
+	}
+}
+
+type addrWithMask struct {
+	string
+	int
+}
+
+func resolveHitEventAddress() error {
+	var _hitEventMemPatterns struct {
+		Playing []addrWithMask
+		Replay  []addrWithMask
+	} = struct {
+		Playing []addrWithMask
+		Replay  []addrWithMask
+	}{ // hit event addr may have different pattern
+		[]addrWithMask{
+			{"83 7E 60 00 74 2C A1 ?? ?? ?? ?? 8B 50 1C 8B 4A 04", 7},
+			{"5D C3 A1 ?? ?? ?? ?? 8B 50 1C 8B 4A 04", 3},
+		},
+		[]addrWithMask{
+			{"D9 5D C0 EB 4E A1 ?? ?? ?? ?? 8B 48 34 4E", 6},
+			{"74 4D A1 ?? ?? ?? ?? 8B 58 34 8D 46 FF", 3},
+			{"A1 ?? ?? ?? ?? 8B 40 34 8B 70 0C", 1},
+			{"75 0E 33 D2 89 15 ?? ?? ?? ?? 89 15", 6},
+		},
+	}
+
+	if hitEventBaseAddress.Playing == 0 {
+		var errMsg string = ""
+		var resolved = false
+		for i, t := range _hitEventMemPatterns.Playing {
+			base, err := mem.Scan(process, t.string)
+			if err != nil || base == 0 {
+				errMsg += err.Error() + "; "
+				continue
+			}
+			addr, err := mem.ReadInt32(process, base, int64(t.int))
+			if err != nil || addr == 0 {
+				errMsg += err.Error() + "; "
+				continue
+			} else {
+				hitEventBaseAddress.Playing = addr
+				resolved = true
+				log.Printf("Resolved hit event(playing) at 0x%x by pattern #%d.\n", addr, i)
+				break
+			}
+		}
+		if !resolved {
+			return fmt.Errorf("err resolving hit event(playing) address: %s", errMsg)
+		}
+	}
+	if hitEventBaseAddress.Replay == 0 {
+		var errMsg string = ""
+		var resolved = false
+		for i, t := range _hitEventMemPatterns.Replay {
+			base, err := mem.Scan(process, t.string)
+			if err != nil || base == 0 {
+				errMsg += err.Error() + "; "
+				continue
+			}
+			addr, err := mem.ReadInt32(process, base, int64(t.int))
+			if err != nil || addr == 0 {
+				errMsg += err.Error() + "; "
+				continue
+			} else {
+				hitEventBaseAddress.Replay = addr
+				resolved = true
+				log.Printf("Resolved hit event(replay) at 0x%x by pattern #%d.\n", addr, i)
+				break
+			}
+		}
+		if !resolved {
+			return fmt.Errorf("err resolving hit event(replay) address: %s", errMsg)
+		}
+	}
+	return nil
+}
+
+// Init the whole thing and get osu! memory values to start working with it.
 func Init() {
 	if UnderWine == true || runtime.GOOS != "windows" { //Arrays start at 0xC in Linux for some reason, has to be wine specific
 		leaderStart = 0xC
@@ -95,6 +201,18 @@ func Init() {
 			SettingsData.Folders.Skin = alwaysData.SkinFolder
 
 			SettingsData.ShowInterface = cast.ToBool(int(alwaysData.ShowInterface))
+
+			resolveHitEventAddress()
+
+			if preStatus == 2 && menuData.Status != 2 {
+				hitEventIndexIncrement = 0
+				preStatus = menuData.Status
+				hitEventFrame = []hitEvent{}
+				currentHitEventFrameIndex = 0
+				prevHitEventFrameSize = 0
+				GameplayData.HitEvent = []hitEvent{}
+			}
+
 			switch menuData.Status {
 			case 0:
 				err = bmUpdateData()
@@ -295,6 +413,111 @@ func getGamplayData() {
 	}
 	getLeaderboard()
 	getKeyOveraly()
+
+	if preStatus != 2 || prePlayTime > alwaysData.PlayTime {
+		hitEventIndexIncrement = 0
+	}
+
+	preStatus = menuData.Status
+	prePlayTime = alwaysData.PlayTime
+
+	if menuData.Status == 2 {
+		if hitEventBaseAddress.Playing != 0 {
+			var currPlayTime = alwaysData.PlayTime
+
+			hitEventAddress[0] = hitEventBaseAddress.Playing
+			getHitEvent()
+
+			var currHitEventFrameSize = len(hitEventFrame)
+			if prevHitEventFrameSize != currHitEventFrameSize {
+				if currHitEventFrameSize == 1 {
+					GameplayData.HitEvent = hitEventFrame
+				} else {
+					GameplayData.HitEvent = hitEventFrame[prevHitEventFrameSize:currHitEventFrameSize]
+				}
+			} else {
+				for i := currentHitEventFrameIndex; i < len(hitEventFrame)-1; i++ {
+					var currHitEventFrame = hitEventFrame[i]
+					if currPlayTime > currHitEventFrame.TimeStamp && currPlayTime <= hitEventFrame[i+1].TimeStamp {
+						GameplayData.HitEvent = hitEventFrame[currentHitEventFrameIndex : i+1]
+						currentHitEventFrameIndex = i + 1
+						break
+					}
+				}
+			}
+			prevHitEventFrameSize = currHitEventFrameSize
+		}
+	}
+}
+
+func getHitEvent() {
+	hitEventPreOffset = [4]int32{-1, -1, -1, -1}
+	for {
+		hitEvent, err := readCurrentHitEvent(hitEventIndexIncrement)
+
+		if err != nil || hitEvent.X == -1 {
+			break
+		} else {
+			hitEventFrame = append(hitEventFrame, hitEvent)
+			hitEventIndexIncrement++
+		}
+	}
+}
+
+func readCurrentHitEvent(index int32) (hitEvent, error) {
+	var changed = false
+	var hitEvent hitEvent
+
+	for depth := 0; depth < 4; depth++ {
+		offset := getHitEventOffset(int32(depth), index)
+		if offset != hitEventPreOffset[depth] || changed {
+			hitEventPreOffset[depth] = offset
+			changed = true
+			addr, err := mem.ReadInt32(process, cast.ToInt64(hitEventAddress[depth]))
+			hitEventAddress[depth+1] = addr
+			if err != nil || hitEventAddress[depth+1] == 0 {
+				hitEvent.X = -1
+				return hitEvent, err
+			}
+			hitEventAddress[depth+1] += offset
+		}
+	}
+
+	addr4x64 := cast.ToInt64(hitEventAddress[4])
+
+	x, err := mem.ReadFloat32(process, addr4x64, 4)
+	if err != nil {
+		return hitEvent, err
+	}
+	y, err := mem.ReadFloat32(process, addr4x64, 8)
+	if err != nil {
+		return hitEvent, err
+	}
+	keyBit, err := mem.ReadUint8(process, addr4x64, 12)
+	if err != nil {
+		return hitEvent, err
+	}
+	time, err := mem.ReadInt32(process, addr4x64, 16)
+	if err != nil {
+		return hitEvent, err
+	}
+
+	// print memory
+	// var u8Arr []string = []string{}
+	// for i := 0; i < 100; i++ {
+	// 	u8, _ := mem.ReadUint8(process, addr4x64, int64(i))
+	// 	u8Arr = append(u8Arr, fmt.Sprintf("%2x", u8))
+	// }
+	// fmt.Println(strings.Join(u8Arr, " "))
+
+	hitEvent.X = x
+	hitEvent.Y = y
+	hitEvent.TimeStamp = time
+	hitEvent.K1 = keyBit&0b0101 == 0b0101
+	hitEvent.K2 = keyBit&0b1010 == 0b1010
+	hitEvent.M1 = (keyBit&0b1100 == 0b0000) && ((keyBit&0b0001 == 0b0001) || (keyBit&0b0001 == 0b0011))
+	hitEvent.M2 = (keyBit&0b1100 == 0b0000) && ((keyBit&0b0010 == 0b0010) || (keyBit&0b0010 == 0b0011))
+	return hitEvent, nil
 }
 
 func getLeaderboard() {
@@ -431,29 +654,22 @@ func calculateBassDensity(base uint32, proc *mem.Process) float64 {
 func getKeyOveraly() {
 	addresses := struct{ Base int64 }{int64(gameplayData.KeyOverlayArrayAddr)}
 	var entries struct {
-		K1Pressed int8  `mem:"[Base + 0x8] + 0x1C"` //Pressed usually works with <20 update rate. It's recommended to create a buffer and predict presses by count to save CPU overhead
-		K1Count   int32 `mem:"[Base + 0x8] + 0x14"`
-		K2Pressed int8  `mem:"[Base + 0xC] + 0x1C"`
-		K2Count   int32 `mem:"[Base + 0xC] + 0x14"`
-		M1Pressed int8  `mem:"[Base + 0x10] + 0x1C"`
-		M1Count   int32 `mem:"[Base + 0x10] + 0x14"`
-		M2Pressed int8  `mem:"[Base + 0x14] + 0x1C"`
-		M2Count   int32 `mem:"[Base + 0x14] + 0x14"`
+		//Pressed usually works with <20 update rate. It's recommended to create a buffer and predict presses by count to save CPU overhead
+		K1Count int32 `mem:"[Base + 0x8] + 0x14"`
+		K2Count int32 `mem:"[Base + 0xC] + 0x14"`
+		M1Count int32 `mem:"[Base + 0x10] + 0x14"`
+		M2Count int32 `mem:"[Base + 0x14] + 0x14"`
 	}
 	err := mem.Read(process, &addresses, &entries)
 	if err != nil {
 		return
 	}
 
-	var out keyOverlay
+	var out keyCount
 
-	out.K1.IsPressed = cast.ToBool(int(entries.K1Pressed))
-	out.K1.Count = entries.K1Count
-	out.K2.IsPressed = cast.ToBool(int(entries.K2Pressed))
-	out.K2.Count = entries.K2Count
-	out.M1.IsPressed = cast.ToBool(int(entries.M1Pressed))
-	out.M1.Count = entries.M1Count
-	out.M2.IsPressed = cast.ToBool(int(entries.M2Pressed))
-	out.M2.Count = entries.M2Count
-	GameplayData.KeyOverlay = out //needs complete rewrite in 1.4.0
+	out.K1 = entries.K1Count
+	out.K2 = entries.K2Count
+	out.M1 = entries.M1Count
+	out.M2 = entries.M2Count
+	GameplayData.KeyCount = out //needs complete rewrite in 1.4.0
 }
