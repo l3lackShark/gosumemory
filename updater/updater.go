@@ -12,9 +12,9 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-const version = "1.3.6"
+const version = "1.3.7"
 
-//DoSelfUpdate updates the application
+// DoSelfUpdate updates the application
 func DoSelfUpdate() {
 	fmt.Println("Checking Updates... (can take some time if you have bad routing to GitHub)")
 	name, err := os.Executable()
