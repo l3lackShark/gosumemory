@@ -22,3 +22,4 @@ res.ico
 # Editor-based HTTP Client requests
 /httpRequests/
 gameoverlay.zip
+*.exe
