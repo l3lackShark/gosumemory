@@ -20,25 +20,25 @@ func modsResolver(xor uint32) string {
 	return Mods(xor).String()
 }
 
-//UpdateTime Intervall between value updates
+// UpdateTime Intervall between value updates
 var UpdateTime int
 
-//UnderWine?
+// UnderWine?
 var UnderWine bool
 
-//MemCycle test
+// MemCycle test
 var MemCycle bool
 var isTournamentMode bool
 var tourneyProcs []mem.Process
 var tourneyErr error
 
-//Were we in the Result Screen?
+// Were we in the Result Screen?
 var dirtyResults bool = false
 
-//var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
+// var proc, procerr = kiwi.GetProcessByFileName("osu!.exe")
 var leaderStart int32
 
-//SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
+// SongsFolderPath is full path to osu! Songs. Gets set automatically on Windows (through memory)
 var SongsFolderPath string
 
 var allProcs []mem.Process
@@ -46,7 +46,7 @@ var process mem.Process
 var procerr error
 var tempRetries int32
 
-//Init the whole thing and get osu! memory values to start working with it.
+// Init the whole thing and get osu! memory values to start working with it.
 func Init() {
 	if UnderWine == true || runtime.GOOS != "windows" { //Arrays start at 0xC in Linux for some reason, has to be wine specific
 		leaderStart = 0xC
@@ -277,11 +277,11 @@ func getGamplayData() {
 	} else {
 		MenuData.Mods.PpMods = Mods(gameplayData.ModsXor1 ^ gameplayData.ModsXor2).String()
 	}
-	if strings.Contains(MenuData.Mods.PpMods, "V2") {
-		GameplayData.Score = gameplayData.ScoreV2
-	} else {
-		GameplayData.Score = gameplayData.Score
-	}
+	// if strings.Contains(MenuData.Mods.PpMods, "V2") {
+	GameplayData.Score = gameplayData.ScoreV2
+	// } else {
+	// 	GameplayData.Score = gameplayData.Score
+	// }
 	if GameplayData.Combo.Max > 0 {
 		GameplayData.Hits.HitErrorArray = gameplayData.HitErrors
 		baseUR, _ := calculateUR(GameplayData.Hits.HitErrorArray)
@@ -335,7 +335,8 @@ func ReadManiaStars() (ManiaStars, error) {
 	}
 	err := mem.Read(process, &addresses, &entries)
 	if err != nil || entries.Data == 0 {
-		return ManiaStars{}, errors.New("[MEMORY] Could not find star rating for this map (internal) This probably means that difficulty calculation is in progress")
+		pp.Println("[MEMORY] Could not find star rating for this map or converts not supported yet")
+		return ManiaStars{}, nil
 	}
 	starRating := struct{ Base int64 }{int64(entries.Data)}
 	var stars struct {

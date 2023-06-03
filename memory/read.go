@@ -134,8 +134,7 @@ type gameplayD struct {
 	HitErrors           []int32 `mem:"[[[Ruleset + 0x68] + 0x38] + 0x38]"`
 	Mode                int32   `mem:"[[Ruleset + 0x68] + 0x38] + 0x64"`
 	MaxCombo            int16   `mem:"[[Ruleset + 0x68] + 0x38] + 0x68"`
-	Score               int32   `mem:"[[Ruleset + 0x68] + 0x38] + 0x78"`
-	ScoreV2             int32   `mem:"Ruleset + 0xF8"`
+	ScoreV2             int32   `mem:"Ruleset + 0x100"`
 	Hit100              int16   `mem:"[[Ruleset + 0x68] + 0x38] + 0x88"`
 	Hit300              int16   `mem:"[[Ruleset + 0x68] + 0x38] + 0x8A"`
 	Hit50               int16   `mem:"[[Ruleset + 0x68] + 0x38] + 0x8C"`
@@ -148,4 +147,5 @@ type gameplayD struct {
 	Accuracy            float64 `mem:"[[Ruleset + 0x68] + 0x48] + 0xC"`
 	LeaderBoard         uint32  `mem:"[Ruleset + 0x7C] + 0x24"`
 	KeyOverlayArrayAddr uint32  `mem:"[[Ruleset + 0xB0] + 0x10] + 0x4"` //has to be at the end due to mem not liking dead pointers, TODO: Fix this mem-side
+	// Score               int32   `mem:"[[Ruleset + 0x68] + 0x38] + 0x78"`
 }
