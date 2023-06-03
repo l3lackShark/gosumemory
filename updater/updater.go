@@ -12,7 +12,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-const version = "1.3.7"
+const version = "1.3.8"
 
 // DoSelfUpdate updates the application
 func DoSelfUpdate() {
