@@ -26,45 +26,57 @@ jobs:
         run: git clone https://github.com/l3lackShark/static
 
       - name: Build for Windows amd64
-        run: CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o gosumemory_windows_amd64.exe
-
+        run: CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o gosumemory.exe
+        
       - name: Archive Windows amd64
         uses: actions/upload-artifact@v2
         with:
           name: gosumemory_windows_amd64
           path: |
-            gosumemory_windows_amd64.exe
+            gosumemory.exe
             static/
 
+      - name: Rename Windows amd64 executable
+        run: mv gosumemory.exe gosumemory_windows_amd64.exe
+
       - name: Build for Windows 386
-        run: CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -o gosumemory_windows_386.exe
+        run: CC=i686-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -o gosumemory.exe
 
       - name: Archive Windows 386
         uses: actions/upload-artifact@v2
         with:
           name: gosumemory_windows_386
           path: |
-            gosumemory_windows_386.exe
+            gosumemory.exe
             static/
 
+      - name: Rename Windows 386 executable
+        run: mv gosumemory.exe gosumemory_windows_386.exe
+
       - name: Build for Linux amd64
-        run: CC=gcc go build -o gosumemory_linux_amd64
+        run: CC=gcc go build -o gosumemory
 
       - name: Archive Linux amd64
         uses: actions/upload-artifact@v2
         with:
           name: gosumemory_linux_amd64
           path: |
-            gosumemory_linux_amd64
+            gosumemory
             static/
 
+      - name: Rename Linux amd64 executable
+        run: mv gosumemory gosumemory_linux_amd64
+
       - name: Build for Linux 386
-        run: CC=gcc CGO_ENABLED=1 GOARCH=386 go build -o gosumemory_linux_386
+        run: CC=gcc CGO_ENABLED=1 GOARCH=386 go build -o gosumemory
 
       - name: Archive Linux 386
         uses: actions/upload-artifact@v2
         with:
           name: gosumemory_linux_386
           path: |
-            gosumemory_linux_386
+            gosumemory
             static/
+
+      - name: Rename Linux 386 executable
+        run: mv gosumemory gosumemory_linux_386
