@@ -31,7 +31,7 @@ jobs:
       - name: Archive Windows amd64
         uses: actions/upload-artifact@v2
         with:
-          name: gosumemory-windows-amd64
+          name: gosumemory_windows_amd64
           path: |
             gosumemory_windows_amd64.exe
             static/
@@ -42,7 +42,7 @@ jobs:
       - name: Archive Windows 386
         uses: actions/upload-artifact@v2
         with:
-          name: gosumemory-windows-386
+          name: gosumemory_windows_386
           path: |
             gosumemory_windows_386.exe
             static/
@@ -53,7 +53,7 @@ jobs:
       - name: Archive Linux amd64
         uses: actions/upload-artifact@v2
         with:
-          name: gosumemory-linux-amd64
+          name: gosumemory_linux_amd64
           path: |
             gosumemory_linux_amd64
             static/
@@ -64,7 +64,7 @@ jobs:
       - name: Archive Linux 386
         uses: actions/upload-artifact@v2
         with:
-          name: gosumemory-linux-386
+          name: gosumemory_linux_386
           path: |
             gosumemory_linux_386
             static/
