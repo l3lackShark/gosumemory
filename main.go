@@ -10,6 +10,7 @@ import (
 
 	"github.com/l3lackShark/gosumemory/config"
 
+	"github.com/l3lackShark/gosumemory/deafen"
 	"github.com/l3lackShark/gosumemory/mem"
 	"github.com/l3lackShark/gosumemory/memory"
 	"github.com/l3lackShark/gosumemory/pp"
@@ -26,8 +27,10 @@ func main() {
 	memDebugFlag := flag.Bool("memdebug", cast.ToBool(config.Config["memdebug"]), `Enable verbose memory debugging?`)
 	memCycleTestFlag := flag.Bool("memcycletest", cast.ToBool(config.Config["memcycletest"]), `Enable memory cycle time measure?`)
 	disablecgo := flag.Bool("cgodisable", cast.ToBool(config.Config["cgodisable"]), `Disable everything non memory-reader related? (pp counters)`)
+	enableAutoDeafen := flag.Bool("autoDeafenEnabled", cast.ToBool(config.Config["autoDeafenEnabled"]), "Should auto deafen be done?")
 	flag.Parse()
 	cgo := *disablecgo
+	autodeafen := *enableAutoDeafen
 	mem.Debug = *memDebugFlag
 	memory.MemCycle = *memCycleTestFlag
 	memory.UpdateTime = *updateTimeFlag
@@ -60,6 +63,8 @@ func main() {
 		go pp.GetMaxData()
 		go pp.GetEditorData()
 	}
+	if autodeafen {
+		go deafen.AutoDeafen()
+	}
 	web.HTTPServer()
-
 }

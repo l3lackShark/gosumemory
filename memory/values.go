@@ -1,6 +1,6 @@
 package memory
 
-//InMenuValues inside osu!memory
+// InMenuValues inside osu!memory
 type InMenuValues struct {
 	MainMenuValues MainMenuValues `json:"mainMenu"`
 	OsuStatus      uint32         `json:"state"`
@@ -34,7 +34,7 @@ type MainMenuValues struct {
 	BassDensity float64 `json:"bassDensity"`
 }
 
-//InSettingsValues are values represented inside settings class, could be dynamic
+// InSettingsValues are values represented inside settings class, could be dynamic
 type InSettingsValues struct {
 	ShowInterface bool    `json:"showInterface"` //dynamic in gameplay
 	Folders       folders `json:"folders"`
@@ -118,7 +118,7 @@ type gGrade struct {
 	Expected string `json:"maxThisPlay"`
 }
 
-//GameplayValues inside osu!memory
+// GameplayValues inside osu!memory
 type GameplayValues struct {
 	GameMode    int32       `json:"gameMode"`
 	Name        string      `json:"name"`
@@ -290,20 +290,20 @@ type leaderboard struct {
 	Slots                 []leaderPlayer `json:"slots"`
 }
 
-//MenuData contains raw values taken from osu! memory
+// MenuData contains raw values taken from osu! memory
 var MenuData = InMenuValues{}
 
-//GameplayData contains raw values taken from osu! memory
+// GameplayData contains raw values taken from osu! memory
 var GameplayData = GameplayValues{}
 
-//ResultsScreenData contains raw values taken from osu! memory
+// ResultsScreenData contains raw values taken from osu! memory
 var ResultsScreenData = ResultsScreenValues{}
 
-//SettingsData contains raw values taken from osu! memory
+// SettingsData contains raw values taken from osu! memory
 var SettingsData = InSettingsValues{}
 
-//TourneyData contains raw values taken from osu! memory
+// TourneyData contains raw values taken from osu! memory
 var TourneyData = TourneyValues{}
 
-//DynamicAddresses are in-between pointers that lead to values
+// DynamicAddresses are in-between pointers that lead to values
 var DynamicAddresses = dynamicAddresses{}
