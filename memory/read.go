@@ -98,7 +98,7 @@ type menuD struct {
 	Folder             string  `mem:"[[Beatmap] + 0x78]"`
 	Creator            string  `mem:"[[Beatmap] + 0x7C]"`
 	Name               string  `mem:"[[Beatmap] + 0x80]"`
-	Path               string  `mem:"[[Beatmap] + 0x94]"`
+	Path               string  `mem:"[[Beatmap] + 0x90]"`
 	Difficulty         string  `mem:"[[Beatmap] + 0xB0]"`
 	MapID              int32   `mem:"[Beatmap] + 0xCC"`
 	SetID              int32   `mem:"[Beatmap] + 0xD0"`
