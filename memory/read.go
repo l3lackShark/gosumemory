@@ -99,7 +99,7 @@ type menuD struct {
 	Creator            string  `mem:"[[Beatmap] + 0x7C]"`
 	Name               string  `mem:"[[Beatmap] + 0x80]"`
 	Path               string  `mem:"[[Beatmap] + 0x90]"`
-	Difficulty         string  `mem:"[[Beatmap] + 0xB0]"`
+	Difficulty         string  `mem:"[[Beatmap] + 0xAC]"`
 	MapID              int32   `mem:"[Beatmap] + 0xCC"`
 	SetID              int32   `mem:"[Beatmap] + 0xD0"`
 	RankedStatus       int32   `mem:"[Beatmap] + 0x130"` // unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
