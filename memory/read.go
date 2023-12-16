@@ -100,8 +100,8 @@ type menuD struct {
 	Name               string  `mem:"[[Beatmap] + 0x80]"`
 	Path               string  `mem:"[[Beatmap] + 0x90]"`
 	Difficulty         string  `mem:"[[Beatmap] + 0xAC]"`
-	MapID              int32   `mem:"[Beatmap] + 0xCC"`
-	SetID              int32   `mem:"[Beatmap] + 0xD0"`
+	MapID              int32   `mem:"[Beatmap] + 0xC8"`
+	SetID              int32   `mem:"[Beatmap] + 0xCC"`
 	RankedStatus       int32   `mem:"[Beatmap] + 0x130"` // unknown, unsubmitted, pending/wip/graveyard, unused, ranked, approved, qualified
 	MD5                string  `mem:"[[Beatmap] + 0x6C]"`
 	ObjectCount        int32   `mem:"[Beatmap] + 0xFC"`
