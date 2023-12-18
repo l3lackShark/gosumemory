@@ -145,7 +145,7 @@ func initBase() error {
 	if cast.ToBool(config.Config["enabled"]) {
 		err = injctr.Injct(process.Pid())
 		if err != nil {
-			log.Printf("Failed to inject into osu's process, in game overlay will be unavailabe. %e\n", err)
+			log.Printf("Failed to inject into osu's process, in game overlay will be unavailable. %e\n", err)
 		}
 	} else {
 		fmt.Println("[MEMORY] In-Game overlay is disabled, but could be enabled in config.ini!")
