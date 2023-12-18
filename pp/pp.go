@@ -104,6 +104,11 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 			C.ezpp_set_nmiss(ez, 0)
 			memory.MenuData.Bm.Stats.BeatmapMaxCombo = int32(C.ezpp_max_combo(ez))
 			memory.MenuData.Bm.Stats.FullSR = cast.ToFloat32(fmt.Sprintf("%.2f", float32(C.ezpp_stars(ez))))
+			type timingPoint struct {
+				time      float64
+				msPerBeat float64
+			}
+			var timingPoints []timingPoint
 			var bpmChanges []int
 			var bpmMultiplier float64 = 1
 			if strings.Contains(memory.MenuData.Mods.PpMods, "DT") || strings.Contains(memory.MenuData.Mods.PpMods, "NC") {
@@ -115,12 +120,46 @@ func readData(data *PP, ez C.ezpp_t, needStrain bool, path string) error {
 				msPerBeat := float64(C.ezpp_timing_ms_per_beat(ez, C.int(i)))
 				timingChanges := int(C.ezpp_timing_change(ez, C.int(i)))
 				if timingChanges == 1 {
+					timingPoints = append(timingPoints, timingPoint{
+						time:      float64(C.ezpp_timing_time(ez, C.int(i))),
+						msPerBeat: msPerBeat,
+					})
+
 					bpmFormula := int(math.Round(1 / msPerBeat * 1000 * 60 * bpmMultiplier))
 					if bpmFormula > 0 {
 						bpmChanges = append(bpmChanges, bpmFormula)
 					}
 				}
 			}
+
+			// adapted from osu.Game.Beatmaps.Beatmap.GetMostCommonBeatLength() at revision 07da9d95 on ppy/osu
+			var beatLengthDurations = make(map[float64]float64)
+			var lastTime = float64(C.ezpp_time_at(ez, C.int(C.ezpp_nobjects(ez))-1))
+			for i, timingPoint := range timingPoints {
+				var currentTime float64 = 0
+				if i > 0 {
+					currentTime = timingPoint.time
+				}
+				var nextTime = lastTime
+				if i < len(timingPoints)-1 {
+					nextTime = timingPoints[i+1].time
+				}
+
+				var duration = nextTime - currentTime
+				var roundedMsPerBeat = math.Round(timingPoint.msPerBeat*1000) / 1000
+				beatLengthDurations[roundedMsPerBeat] += duration
+			}
+
+			var mostCommonMsPerBeat float64 = 0
+			var longestDuration float64 = 0
+			for msPerBeat, aggregateDuration := range beatLengthDurations {
+				if aggregateDuration > longestDuration {
+					longestDuration = aggregateDuration
+					mostCommonMsPerBeat = msPerBeat
+				}
+			}
+			var mostCommonBPM = int(math.Round(1 / mostCommonMsPerBeat * 1000 * 60 * bpmMultiplier))
+			memory.MenuData.Bm.Stats.BeatmapBPM.MostCommon = mostCommonBPM
 			memory.MenuData.Bm.Stats.BeatmapBPM.Minimal, memory.MenuData.Bm.Stats.BeatmapBPM.Maximal = minMax(bpmChanges)
 			strainArray = nil
 			seek := 0

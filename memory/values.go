@@ -191,8 +191,9 @@ type stats struct {
 }
 
 type bpm struct {
-	Minimal int `json:"min"`
-	Maximal int `json:"max"`
+	Minimal    int `json:"min"`
+	Maximal    int `json:"max"`
+	MostCommon int `json:"mostCommon"`
 }
 
 type path struct {
