@@ -203,7 +203,7 @@ When operating in tourney mode, real-time pp counters for each client, leaderboa
 
 # Linux
 
-You have two options. Either run native, but with sudo privileges, or through WINE.
+You have two options. Either run native, but with sudo privileges, or through WINE. Make sure to have dotnet45 installed, otherwise gosumemory won't be able to find the correct memory addresses.
 Please note that Linux builds are not well tested and could contain crashes. Report them if you encounter any.
 
 # Consider supporting
